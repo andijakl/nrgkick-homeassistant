@@ -1,0 +1,315 @@
+# Example Automations for NRGkick Home Assistant Integration
+
+# These examples show common use cases for automating your EV charging
+# Copy and adapt these to your needs
+
+# ============================================================================
+# SOLAR CHARGING
+# ============================================================================
+
+# Start charging when solar production exceeds 3kW
+- alias: "NRGkick - Start Solar Charging"
+  description: "Start charging when solar production is sufficient"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.solar_power
+      above: 3000
+  condition:
+    - condition: state
+      entity_id: binary_sensor.nrgkick_charging
+      state: "off"
+    - condition: state
+      entity_id: switch.nrgkick_charge_pause
+      state: "on"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.nrgkick_charge_pause
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_charging_current
+      data:
+        value: 16
+
+# Reduce charging current when solar production drops
+- alias: "NRGkick - Adjust Solar Charging"
+  description: "Dynamically adjust charging current based on solar production"
+  trigger:
+    - platform: state
+      entity_id: sensor.solar_power
+  condition:
+    - condition: state
+      entity_id: binary_sensor.nrgkick_charging
+      state: "on"
+  action:
+    - choose:
+        - conditions:
+            - condition: numeric_state
+              entity_id: sensor.solar_power
+              above: 5000
+          sequence:
+            - service: number.set_value
+              target:
+                entity_id: number.nrgkick_charging_current
+              data:
+                value: 24
+        - conditions:
+            - condition: numeric_state
+              entity_id: sensor.solar_power
+              above: 3000
+              below: 5000
+          sequence:
+            - service: number.set_value
+              target:
+                entity_id: number.nrgkick_charging_current
+              data:
+                value: 16
+        - conditions:
+            - condition: numeric_state
+              entity_id: sensor.solar_power
+              below: 2000
+          sequence:
+            - service: switch.turn_on
+              target:
+                entity_id: switch.nrgkick_charge_pause
+
+# ============================================================================
+# TIME-BASED CHARGING
+# ============================================================================
+
+# Pause charging during peak hours
+- alias: "NRGkick - Pause Peak Hours"
+  description: "Pause charging during expensive peak hours"
+  trigger:
+    - platform: time
+      at: "17:00:00"
+  action:
+    - service: switch.turn_on
+      target:
+        entity_id: switch.nrgkick_charge_pause
+
+# Resume charging after peak hours
+- alias: "NRGkick - Resume After Peak"
+  description: "Resume charging when off-peak rates start"
+  trigger:
+    - platform: time
+      at: "22:00:00"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.nrgkick_charge_pause
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_charging_current
+      data:
+        value: 32
+
+# Night charging with full power
+- alias: "NRGkick - Night Fast Charge"
+  description: "Charge at maximum rate during cheap night hours"
+  trigger:
+    - platform: time
+      at: "02:00:00"
+  condition:
+    - condition: state
+      entity_id: sensor.nrgkick_charging_status
+      state: "Connected"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.nrgkick_charge_pause
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_charging_current
+      data:
+        value: 32
+
+# ============================================================================
+# NOTIFICATIONS
+# ============================================================================
+
+# Notify when charging starts
+- alias: "NRGkick - Charging Started Notification"
+  description: "Send notification when EV starts charging"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.nrgkick_charging
+      from: "off"
+      to: "on"
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "EV Charging Started"
+        message: "Your vehicle is now charging at {{ states('sensor.nrgkick_total_active_power') }}W"
+
+# Notify when charging completes
+- alias: "NRGkick - Charging Complete Notification"
+  description: "Send notification when charging session completes"
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.nrgkick_charging
+      from: "on"
+      to: "off"
+  condition:
+    - condition: numeric_state
+      entity_id: sensor.nrgkick_current_session_energy
+      above: 1000
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "EV Charging Complete"
+        message: >
+          Charging session completed.
+          Energy: {{ states('sensor.nrgkick_current_session_energy') | round(1) }} Wh
+          Duration: {{ (states('sensor.nrgkick_vehicle_charging_time') | int / 3600) | round(1) }} hours
+
+# Notify when energy limit is reached
+- alias: "NRGkick - Energy Limit Reached"
+  description: "Notify when configured energy limit is reached"
+  trigger:
+    - platform: state
+      entity_id: sensor.nrgkick_charging_status
+      to: "Standby"
+  condition:
+    - condition: numeric_state
+      entity_id: number.nrgkick_energy_limit
+      above: 0
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "Energy Limit Reached"
+        message: "Your EV has reached the configured energy limit"
+
+# ============================================================================
+# TEMPERATURE PROTECTION
+# ============================================================================
+
+# Reduce current if temperature is too high
+- alias: "NRGkick - Temperature Protection"
+  description: "Reduce charging current if device gets too hot"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.nrgkick_housing_temperature
+      above: 60
+  action:
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_charging_current
+      data:
+        value: 6
+    - service: notify.mobile_app
+      data:
+        title: "NRGkick Temperature High"
+        message: "Charging reduced due to high temperature: {{ states('sensor.nrgkick_housing_temperature') }}°C"
+
+# Resume normal charging when temperature normalizes
+- alias: "NRGkick - Temperature Normal"
+  description: "Resume normal charging when temperature drops"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.nrgkick_housing_temperature
+      below: 50
+  condition:
+    - condition: numeric_state
+      entity_id: sensor.nrgkick_set_current
+      below: 10
+  action:
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_charging_current
+      data:
+        value: 16
+
+# ============================================================================
+# SMART CHARGING WITH ENERGY LIMIT
+# ============================================================================
+
+# Set energy limit based on battery level (if available)
+- alias: "NRGkick - Smart Energy Limit"
+  description: "Automatically set energy limit based on battery needs"
+  trigger:
+    - platform: state
+      entity_id: sensor.nrgkick_charging_status
+      to: "Connected"
+  condition:
+    - condition: template
+      value_template: "{{ states('sensor.ev_battery_level') | int < 80 }}"
+  action:
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_energy_limit
+      data:
+        value: "{{ ((80 - states('sensor.ev_battery_level') | int) * 500) | int }}"
+
+# ============================================================================
+# GRID LOAD MANAGEMENT
+# ============================================================================
+
+# Reduce charging if total home power exceeds limit
+- alias: "NRGkick - Grid Load Management"
+  description: "Reduce EV charging to prevent exceeding grid limit"
+  trigger:
+    - platform: numeric_state
+      entity_id: sensor.home_power_consumption
+      above: 8000
+  condition:
+    - condition: state
+      entity_id: binary_sensor.nrgkick_charging
+      state: "on"
+  action:
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_charging_current
+      data:
+        value: 6
+
+# ============================================================================
+# SCHEDULED CHARGING SESSIONS
+# ============================================================================
+
+# Weekend fast charging
+- alias: "NRGkick - Weekend Fast Charge"
+  description: "Fast charge during weekends when home"
+  trigger:
+    - platform: time
+      at: "10:00:00"
+  condition:
+    - condition: state
+      entity_id: binary_sensor.workday_sensor
+      state: "off"
+    - condition: state
+      entity_id: sensor.nrgkick_charging_status
+      state: "Connected"
+  action:
+    - service: switch.turn_off
+      target:
+        entity_id: switch.nrgkick_charge_pause
+    - service: number.set_value
+      target:
+        entity_id: number.nrgkick_charging_current
+      data:
+        value: 32
+
+# ============================================================================
+# DASHBOARD HELPERS
+# ============================================================================
+
+# Create input_boolean to control automation modes
+input_boolean:
+  nrgkick_solar_mode:
+    name: "NRGkick Solar Charging Mode"
+    icon: mdi:solar-power
+  
+  nrgkick_scheduled_mode:
+    name: "NRGkick Scheduled Charging Mode"
+    icon: mdi:clock-outline
+
+# Create input_number for user preferences
+input_number:
+  nrgkick_max_current_limit:
+    name: "NRGkick Maximum Current Limit"
+    min: 6
+    max: 32
+    step: 1
+    unit_of_measurement: "A"
+    icon: mdi:current-ac

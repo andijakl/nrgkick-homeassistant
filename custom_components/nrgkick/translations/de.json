@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mit NRGkick verbinden",
+        "description": "Geben Sie die Verbindungsdetails für Ihr NRGkick-Gerät ein.",
+        "data": {
+          "host": "IP-Adresse oder Hostname",
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte überprüfen Sie die IP-Adresse und stellen Sie sicher, dass das Gerät erreichbar ist.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfen Sie die Logs für weitere Informationen."
+    },
+    "abort": {
+      "already_configured": "Dieses Gerät ist bereits konfiguriert."
+    }
+  }
+}

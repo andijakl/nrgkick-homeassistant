@@ -1,0 +1,353 @@
+# Example Lovelace Dashboard Configurations for NRGkick
+
+# Copy these card configurations to your Home Assistant dashboard
+# Customize colors, icons, and layouts to match your theme
+
+# ============================================================================
+# BASIC STATUS CARD
+# ============================================================================
+
+type: entities
+title: NRGkick Status
+entities:
+  - entity: sensor.nrgkick_charging_status
+    name: Status
+  - entity: binary_sensor.nrgkick_charging
+    name: Charging Active
+  - entity: sensor.nrgkick_total_active_power
+    name: Current Power
+  - entity: sensor.nrgkick_charging_current
+    name: Current
+  - entity: sensor.nrgkick_charging_voltage
+    name: Voltage
+  - entity: sensor.nrgkick_current_session_energy
+    name: Session Energy
+
+# ============================================================================
+# CONTROL CARD
+# ============================================================================
+
+type: entities
+title: NRGkick Control
+entities:
+  - entity: switch.nrgkick_charge_pause
+    name: Charge Pause
+  - entity: number.nrgkick_charging_current
+    name: Charging Current
+  - entity: number.nrgkick_energy_limit
+    name: Energy Limit
+
+# ============================================================================
+# POWER GAUGE CARD
+# ============================================================================
+
+type: gauge
+entity: sensor.nrgkick_total_active_power
+min: 0
+max: 22000
+name: Charging Power
+severity:
+  green: 0
+  yellow: 11000
+  red: 18000
+unit: W
+
+# ============================================================================
+# COMPREHENSIVE DASHBOARD VIEW
+# ============================================================================
+
+type: vertical-stack
+cards:
+  # Status Header
+  - type: horizontal-stack
+    cards:
+      - type: custom:mushroom-entity-card
+        entity: sensor.nrgkick_charging_status
+        name: Status
+        icon: mdi:ev-station
+        fill_container: true
+        primary_info: state
+        secondary_info: last-changed
+      
+      - type: custom:mushroom-entity-card
+        entity: binary_sensor.nrgkick_charging
+        name: Charging
+        icon: mdi:lightning-bolt
+        fill_container: true
+  
+  # Power Display
+  - type: horizontal-stack
+    cards:
+      - type: statistic
+        entity: sensor.nrgkick_total_active_power
+        name: Power
+        unit: W
+        period:
+          calendar:
+            period: hour
+      
+      - type: statistic
+        entity: sensor.nrgkick_current_session_energy
+        name: Session Energy
+        unit: Wh
+  
+  # Electrical Details
+  - type: entities
+    title: Electrical Details
+    entities:
+      - entity: sensor.nrgkick_charging_current
+        name: Current
+      - entity: sensor.nrgkick_set_current
+        name: Set Current
+      - entity: sensor.nrgkick_charging_voltage
+        name: Voltage
+      - entity: sensor.nrgkick_grid_frequency
+        name: Frequency
+  
+  # Temperature Monitoring
+  - type: entities
+    title: Temperature
+    entities:
+      - entity: sensor.nrgkick_housing_temperature
+        name: Housing
+        secondary_info: last-changed
+  
+  # Controls
+  - type: entities
+    title: Controls
+    entities:
+      - entity: switch.nrgkick_charge_pause
+        name: Charge Pause
+      - entity: number.nrgkick_charging_current
+        name: Set Current
+      - entity: number.nrgkick_energy_limit
+        name: Energy Limit
+
+# ============================================================================
+# COMPACT CARD (using custom:button-card)
+# ============================================================================
+
+type: custom:button-card
+entity: binary_sensor.nrgkick_charging
+name: NRGkick
+show_state: true
+show_icon: true
+show_label: true
+label: |
+  [[[
+    if (states['sensor.nrgkick_charging_status'].state == 'Charging')
+      return states['sensor.nrgkick_total_active_power'].state + 'W';
+    return states['sensor.nrgkick_charging_status'].state;
+  ]]]
+styles:
+  card:
+    - height: 100px
+  name:
+    - font-size: 16px
+    - font-weight: bold
+  label:
+    - font-size: 14px
+    - color: gray
+state:
+  - value: 'on'
+    styles:
+      card:
+        - background-color: '#4CAF50'
+      icon:
+        - color: white
+      name:
+        - color: white
+      label:
+        - color: white
+  - value: 'off'
+    styles:
+      card:
+        - background-color: '#757575'
+
+# ============================================================================
+# ENERGY GRAPH CARD
+# ============================================================================
+
+type: custom:apexcharts-card
+graph_span: 24h
+header:
+  show: true
+  title: Charging Power (24h)
+series:
+  - entity: sensor.nrgkick_total_active_power
+    name: Power
+    stroke_width: 2
+    type: area
+    color: '#4CAF50'
+    opacity: 0.3
+    group_by:
+      func: avg
+      duration: 5min
+
+# ============================================================================
+# SESSION STATISTICS CARD
+# ============================================================================
+
+type: entities
+title: Current Session
+entities:
+  - type: attribute
+    entity: sensor.nrgkick_current_session_energy
+    attribute: unit_of_measurement
+    name: Energy
+    suffix: " Wh"
+  - entity: sensor.nrgkick_vehicle_connect_time
+    name: Connect Time
+  - entity: sensor.nrgkick_vehicle_charging_time
+    name: Charging Time
+  - type: divider
+  - entity: sensor.nrgkick_total_charged_energy
+    name: Total Lifetime Energy
+
+# ============================================================================
+# QUICK ACTION CARD
+# ============================================================================
+
+type: horizontal-stack
+cards:
+  - type: button
+    name: Pause
+    icon: mdi:pause
+    tap_action:
+      action: call-service
+      service: switch.turn_on
+      service_data:
+        entity_id: switch.nrgkick_charge_pause
+  
+  - type: button
+    name: Resume
+    icon: mdi:play
+    tap_action:
+      action: call-service
+      service: switch.turn_off
+      service_data:
+        entity_id: switch.nrgkick_charge_pause
+  
+  - type: button
+    name: Eco (6A)
+    icon: mdi:leaf
+    tap_action:
+      action: call-service
+      service: number.set_value
+      service_data:
+        entity_id: number.nrgkick_charging_current
+        value: 6
+  
+  - type: button
+    name: Fast (32A)
+    icon: mdi:flash
+    tap_action:
+      action: call-service
+      service: number.set_value
+      service_data:
+        entity_id: number.nrgkick_charging_current
+        value: 32
+
+# ============================================================================
+# MOBILE DASHBOARD (Compact View)
+# ============================================================================
+
+type: vertical-stack
+cards:
+  - type: glance
+    title: NRGkick
+    entities:
+      - entity: sensor.nrgkick_charging_status
+        name: Status
+      - entity: sensor.nrgkick_total_active_power
+        name: Power
+      - entity: sensor.nrgkick_current_session_energy
+        name: Energy
+  
+  - type: horizontal-stack
+    cards:
+      - type: button
+        entity: switch.nrgkick_charge_pause
+        name: Pause
+        show_state: true
+        tap_action:
+          action: toggle
+      
+      - type: entity
+        entity: number.nrgkick_charging_current
+        name: Current
+
+# ============================================================================
+# CONDITIONAL CARD (Show only when charging)
+# ============================================================================
+
+type: conditional
+conditions:
+  - entity: binary_sensor.nrgkick_charging
+    state: 'on'
+card:
+  type: entities
+  title: Active Charging Session
+  entities:
+    - entity: sensor.nrgkick_total_active_power
+      name: Power
+    - entity: sensor.nrgkick_charging_current
+      name: Current
+    - entity: sensor.nrgkick_current_session_energy
+      name: Energy Charged
+    - entity: sensor.nrgkick_vehicle_charging_time
+      name: Duration
+    - entity: sensor.nrgkick_housing_temperature
+      name: Temperature
+
+# ============================================================================
+# PICTURE ELEMENTS CARD (Custom Layout)
+# ============================================================================
+
+type: picture-elements
+image: /local/nrgkick_background.png  # Add your own image
+elements:
+  - type: state-label
+    entity: sensor.nrgkick_charging_status
+    style:
+      top: 20%
+      left: 50%
+      font-size: 24px
+      font-weight: bold
+      color: white
+  
+  - type: state-label
+    entity: sensor.nrgkick_total_active_power
+    style:
+      top: 40%
+      left: 50%
+      font-size: 48px
+      font-weight: bold
+      color: '#4CAF50'
+  
+  - type: state-icon
+    entity: binary_sensor.nrgkick_charging
+    style:
+      top: 60%
+      left: 50%
+      transform: translate(-50%, -50%) scale(2)
+  
+  - type: service-button
+    title: Pause
+    service: switch.turn_on
+    service_data:
+      entity_id: switch.nrgkick_charge_pause
+    style:
+      bottom: 10%
+      left: 25%
+
+# ============================================================================
+# NOTES
+# ============================================================================
+
+# Custom Cards Requirements:
+# - mushroom-card: https://github.com/piitaya/lovelace-mushroom
+# - button-card: https://github.com/custom-cards/button-card
+# - apexcharts-card: https://github.com/RomRider/apexcharts-card
+#
+# Install via HACS → Frontend
