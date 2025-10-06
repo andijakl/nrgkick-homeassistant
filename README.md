@@ -67,18 +67,6 @@ A comprehensive Home Assistant integration for the **NRGkick Gen2** EV charging 
 
 ## Installation
 
-### Via HACS (Recommended)
-
-Once this integration is available in HACS:
-
-1. Open **HACS** in Home Assistant
-2. Go to **Integrations**
-3. Click **Explore & Download Repositories**
-4. Search for **NRGkick**
-5. Click **Download**
-6. Restart Home Assistant
-7. Go to **Settings** → **Devices & Services** → **Add Integration** → **NRGkick**
-
 ### Via HACS Custom Repository (Before Official Release)
 
 1. Open **HACS** → **Integrations**
@@ -90,6 +78,18 @@ Once this integration is available in HACS:
 5. Search for **NRGkick** and click **Download**
 6. Restart Home Assistant
 7. Add integration via UI
+
+### Via HACS (not yet available)
+
+Once this integration is available in HACS:
+
+1. Open **HACS** in Home Assistant
+2. Go to **Integrations**
+3. Click **Explore & Download Repositories**
+4. Search for **NRGkick**
+5. Click **Download**
+6. Restart Home Assistant
+7. Go to **Settings** → **Devices & Services** → **Add Integration** → **NRGkick**
 
 ### Manual Installation
 

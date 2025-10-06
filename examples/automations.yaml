@@ -294,17 +294,17 @@
 # DASHBOARD HELPERS
 # ============================================================================
 
-# Create input_boolean to control automation modes
+# NOTE: The following helpers must be defined in configuration.yaml or via the UI, not in automations.yaml.
+# Example for configuration.yaml:
+
 input_boolean:
   nrgkick_solar_mode:
     name: "NRGkick Solar Charging Mode"
     icon: mdi:solar-power
-  
   nrgkick_scheduled_mode:
     name: "NRGkick Scheduled Charging Mode"
     icon: mdi:clock-outline
 
-# Create input_number for user preferences
 input_number:
   nrgkick_max_current_limit:
     name: "NRGkick Maximum Current Limit"
