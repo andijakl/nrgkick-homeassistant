@@ -142,3 +142,8 @@ home-assistant_v2.db
 .tox/
 .pytest_cache/
 htmlcov/
+
+# Release builds
+releases/
+release-temp/
+*.zip
