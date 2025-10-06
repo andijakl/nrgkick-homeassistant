@@ -68,7 +68,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NRGkick data from the API."""
 
-    def __init__(self, hass: HomeAssistant, api: NRGkickAPI, entry: ConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, api: NRGkickAPI, entry: ConfigEntry
+    ) -> None:
         """Initialize."""
         self.api = api
         self.entry = entry

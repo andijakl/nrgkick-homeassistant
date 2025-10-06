@@ -1,18 +1,25 @@
 # Development dependencies for NRGkick Home Assistant Integration
 
 # Testing
-pytest>=7.0.0
+pytest>=7.4.0
 pytest-asyncio>=0.21.0
 pytest-homeassistant-custom-component>=0.13.0
+pytest-cov>=4.1.0
+pytest-timeout>=2.1.0
 
 # Code Quality
 black>=23.0.0
 pylint>=2.17.0
 mypy>=1.0.0
 isort>=5.12.0
+flake8>=6.0.0
 
 # Type Stubs
 types-aiofiles>=23.0.0
 
 # Home Assistant (for development/testing)
 homeassistant>=2023.1.0
+
+# API Dependencies
+aiohttp>=3.8.0
+async-timeout>=4.0.0
