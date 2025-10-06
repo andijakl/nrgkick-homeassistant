@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from aiohttp import ClientError, ClientResponseError
@@ -17,8 +17,15 @@ def mock_session():
     response = AsyncMock()
     response.status = 200
     response.json = AsyncMock(return_value={"test": "data"})
-    response.raise_for_status = AsyncMock()
-    session.get.return_value.__aenter__.return_value = response
+    response.raise_for_status = MagicMock()  # Not async, just a regular method
+    
+    # Create a proper async context manager mock
+    mock_get = MagicMock()
+    mock_get.__aenter__ = AsyncMock(return_value=response)
+    mock_get.__aexit__ = AsyncMock(return_value=None)
+    
+    session.get = MagicMock(return_value=mock_get)
+    
     return session
 
 

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from aiohttp import ClientResponseError
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -119,13 +120,10 @@ async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> 
 
 async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle already configured."""
-    entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=0,
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
-        source=config_entries.SOURCE_USER,
         entry_id="test_entry",
         unique_id="TEST123456",
     )
@@ -150,9 +148,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) ->
 
 async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test reauth flow."""
-    entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=0,
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={
@@ -160,7 +156,6 @@ async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
             CONF_USERNAME: "old_user",
             CONF_PASSWORD: "old_pass",
         },
-        source=config_entries.SOURCE_USER,
         entry_id="test_entry",
         unique_id="TEST123456",
     )
@@ -201,13 +196,10 @@ async def test_reauth_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test reauth flow with connection error."""
-    entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=0,
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
-        source=config_entries.SOURCE_USER,
         entry_id="test_entry",
         unique_id="TEST123456",
     )
@@ -242,9 +234,7 @@ async def test_reauth_flow_cannot_connect(
 
 async def test_options_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test options flow."""
-    entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=0,
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={
@@ -252,7 +242,6 @@ async def test_options_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_pass",
         },
-        source=config_entries.SOURCE_USER,
         entry_id="test_entry",
         unique_id="TEST123456",
     )
@@ -286,13 +275,10 @@ async def test_options_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test options flow with connection error."""
-    entry = config_entries.ConfigEntry(
-        version=1,
-        minor_version=0,
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
-        source=config_entries.SOURCE_USER,
         entry_id="test_entry",
         unique_id="TEST123456",
     )
