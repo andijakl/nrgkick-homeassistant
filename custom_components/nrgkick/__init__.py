@@ -35,14 +35,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),
     )
 
-    coordinator = NRGkickDataUpdateCoordinator(hass, api)
+    coordinator = NRGkickDataUpdateCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
+    # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    # Register update listener for options changes
+    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
+
     return True
+
+
+async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the config entry when it changed."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -56,9 +65,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NRGkick data from the API."""
 
-    def __init__(self, hass: HomeAssistant, api: NRGkickAPI) -> None:
+    def __init__(self, hass: HomeAssistant, api: NRGkickAPI, entry: ConfigEntry) -> None:
         """Initialize."""
         self.api = api
+        self.entry = entry
         super().__init__(
             hass,
             _LOGGER,

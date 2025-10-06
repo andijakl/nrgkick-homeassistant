@@ -152,6 +152,18 @@ The integration will verify the connection and automatically create all entities
 
 To add multiple NRGkick devices, repeat the configuration steps for each device. Each will be identified by its unique serial number.
 
+### Reconfiguring Connection Settings
+
+If your device IP address changes or you need to update credentials:
+
+1. Go to **Settings** → **Devices & Services**
+2. Find the **NRGkick** integration
+3. Click **⋮** (three dots) → **Configure**
+4. Update IP address, username, or password as needed
+5. Click **Submit**
+
+The integration will automatically reload with the new settings.
+
 ## Usage
 
 ### Entity Overview
@@ -365,6 +377,20 @@ More examples available in [`examples/`](examples/) directory.
 - Per-phase sensors only show data during 3-phase charging
 - Some values depend on device model and firmware version
 - Temperature sensors may not be available on all connectors
+
+### Entities Not Visible or Missing
+
+**Possible causes:**
+- Integration failed to load
+- Coordinator not fetching data
+- Device connection lost
+
+**Solutions:**
+1. Download diagnostics: **Integration** → **⋮** → **Download diagnostics**
+2. Check if `coordinator_last_update_success` is `true`
+3. Verify `data` section contains info/control/values
+4. If data is `null`, check logs for specific error messages
+5. Try reconfiguring the integration with current connection details
 
 ## Technical Details
 

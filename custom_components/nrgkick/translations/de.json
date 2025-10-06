@@ -18,5 +18,22 @@
     "abort": {
       "already_configured": "Dieses Gerät ist bereits konfiguriert."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "NRGkick-Verbindung neu konfigurieren",
+        "description": "Aktualisieren Sie die Verbindungsdetails für Ihr NRGkick-Gerät. Die Integration wird nach dem Speichern neu gestartet.",
+        "data": {
+          "host": "IP-Adresse oder Hostname",
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Gerät mit den neuen Einstellungen fehlgeschlagen. Bitte überprüfen Sie die Verbindungsdetails.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfen Sie die Logs für weitere Informationen."
+    }
   }
 }

@@ -18,5 +18,22 @@
     "abort": {
       "already_configured": "This device is already configured."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Reconfigure NRGkick Connection",
+        "description": "Update the connection details for your NRGkick device. The integration will restart after saving.",
+        "data": {
+          "host": "IP Address or Hostname",
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the device with the new settings. Please verify the connection details.",
+      "unknown": "An unexpected error occurred. Please check the logs for more information."
+    }
   }
 }
