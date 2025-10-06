@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from typing import Any
 
 import aiohttp
-import async_timeout
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ class NRGkickAPI:
         if self.username and self.password:
             auth = aiohttp.BasicAuth(self.username, self.password)
 
-        async with async_timeout.timeout(10):
+        async with asyncio.timeout(10):
             async with self._session.get(url, auth=auth, params=params) as response:
                 response.raise_for_status()
                 return await response.json()

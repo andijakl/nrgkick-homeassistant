@@ -1,0 +1,140 @@
+name: Code Quality
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  quality:
+    name: Code Quality Checks
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+          pip install pre-commit
+
+      - name: Cache pre-commit
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+
+      - name: Run pre-commit hooks
+        run: pre-commit run --all-files --show-diff-on-failure
+
+  black:
+    name: Check code formatting (Black)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Black
+        run: pip install black>=23.0.0
+
+      - name: Run Black
+        run: black --check --diff custom_components/ tests/
+
+  isort:
+    name: Check import sorting (isort)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install isort
+        run: pip install isort>=5.12.0
+
+      - name: Run isort
+        run: isort --check-only --diff custom_components/ tests/
+
+  flake8:
+    name: Linting (Flake8)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install Flake8
+        run: |
+          pip install flake8>=6.0.0
+          pip install flake8-bugbear flake8-comprehensions
+
+      - name: Run Flake8
+        run: flake8 custom_components/ tests/ --max-line-length=88 --extend-ignore=E203,E266,E501,W503 --max-complexity=18 --statistics
+
+  pylint:
+    name: Linting (Pylint)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+
+      - name: Run Pylint
+        run: pylint custom_components/nrgkick/ --disable=C0111,C0103,W0212,R0913,R0902,R0914 --max-line-length=88 || true
+
+  mypy:
+    name: Type checking (MyPy)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements_dev.txt
+          pip install types-aiofiles
+
+      - name: Run MyPy
+        run: mypy custom_components/nrgkick/ --ignore-missing-imports --check-untyped-defs || true

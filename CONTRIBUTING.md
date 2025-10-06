@@ -69,30 +69,57 @@ We welcome feature suggestions! Please create an issue with:
    pip install -r requirements_dev.txt
    ```
 
-4. Link to your Home Assistant instance:
+4. Install pre-commit hooks:
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+   This will automatically run code quality checks before each commit.
+
+5. Link to your Home Assistant instance:
    ```bash
    ln -s $(pwd)/custom_components/nrgkick /path/to/homeassistant/config/custom_components/
    ```
+
+### Code Quality Checks
+
+We use pre-commit hooks to maintain code quality. The hooks will run automatically before each commit, but you can also run them manually:
+
+```bash
+# Run all pre-commit hooks on all files
+pre-commit run --all-files
+
+# Run on specific files only
+pre-commit run --files custom_components/nrgkick/api.py
+```
+
+**What the hooks check:**
+- **Black**: Code formatting (88 character line length)
+- **isort**: Import statement organization
+- **Flake8**: Code linting and style issues
+- **MyPy**: Type checking
+- **Pylint**: Additional code quality checks
+- **YAML/JSON**: File syntax validation
 
 ### Testing
 
 Run tests before submitting:
 
 ```bash
-# Linting
-pylint custom_components/nrgkick
+# Run all tests with coverage
+pytest tests/ -v --cov=custom_components.nrgkick --cov-report=term
 
-# Type checking
-mypy custom_components/nrgkick
+# Run specific test file
+pytest tests/test_api.py -v
 
-# Format checking
-black --check custom_components/nrgkick
+# Run with detailed output
+pytest tests/ -vv
+
+# Run pre-commit checks manually
+pre-commit run --all-files
 ```
 
-Format code:
-```bash
-black custom_components/nrgkick
-```
+**Note**: Pre-commit hooks will automatically format your code. If they make changes, you'll need to stage the changes and commit again.
 
 ## Code Style Guidelines
 
