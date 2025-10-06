@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import logging
 from datetime import timedelta
+from typing import Any
 
 import aiohttp
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -81,7 +81,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:
             info = await self.api.get_info()
@@ -96,7 +96,8 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         except aiohttp.ClientResponseError as err:
             if err.status == 401:
                 raise ConfigEntryAuthFailed(
-                    "Authentication failed. Please reconfigure the integration with valid credentials."
+                    "Authentication failed. Please reconfigure the integration "
+                    "with valid credentials."
                 ) from err
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         except Exception as err:

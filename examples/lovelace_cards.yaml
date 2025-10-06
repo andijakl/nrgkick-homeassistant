@@ -68,13 +68,13 @@ cards:
         fill_container: true
         primary_info: state
         secondary_info: last-changed
-      
+
       - type: custom:mushroom-entity-card
         entity: binary_sensor.nrgkick_charging
         name: Charging
         icon: mdi:lightning-bolt
         fill_container: true
-  
+
   # Power Display
   - type: horizontal-stack
     cards:
@@ -85,12 +85,12 @@ cards:
         period:
           calendar:
             period: hour
-      
+
       - type: statistic
         entity: sensor.nrgkick_current_session_energy
         name: Session Energy
         unit: Wh
-  
+
   # Electrical Details
   - type: entities
     title: Electrical Details
@@ -103,7 +103,7 @@ cards:
         name: Voltage
       - entity: sensor.nrgkick_grid_frequency
         name: Frequency
-  
+
   # Temperature Monitoring
   - type: entities
     title: Temperature
@@ -111,7 +111,7 @@ cards:
       - entity: sensor.nrgkick_housing_temperature
         name: Housing
         secondary_info: last-changed
-  
+
   # Controls
   - type: entities
     title: Controls
@@ -218,7 +218,7 @@ cards:
       service: switch.turn_on
       service_data:
         entity_id: switch.nrgkick_charge_pause
-  
+
   - type: button
     name: Resume
     icon: mdi:play
@@ -227,7 +227,7 @@ cards:
       service: switch.turn_off
       service_data:
         entity_id: switch.nrgkick_charge_pause
-  
+
   - type: button
     name: Eco (6A)
     icon: mdi:leaf
@@ -237,7 +237,7 @@ cards:
       service_data:
         entity_id: number.nrgkick_charging_current
         value: 6
-  
+
   - type: button
     name: Fast (32A)
     icon: mdi:flash
@@ -263,7 +263,7 @@ cards:
         name: Power
       - entity: sensor.nrgkick_current_session_energy
         name: Energy
-  
+
   - type: horizontal-stack
     cards:
       - type: button
@@ -272,7 +272,7 @@ cards:
         show_state: true
         tap_action:
           action: toggle
-      
+
       - type: entity
         entity: number.nrgkick_charging_current
         name: Current
@@ -315,7 +315,7 @@ elements:
       font-size: 24px
       font-weight: bold
       color: white
-  
+
   - type: state-label
     entity: sensor.nrgkick_total_active_power
     style:
@@ -324,14 +324,14 @@ elements:
       font-size: 48px
       font-weight: bold
       color: '#4CAF50'
-  
+
   - type: state-icon
     entity: binary_sensor.nrgkick_charging
     style:
       top: 60%
       left: 50%
       transform: translate(-50%, -50%) scale(2)
-  
+
   - type: service-button
     title: Pause
     service: switch.turn_on

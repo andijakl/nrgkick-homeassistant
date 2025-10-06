@@ -26,7 +26,6 @@ The documentation is a monolithic HTML file (~2000 lines) containing:
 ### API Coverage
 
 1. **JSON REST API** (default view)
-
    - `/info` - Device information (serial, network, hardware/software versions)
    - `/control` - Charging control (current, pause, energy limits, phase count)
    - `/values` - Real-time telemetry (power, voltage, temperature, status)

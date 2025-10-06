@@ -7,7 +7,6 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -48,7 +47,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for NRGkick."""
 
     VERSION = 1

@@ -47,19 +47,36 @@ pre-commit install
 echo ""
 echo "🔍 Running pre-commit checks on all files..."
 echo "   (This may take a few minutes on first run)"
+echo "   Note: Some warnings (like Pylint code duplication) are acceptable"
 echo ""
 
-if pre-commit run --all-files; then
+# Run pre-commit, but allow it to continue with warnings
+set +e  # Temporarily disable exit on error
+pre-commit run --all-files
+PRE_COMMIT_EXIT=$?
+set -e  # Re-enable exit on error
+
+if [ $PRE_COMMIT_EXIT -eq 0 ]; then
     echo ""
     echo "✅ All pre-commit checks passed!"
 else
     echo ""
-    echo "⚠️  Some pre-commit checks failed or made changes."
-    echo "   Review the output above and:"
-    echo "   1. Check what was changed (git diff)"
-    echo "   2. Stage the changes (git add .)"
-    echo "   3. Re-run this script or commit your changes"
-    exit 1
+    echo "⚠️  Some pre-commit checks have warnings or made changes."
+    echo "   Common acceptable warnings:"
+    echo "   - Pylint: duplicate-code (structural similarities in entity classes)"
+    echo "   - MyPy: abstract-method warnings (Home Assistant handles these)"
+    echo ""
+    echo "   Critical issues (must fix):"
+    echo "   - Syntax errors"
+    echo "   - Import errors"
+    echo "   - Type errors preventing code execution"
+    echo ""
+    read -p "Continue with tests? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Exiting. Please review the warnings above."
+        exit 1
+    fi
 fi
 
 # Run tests

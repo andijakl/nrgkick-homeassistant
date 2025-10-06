@@ -3,6 +3,7 @@
 This document outlines the specific steps needed to prepare the NRGkick integration for Home Assistant Bronze Tier certification.
 
 ## Status: 🟡 NEAR COMPLIANT
+
 **Current Compliance**: 6/8 categories fully compliant, 2 partially compliant
 
 ---
@@ -11,12 +12,14 @@ This document outlines the specific steps needed to prepare the NRGkick integrat
 
 ### 1. ✅ Pre-commit Configuration (COMPLETED)
 
-**Status**: ✅ COMPLETED  
+**Status**: ✅ COMPLETED
 **Files Created**:
+
 - `.pre-commit-config.yaml` - Pre-commit hooks configuration
 - `.github/workflows/quality.yml` - CI/CD quality checks
 
 **Next Steps**:
+
 ```bash
 # Install pre-commit
 pip install pre-commit
@@ -31,6 +34,7 @@ pre-commit run --all-files
 ```
 
 **What It Does**:
+
 - Automatically formats code with Black
 - Sorts imports with isort
 - Checks for linting issues with Flake8
@@ -39,6 +43,7 @@ pre-commit run --all-files
 - Validates Home Assistant manifest
 
 **Expected First-Time Issues**:
+
 - Some formatting changes from Black
 - Import order changes from isort
 - Possible linting warnings from Flake8
@@ -47,18 +52,20 @@ pre-commit run --all-files
 
 ### 2. ⚠️ Official Documentation (Required for Official HA Integration)
 
-**Status**: ⚠️ PENDING (only if submitting to official HA)  
-**Current**: Documentation in README.md (excellent for HACS)  
+**Status**: ⚠️ PENDING (only if submitting to official HA)
+**Current**: Documentation in README.md (excellent for HACS)
 **Required For**: Official Home Assistant Core integration
 
 #### If Submitting to Official Home Assistant:
 
 **Step 1: Create Documentation PR**
+
 1. Fork `home-assistant/home-assistant.io` repository
 2. Create new documentation file: `source/_integrations/nrgkick.markdown`
 3. Follow the template structure
 
 **Template Structure**:
+
 ```markdown
 ---
 title: NRGkick
@@ -69,7 +76,7 @@ ha_release: 2024.XX
 ha_iot_class: Local Polling
 ha_config_flow: true
 ha_codeowners:
-  - '@andijakl'
+  - "@andijakl"
 ha_domain: nrgkick
 ha_platforms:
   - binary_sensor
@@ -106,6 +113,7 @@ This integration provides the following sensors:
 ```
 
 **Step 2: Update manifest.json**
+
 ```json
 {
   "documentation": "https://www.home-assistant.io/integrations/nrgkick",
@@ -114,11 +122,13 @@ This integration provides the following sensors:
 ```
 
 **Step 3: Submit PR**
+
 - PR Title: "Add documentation for NRGkick integration"
 - Link to integration code repository
 - Wait for review from HA docs team
 
 #### If Staying as HACS Custom Integration:
+
 - Current README.md is excellent and sufficient
 - No action needed for documentation
 
@@ -133,6 +143,7 @@ This integration provides the following sensors:
 **File to Update**: `custom_components/nrgkick/api.py`
 
 **Current Code**:
+
 ```python
 import async_timeout
 
@@ -143,6 +154,7 @@ async def _request(self, endpoint: str, params: dict[str, Any] | None = None):
 ```
 
 **Updated Code**:
+
 ```python
 import asyncio
 
@@ -161,6 +173,7 @@ async def _request(self, endpoint: str, params: dict[str, Any] | None = None):
 **Why**: Better user support and bug reporting
 
 **Create**: `.github/ISSUE_TEMPLATE/bug_report.yml`
+
 ```yaml
 name: Bug Report
 description: File a bug report
@@ -171,7 +184,7 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this bug report!
-  
+
   - type: textarea
     id: what-happened
     attributes:
@@ -179,7 +192,7 @@ body:
       description: A clear description of what the bug is
     validations:
       required: true
-  
+
   - type: textarea
     id: expected
     attributes:
@@ -187,7 +200,7 @@ body:
       description: What you expected to happen
     validations:
       required: true
-  
+
   - type: input
     id: version
     attributes:
@@ -196,7 +209,7 @@ body:
       placeholder: "0.1.1"
     validations:
       required: true
-  
+
   - type: input
     id: ha-version
     attributes:
@@ -205,7 +218,7 @@ body:
       placeholder: "2024.10.0"
     validations:
       required: true
-  
+
   - type: textarea
     id: logs
     attributes:
@@ -215,6 +228,7 @@ body:
 ```
 
 **Create**: `.github/ISSUE_TEMPLATE/feature_request.yml`
+
 ```yaml
 name: Feature Request
 description: Suggest an idea for this integration
@@ -228,7 +242,7 @@ body:
       description: A clear description of what you want to happen
     validations:
       required: true
-  
+
   - type: textarea
     id: use-case
     attributes:
@@ -245,22 +259,23 @@ body:
 **Add to** `.github/workflows/test.yml`:
 
 ```yaml
-      - name: Generate coverage badge
-        if: github.ref == 'refs/heads/main'
-        run: |
-          coverage-badge -o coverage.svg -f
-          
-      - name: Commit coverage badge
-        if: github.ref == 'refs/heads/main'
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git add coverage.svg
-          git diff --staged --quiet || git commit -m "Update coverage badge"
-          git push
+- name: Generate coverage badge
+  if: github.ref == 'refs/heads/main'
+  run: |
+    coverage-badge -o coverage.svg -f
+
+- name: Commit coverage badge
+  if: github.ref == 'refs/heads/main'
+  run: |
+    git config --local user.email "action@github.com"
+    git config --local user.name "GitHub Action"
+    git add coverage.svg
+    git diff --staged --quiet || git commit -m "Update coverage badge"
+    git push
 ```
 
 **Add to README.md**:
+
 ```markdown
 [![Coverage](coverage.svg)](https://github.com/andijakl/nrgkick-homeassistant)
 ```
@@ -270,6 +285,7 @@ body:
 ### 6. 🧪 Add Integration Quality Scale Badge
 
 **Add to README.md** (after achieving Bronze):
+
 ```markdown
 [![Integration Quality Scale](https://img.shields.io/badge/Integration%20Quality%20Scale-Bronze-CD7F32)](https://www.home-assistant.io/docs/quality_scale/)
 ```
@@ -344,18 +360,18 @@ Before submitting for Bronze Tier, verify:
 
 ## Timeline Estimate
 
-| Task | Estimated Time | Priority |
-|------|----------------|----------|
-| Install and run pre-commit | 15 minutes | High |
-| Fix formatting/linting issues | 30-60 minutes | High |
-| Update async_timeout usage | 15 minutes | Medium |
-| Add issue templates | 20 minutes | Low |
-| Create official docs (if needed) | 2-3 hours | High* |
-| Test everything | 30 minutes | High |
+| Task                             | Estimated Time | Priority |
+| -------------------------------- | -------------- | -------- |
+| Install and run pre-commit       | 15 minutes     | High     |
+| Fix formatting/linting issues    | 30-60 minutes  | High     |
+| Update async_timeout usage       | 15 minutes     | Medium   |
+| Add issue templates              | 20 minutes     | Low      |
+| Create official docs (if needed) | 2-3 hours      | High\*   |
+| Test everything                  | 30 minutes     | High     |
 
-*Only required for official Home Assistant integration submission
+\*Only required for official Home Assistant integration submission
 
-**Total Time for Critical Items**: ~1-2 hours  
+**Total Time for Critical Items**: ~1-2 hours
 **Total Time for All Improvements**: ~4-5 hours
 
 ---
@@ -385,6 +401,6 @@ https://developers.home-assistant.io/docs/integration_quality_scale_index/
 
 ---
 
-**Document Created**: October 6, 2025  
-**Integration Version**: 0.1.1  
+**Document Created**: October 6, 2025
+**Integration Version**: 0.1.1
 **Status**: Ready for Bronze Tier preparation

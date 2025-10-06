@@ -6,7 +6,6 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from custom_components.nrgkick.const import DOMAIN

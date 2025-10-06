@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 
@@ -34,15 +34,26 @@ class NRGkickAPI:
         params: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         """Make a request to the API."""
+        if self._session is None:
+            raise RuntimeError("Session not initialized")
+
+        session = cast(aiohttp.ClientSession, self._session)
         url = f"{self._base_url}{endpoint}"
         auth = None
         if self.username and self.password:
             auth = aiohttp.BasicAuth(self.username, self.password)
 
+        request_params = params if params is not None else {}
+
         async with asyncio.timeout(10):
-            async with self._session.get(url, auth=auth, params=params) as response:
+            async with session.get(
+                url, auth=auth, params=request_params
+            ) as response:
                 response.raise_for_status()
-                return await response.json()
+                data = await response.json()
+                if data is None:
+                    return {}
+                return data
 
     async def get_info(self, sections: list[str] | None = None) -> dict[str, Any]:
         """Get device information."""

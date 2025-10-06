@@ -6,12 +6,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from aiohttp import ClientResponseError
-
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from custom_components.nrgkick import (
     async_reload_entry,
@@ -156,12 +153,6 @@ async def test_coordinator_auth_failed(
 
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"), pytest.raises(
-        ConfigEntryAuthFailed
-    ):
-        await async_setup_entry(hass, mock_config_entry)
-        await hass.async_block_till_done()
-
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-        # Manually trigger update to test auth failure
-        await coordinator.async_refresh()
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        with pytest.raises(ConfigEntryAuthFailed):
+            await async_setup_entry(hass, mock_config_entry)

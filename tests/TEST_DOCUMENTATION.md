@@ -20,6 +20,7 @@ Tests the user interface configuration process including setup, reauthentication
 **Test Count**: 10 tests
 
 **Coverage**:
+
 - ✅ Initial user setup flow
 - ✅ Setup without authentication credentials
 - ✅ Connection failure handling
@@ -31,6 +32,7 @@ Tests the user interface configuration process including setup, reauthentication
 - ✅ Options flow with connection errors
 
 **Key Scenarios**:
+
 ```python
 # Successful setup
 test_form()
@@ -57,6 +59,7 @@ Tests the core integration setup, coordinator, and lifecycle management.
 **Test Count**: 7 tests
 
 **Coverage**:
+
 - ✅ Successful entry setup
 - ✅ Setup with connection failure
 - ✅ Entry unload
@@ -66,6 +69,7 @@ Tests the core integration setup, coordinator, and lifecycle management.
 - ✅ Coordinator authentication failure (triggers reauth)
 
 **Key Scenarios**:
+
 ```python
 # Lifecycle
 test_setup_entry()
@@ -87,6 +91,7 @@ Tests the NRGkickAPI client including all endpoints and error handling.
 **Test Count**: 18 tests
 
 **Coverage**:
+
 - ✅ API client initialization
 - ✅ GET /info endpoint
 - ✅ GET /info with section filtering
@@ -103,6 +108,7 @@ Tests the NRGkickAPI client including all endpoints and error handling.
 - ✅ HTTP error handling
 
 **Key Scenarios**:
+
 ```python
 # API methods
 test_get_info()
@@ -127,18 +133,23 @@ test_test_connection_failure()
 ### Mock Objects
 
 #### `mock_nrgkick_api`
+
 Fully mocked API client with realistic responses:
+
 - Device info (serial, model, versions)
 - Control data (current, pause, limits)
 - Values (power, energy, status, temperatures)
 
 #### `mock_config_entry`
+
 Pre-configured ConfigEntry for testing:
+
 - Host: 192.168.1.100
 - Username/Password: test credentials
 - Unique ID: TEST123456
 
 #### Mock Data Fixtures
+
 - `mock_info_data`: Complete device information
 - `mock_control_data`: Control settings
 - `mock_values_data`: Real-time telemetry
@@ -171,6 +182,7 @@ pytest tests/test_api.py::test_get_info -v
 ### CI/CD Integration
 
 Tests run automatically via GitHub Actions on:
+
 - Every push to main
 - Every pull request
 - Tag creation
@@ -183,12 +195,12 @@ See `.github/workflows/test.yml`
 
 ### Target Coverage
 
-| Component | Target | Status |
-|-----------|--------|--------|
-| config_flow.py | 100% | ✅ |
-| api.py | 100% | ✅ |
-| __init__.py | 95%+ | ✅ |
-| Overall | 90%+ | 🎯 |
+| Component      | Target | Status |
+| -------------- | ------ | ------ |
+| config_flow.py | 100%   | ✅     |
+| api.py         | 100%   | ✅     |
+| **init**.py    | 95%+   | ✅     |
+| Overall        | 90%+   | 🎯     |
 
 ### Generating Coverage Report
 
@@ -214,10 +226,10 @@ async def test_example(hass: HomeAssistant, mock_api) -> None:
     """Test example."""
     # Arrange
     mock_api.method.return_value = {"data": "value"}
-    
+
     # Act
     result = await function_under_test(hass)
-    
+
     # Assert
     assert result == expected_value
 ```
@@ -259,6 +271,7 @@ with pytest.raises(ExpectedException):
 ### Updating Tests
 
 When modifying integration code:
+
 1. Update affected tests
 2. Add tests for new functionality
 3. Ensure all tests pass
@@ -280,6 +293,7 @@ When modifying integration code:
 ### Test Coverage
 
 The test suite validates:
+
 - User interface flows (config, reauth, options)
 - Integration lifecycle (setup, unload, reload)
 - API communication (all endpoints)
@@ -294,6 +308,7 @@ The test suite validates:
 ### Common Issues
 
 **Import Errors**:
+
 ```bash
 pip install -r requirements_dev.txt
 ```
@@ -305,6 +320,7 @@ Ensure `pytest.ini` has `asyncio_mode = auto`
 Check `conftest.py` is present and properly structured
 
 **Home Assistant Not Found**:
+
 ```bash
 pip install homeassistant>=2023.1.0
 ```

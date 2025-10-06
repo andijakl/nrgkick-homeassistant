@@ -39,6 +39,7 @@ custom_components/nrgkick/
 **Purpose**: Manages data fetching and distribution to entities
 
 **Features**:
+
 - Polls device every 30 seconds
 - Fetches `/info`, `/control`, `/values` endpoints
 - Caches data for all entities
@@ -51,6 +52,7 @@ custom_components/nrgkick/
 **Purpose**: HTTP client for NRGkick REST API
 
 **Methods**:
+
 - `get_info(sections)` - Device info
 - `get_control()` - Control parameters
 - `get_values(sections)` - Real-time values
@@ -61,6 +63,7 @@ custom_components/nrgkick/
 - `test_connection()` - Connectivity check
 
 **Features**:
+
 - Optional BasicAuth support
 - 10-second timeout
 - Error handling
@@ -72,6 +75,7 @@ custom_components/nrgkick/
 **Purpose**: UI-based configuration
 
 **Features**:
+
 - Host (IP/hostname) input
 - Optional username/password
 - Connection validation
@@ -83,6 +87,7 @@ custom_components/nrgkick/
 ### Sensors (80+)
 
 **Categories**:
+
 - Power & Energy (8 sensors)
 - Per-phase metrics (18 sensors: L1/L2/L3)
 - Temperatures (6 sensors)
@@ -91,6 +96,7 @@ custom_components/nrgkick/
 - Status (10+ sensors)
 
 **Features**:
+
 - Display precision hints
 - Suggested unit conversions (Wh → kWh)
 - Disabled by default (version sensors)
@@ -119,6 +125,7 @@ custom_components/nrgkick/
 ### GET /info
 
 Device information:
+
 ```json
 {
   "general": {
@@ -137,6 +144,7 @@ Device information:
 ### GET /control
 
 Control parameters:
+
 ```json
 {
   "current_set": 16.0,
@@ -149,6 +157,7 @@ Control parameters:
 ### GET /values
 
 Real-time telemetry:
+
 ```json
 {
   "general": {
@@ -175,10 +184,10 @@ Real-time telemetry:
 
 ### Control Commands
 
-**Set current**: `GET /control?current=16.0`  
-**Pause charging**: `GET /control?pause=1`  
-**Resume charging**: `GET /control?pause=0`  
-**Set energy limit**: `GET /control?energy=10000`  
+**Set current**: `GET /control?current=16.0`
+**Pause charging**: `GET /control?pause=1`
+**Resume charging**: `GET /control?pause=0`
+**Set energy limit**: `GET /control?energy=10000`
 **Set phases**: `GET /control?phases=3`
 
 ## Status Codes
@@ -236,6 +245,7 @@ STATUS_MAP = {
 ### Testing
 
 1. Enable debug logging:
+
    ```yaml
    logger:
      default: info
@@ -250,6 +260,7 @@ STATUS_MAP = {
 ### Debugging
 
 **Common issues**:
+
 - Import errors: Expected in dev environment (no HA core)
 - Connection timeouts: Check device IP, network
 - Authentication errors: Verify BasicAuth settings
@@ -260,6 +271,7 @@ STATUS_MAP = {
 ### Entity Initialization
 
 All entities include:
+
 - Translation key for i18n
 - Device info (serial, model, manufacturer)
 - Unique ID: `{serial}_{entity_key}`
@@ -267,6 +279,7 @@ All entities include:
 ### Data Access
 
 Entities access coordinator data via value paths:
+
 ```python
 ["values", "powerflow", "total_active_power"]  # → data["values"]["powerflow"]["total_active_power"]
 ```
@@ -274,6 +287,7 @@ Entities access coordinator data via value paths:
 ### Control Commands
 
 Pattern for control entities:
+
 1. Call API method
 2. Sleep 2 seconds (device state sync)
 3. Request coordinator refresh
@@ -295,11 +309,13 @@ Pattern for control entities:
 ## Performance
 
 **Resource Usage**:
+
 - Memory: ~5MB per device
 - CPU: Negligible (async I/O)
 - Network: 3 HTTP requests every 30s
 
 **Optimization**:
+
 - Single coordinator per device
 - Shared data across entities
 - Async/await throughout

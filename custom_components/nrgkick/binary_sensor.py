@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -63,7 +65,7 @@ class NRGkickBinarySensor(CoordinatorEntity, BinarySensorEntity):
         name: str,
         device_class: BinarySensorDeviceClass | None,
         value_path: list[str],
-        value_fn=None,
+        value_fn: Any = None,
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator)

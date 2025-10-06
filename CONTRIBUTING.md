@@ -53,27 +53,32 @@ We welcome feature suggestions! Please create an issue with:
 ### Setting Up Development Environment
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/andijakl/nrgkick-homeassistant.git
    cd nrgkick-homeassistant
    ```
 
 2. Create a virtual environment:
+
    ```bash
    python -m venv venv
    source venv/bin/activate  # On Windows: venv\Scripts\activate
    ```
 
 3. Install dependencies:
+
    ```bash
    pip install -r requirements_dev.txt
    ```
 
 4. Install pre-commit hooks:
+
    ```bash
    pip install pre-commit
    pre-commit install
    ```
+
    This will automatically run code quality checks before each commit.
 
 5. Link to your Home Assistant instance:
@@ -94,6 +99,7 @@ pre-commit run --files custom_components/nrgkick/api.py
 ```
 
 **What the hooks check:**
+
 - **Black**: Code formatting (88 character line length)
 - **isort**: Import statement organization
 - **Flake8**: Code linting and style issues
@@ -132,14 +138,15 @@ pre-commit run --all-files
 - Add docstrings to all functions and classes
 
 Example:
+
 ```python
 async def get_charging_status(self) -> dict[str, Any]:
     """
     Get the current charging status from the device.
-    
+
     Returns:
         dict: Charging status information including current, voltage, and power.
-        
+
     Raises:
         ConnectionError: If device is unreachable.
     """
@@ -184,12 +191,13 @@ When adding new API functionality:
 5. **Add timeout** - Use async_timeout for all requests
 
 Example:
+
 ```python
 async def set_charging_current(self, current: float) -> dict[str, Any]:
     """Set the charging current."""
     if not 6.0 <= current <= self._max_current:
         raise ValueError(f"Current must be between 6.0A and {self._max_current}A")
-    
+
     return await self._request("/control", {"current": current})
 ```
 

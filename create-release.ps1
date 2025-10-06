@@ -14,12 +14,12 @@ $ErrorActionPreference = "Stop"
 if (-not $Version) {
     Write-Host "No version specified, reading from manifest.json..." -ForegroundColor Cyan
     $manifestPath = "custom_components\nrgkick\manifest.json"
-    
+
     if (-not (Test-Path $manifestPath)) {
         Write-Host "ERROR: manifest.json not found at $manifestPath" -ForegroundColor Red
         exit 1
     }
-    
+
     $manifest = Get-Content $manifestPath -Raw | ConvertFrom-Json
     $Version = $manifest.version
     Write-Host "Found version: $Version" -ForegroundColor Cyan

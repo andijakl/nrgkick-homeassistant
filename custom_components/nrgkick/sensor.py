@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -12,11 +14,11 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfApparentPower,
-    UnitOfEnergy,
-    UnitOfPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPower,
     UnitOfReactivePower,
     UnitOfTemperature,
     UnitOfTime,
@@ -667,7 +669,7 @@ class NRGkickSensor(CoordinatorEntity, SensorEntity):
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         value_path: list[str],
-        value_fn=None,
+        value_fn: Any = None,
         precision: int | None = None,
         suggested_unit: str | None = None,
         enabled_default: bool = True,
@@ -707,7 +709,7 @@ class NRGkickSensor(CoordinatorEntity, SensorEntity):
         return self._key
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | int | str | None:
         """Return the state of the sensor."""
         data = self.coordinator.data
         for key in self._value_path:

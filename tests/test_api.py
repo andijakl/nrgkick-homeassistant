@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from aiohttp import ClientError, ClientResponseError
@@ -18,14 +18,14 @@ def mock_session():
     response.status = 200
     response.json = AsyncMock(return_value={"test": "data"})
     response.raise_for_status = MagicMock()  # Not async, just a regular method
-    
+
     # Create a proper async context manager mock
     mock_get = MagicMock()
     mock_get.__aenter__ = AsyncMock(return_value=response)
     mock_get.__aexit__ = AsyncMock(return_value=None)
-    
+
     session.get = MagicMock(return_value=mock_get)
-    
+
     return session
 
 
@@ -217,11 +217,14 @@ async def test_api_timeout(mock_session):
 async def test_api_client_error(mock_session):
     """Test API client error handling."""
     api = NRGkickAPI(host="192.168.1.100", session=mock_session)
-    mock_session.get.return_value.__aenter__.return_value.raise_for_status.side_effect = ClientResponseError(
+    error = ClientResponseError(
         request_info=AsyncMock(),
         history=(),
         status=500,
         message="Internal Server Error",
+    )
+    mock_session.get.return_value.__aenter__.return_value.raise_for_status.side_effect = (
+        error
     )
 
     with pytest.raises(ClientResponseError):

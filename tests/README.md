@@ -91,11 +91,13 @@ The config flow and some integration tests fail because Home Assistant's test en
 ### Do Tests Connect to Real Devices?
 
 **No**, the tests do NOT connect to real NRGkick devices. They use:
+
 - **Mock objects**: Python `unittest.mock` to simulate API responses
 - **Fixtures**: Predefined test data that mimics real device responses
 - **No network calls**: All HTTP requests are intercepted and mocked
 
 This means:
+
 - ✅ Tests run without a physical NRGkick device
 - ✅ Tests are fast and repeatable
 - ✅ No risk of changing device settings during testing
@@ -104,6 +106,7 @@ This means:
 The test suite covers:
 
 ### Config Flow Tests (`test_config_flow.py`)
+
 - ❌ User setup flow - **FAILING** (integration not found)
 - ❌ Setup without credentials - **FAILING** (integration not found)
 - ❌ Connection errors - **FAILING** (integration not found)
@@ -115,6 +118,7 @@ The test suite covers:
 - ❌ Options flow errors - **FAILING** (integration not found)
 
 ### Integration Tests (`test_init.py`)
+
 - ❌ Setup entry - **FAILING** (integration not found)
 - ✅ Setup with connection failure - **PASSING**
 - ❌ Unload entry - **FAILING** (integration not found)
@@ -124,6 +128,7 @@ The test suite covers:
 - ✅ Coordinator authentication failure (401) - **PASSING**
 
 ### API Tests (`test_api.py`)
+
 - ✅ API initialization - **PASSING**
 - ✅ Get device info - **PASSING**
 - ✅ Get info with sections - **PASSING**
@@ -144,10 +149,13 @@ The test suite covers:
 ## Fixtures
 
 ### `mock_setup_entry`
+
 Mocks the integration setup entry function.
 
 ### `mock_nrgkick_api`
+
 Provides a fully mocked NRGkickAPI instance with:
+
 - Successful connection test
 - Device info responses
 - Control data responses
@@ -155,14 +163,17 @@ Provides a fully mocked NRGkickAPI instance with:
 - All control methods (set_current, set_charge_pause, etc.)
 
 ### `mock_config_entry`
+
 Provides a mock ConfigEntry for testing.
 
 ### `mock_info_data`, `mock_control_data`, `mock_values_data`
+
 Provide realistic mock data for API responses.
 
 ## Writing New Tests
 
 ### Test Naming Convention
+
 - Test files: `test_<module_name>.py`
 - Test functions: `test_<functionality>_<scenario>`
 
@@ -173,10 +184,10 @@ async def test_new_feature(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test new feature."""
     # Arrange
     mock_nrgkick_api.some_method.return_value = {"data": "value"}
-    
+
     # Act
     result = await some_function(hass)
-    
+
     # Assert
     assert result == expected_value
     mock_nrgkick_api.some_method.assert_called_once()
@@ -185,6 +196,7 @@ async def test_new_feature(hass: HomeAssistant, mock_nrgkick_api) -> None:
 ## Continuous Integration
 
 Tests are automatically run on:
+
 - Pull requests
 - Pushes to main branch
 - Tag creation

@@ -13,28 +13,33 @@ A comprehensive Home Assistant integration for the **NRGkick Gen2** EV charging 
 ### 📊 Comprehensive Monitoring (80+ Sensors)
 
 **Power & Energy**
+
 - Total active/reactive/apparent power, power factor
 - Total charged energy, session energy
 - Per-phase power monitoring (L1, L2, L3)
 - Peak power tracking
 
 **Electrical Measurements**
+
 - Voltage, current, frequency (total and per-phase)
 - Neutral current monitoring
 - Power factor per phase
 
 **Device Status**
+
 - Charging status (Standby/Connected/Charging/Error)
 - Charging rate, relay state
 - Charge count, RCD trigger status
 - Warning and error codes
 
 **Temperature Monitoring**
+
 - Housing temperature
 - Per-phase connector temperatures (L1, L2, L3)
 - Domestic plug temperatures
 
 **Network & Device Information**
+
 - IP address, MAC address
 - WiFi SSID and signal strength (RSSI)
 - Connector details (type, serial, max current)
@@ -42,6 +47,7 @@ A comprehensive Home Assistant integration for the **NRGkick Gen2** EV charging 
 - Firmware versions
 
 **Session Statistics**
+
 - Vehicle connect time
 - Vehicle charging time
 
@@ -99,6 +105,7 @@ Once this integration is available in HACS:
 4. Add integration via UI
 
 **Directory structure after installation:**
+
 ```
 config/
 └── custom_components/
@@ -123,12 +130,14 @@ config/
 ### Prerequisites
 
 **Enable JSON API on your NRGkick:**
+
 1. Open the NRGkick mobile app
 2. Go to **Settings** → **API Settings**
 3. Enable **JSON API** (or "Native Web API")
 4. (Optional) Enable **BasicAuth** and set username/password for security
 
 **Find your NRGkick IP address:**
+
 - Via NRGkick app: Settings → Network Information
 - Via router: Check DHCP client list for device named "NRGkick"
 - Via mDNS: Device advertises as `_nrgkick._tcp` (may be accessible as `nrgkick.local`)
@@ -171,6 +180,7 @@ The integration will automatically reload with the new settings.
 All entities follow the naming pattern: `{domain}.nrgkick_{entity_name}`
 
 **Key Entities:**
+
 - `sensor.nrgkick_total_active_power` - Current power draw (W)
 - `sensor.nrgkick_charged_energy` - Current session energy (Wh)
 - `sensor.nrgkick_charging_status` - Status text
@@ -183,6 +193,7 @@ All entities follow the naming pattern: `{domain}.nrgkick_{entity_name}`
 ### Automation Examples
 
 **Solar-powered charging:**
+
 ```yaml
 automation:
   - alias: "NRGkick Solar Charging"
@@ -202,12 +213,13 @@ automation:
 ```
 
 **Time-based charging (off-peak hours):**
+
 ```yaml
 automation:
   - alias: "NRGkick Scheduled Charging"
     trigger:
       - platform: time
-        at: "23:00:00"  # Start at 11 PM
+        at: "23:00:00" # Start at 11 PM
     condition:
       - condition: state
         entity_id: binary_sensor.nrgkick_charging
@@ -224,6 +236,7 @@ automation:
 ```
 
 **Pause during peak hours:**
+
 ```yaml
 automation:
   - alias: "NRGkick Peak Hour Pause"
@@ -237,6 +250,7 @@ automation:
 ```
 
 **Charging complete notification:**
+
 ```yaml
 automation:
   - alias: "NRGkick Charging Complete"
@@ -257,6 +271,7 @@ automation:
 ```
 
 **Dynamic current based on available power:**
+
 ```yaml
 automation:
   - alias: "NRGkick Dynamic Current"
@@ -278,6 +293,7 @@ automation:
 ### Dashboard Examples
 
 **Status Card:**
+
 ```yaml
 type: entities
 title: NRGkick Status
@@ -297,6 +313,7 @@ entities:
 ```
 
 **Control Card:**
+
 ```yaml
 type: entities
 title: NRGkick Control
@@ -312,6 +329,7 @@ entities:
 ```
 
 **Gauge Card:**
+
 ```yaml
 type: gauge
 entity: sensor.nrgkick_total_active_power
@@ -325,6 +343,7 @@ severity:
 ```
 
 **Energy Bar Card:**
+
 ```yaml
 type: custom:bar-card
 entity: sensor.nrgkick_charged_energy
@@ -345,12 +364,14 @@ More examples available in [`examples/`](examples/) directory.
 ### Cannot Connect Error
 
 **Possible causes:**
+
 - Wrong IP address
 - Device not on same network
 - JSON API not enabled
 - Firewall blocking connection
 
 **Solutions:**
+
 1. Verify IP address (ping the device)
 2. Check NRGkick app: JSON API is enabled
 3. Ensure Home Assistant and NRGkick are on same network/VLAN
@@ -359,6 +380,7 @@ More examples available in [`examples/`](examples/) directory.
 ### Invalid Authentication Error
 
 **Solutions:**
+
 1. Verify username/password in NRGkick app
 2. Check BasicAuth is enabled in app
 3. Try without credentials if BasicAuth is disabled
@@ -366,6 +388,7 @@ More examples available in [`examples/`](examples/) directory.
 ### Data Not Updating
 
 **Solutions:**
+
 1. Check logs for errors
 2. Verify device is powered and connected
 3. Reload integration: **Settings** → **Devices & Services** → **NRGkick** → **⋮** → **Reload**
@@ -374,6 +397,7 @@ More examples available in [`examples/`](examples/) directory.
 ### Some Sensors Show "Unknown"
 
 **Normal behavior:**
+
 - Per-phase sensors only show data during 3-phase charging
 - Some values depend on device model and firmware version
 - Temperature sensors may not be available on all connectors
@@ -381,11 +405,13 @@ More examples available in [`examples/`](examples/) directory.
 ### Entities Not Visible or Missing
 
 **Possible causes:**
+
 - Integration failed to load
 - Coordinator not fetching data
 - Device connection lost
 
 **Solutions:**
+
 1. Download diagnostics: **Integration** → **⋮** → **Download diagnostics**
 2. Check if `coordinator_last_update_success` is `true`
 3. Verify `data` section contains info/control/values
@@ -397,6 +423,7 @@ More examples available in [`examples/`](examples/) directory.
 ### API Information
 
 The integration uses the NRGkick Gen2 Local REST JSON API:
+
 - **Base URL**: `http://{device_ip}`
 - **Endpoints**:
   - `GET /info` - Device information, network, hardware/software versions
@@ -411,6 +438,7 @@ The integration polls the device every **30 seconds** to retrieve current data. 
 ### Data Coordinator
 
 Uses Home Assistant's `DataUpdateCoordinator` pattern:
+
 - Efficient data fetching with single API call cycle
 - Automatic retry on failures
 - Shared data across all entities

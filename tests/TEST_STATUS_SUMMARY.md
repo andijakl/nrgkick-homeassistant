@@ -4,12 +4,12 @@
 
 ## Quick Status
 
-| Test Suite | Status | Pass Rate | Notes |
-|------------|--------|-----------|-------|
-| API Tests | ✅ PASSING | 16/16 (100%) | All tests working perfectly |
-| Integration Tests | ⚠️ PARTIAL | 3/7 (43%) | 4 tests blocked by integration registration |
-| Config Flow Tests | ❌ FAILING | 0/9 (0%) | All blocked by integration registration |
-| **Overall** | ⚠️ **PARTIAL** | **19/32 (59%)** | Mocking works, registration needed |
+| Test Suite        | Status         | Pass Rate       | Notes                                       |
+| ----------------- | -------------- | --------------- | ------------------------------------------- |
+| API Tests         | ✅ PASSING     | 16/16 (100%)    | All tests working perfectly                 |
+| Integration Tests | ⚠️ PARTIAL     | 3/7 (43%)       | 4 tests blocked by integration registration |
+| Config Flow Tests | ❌ FAILING     | 0/9 (0%)        | All blocked by integration registration     |
+| **Overall**       | ⚠️ **PARTIAL** | **19/32 (59%)** | Mocking works, registration needed          |
 
 ## What Got Fixed
 
@@ -18,15 +18,15 @@
 1. **pytest-asyncio Configuration**
    - Added `asyncio_default_fixture_loop_scope = function` to `pytest.ini`
    - Tests now run instead of being skipped
-   
+
 2. **ConfigEntry Creation**
    - Switched from `ConfigEntry` to `MockConfigEntry` from `pytest-homeassistant-custom-component`
    - Added `discovery_keys` and `options` parameters where needed
-   
+
 3. **Async Session Mocking**
    - Fixed async context manager protocol for `aiohttp.ClientSession.get()`
    - Used `MagicMock` with proper `__aenter__` and `__aexit__` implementation
-   
+
 4. **All API Tests**
    - 16/16 tests passing
    - Proper mocking of HTTP requests
@@ -38,7 +38,8 @@
 
 **Error**: `homeassistant.loader.IntegrationNotFound: Integration 'nrgkick' not found.`
 
-**Affects**: 
+**Affects**:
+
 - All 9 config flow tests
 - 4 out of 7 integration tests
 
@@ -59,6 +60,7 @@ def mock_session():
 ```
 
 **Benefits**:
+
 - ✅ Tests run without NRGkick hardware
 - ✅ Fast execution (no network delays)
 - ✅ Predictable results
@@ -71,36 +73,36 @@ def mock_session():
 
 All tests verify the API client works correctly:
 
-| Test | Status | What It Tests |
-|------|--------|---------------|
-| `test_api_init` | ✅ | API object creation |
-| `test_get_info` | ✅ | GET /info endpoint |
-| `test_get_info_with_sections` | ✅ | GET /info with query params |
-| `test_get_control` | ✅ | GET /control endpoint |
-| `test_get_values` | ✅ | GET /values endpoint |
-| `test_get_values_with_sections` | ✅ | GET /values with query params |
-| `test_set_current` | ✅ | POST current setting |
-| `test_set_charge_pause` | ✅ | POST pause/resume |
-| `test_set_energy_limit` | ✅ | POST energy limit |
-| `test_set_phase_count` | ✅ | POST phase count |
-| `test_set_phase_count_invalid` | ✅ | Error handling for invalid phases |
-| `test_api_with_auth` | ✅ | BasicAuth authentication |
-| `test_test_connection_success` | ✅ | Connection test success |
-| `test_test_connection_failure` | ✅ | Connection test failure |
-| `test_api_timeout` | ✅ | Timeout handling |
-| `test_api_client_error` | ✅ | Client error handling |
+| Test                            | Status | What It Tests                     |
+| ------------------------------- | ------ | --------------------------------- |
+| `test_api_init`                 | ✅     | API object creation               |
+| `test_get_info`                 | ✅     | GET /info endpoint                |
+| `test_get_info_with_sections`   | ✅     | GET /info with query params       |
+| `test_get_control`              | ✅     | GET /control endpoint             |
+| `test_get_values`               | ✅     | GET /values endpoint              |
+| `test_get_values_with_sections` | ✅     | GET /values with query params     |
+| `test_set_current`              | ✅     | POST current setting              |
+| `test_set_charge_pause`         | ✅     | POST pause/resume                 |
+| `test_set_energy_limit`         | ✅     | POST energy limit                 |
+| `test_set_phase_count`          | ✅     | POST phase count                  |
+| `test_set_phase_count_invalid`  | ✅     | Error handling for invalid phases |
+| `test_api_with_auth`            | ✅     | BasicAuth authentication          |
+| `test_test_connection_success`  | ✅     | Connection test success           |
+| `test_test_connection_failure`  | ✅     | Connection test failure           |
+| `test_api_timeout`              | ✅     | Timeout handling                  |
+| `test_api_client_error`         | ✅     | Client error handling             |
 
 ### Integration Tests (`test_init.py`) - 3/7 PASSING ⚠️
 
-| Test | Status | Reason |
-|------|--------|--------|
-| `test_setup_entry` | ❌ | Integration not found |
+| Test                                 | Status     | Reason                    |
+| ------------------------------------ | ---------- | ------------------------- |
+| `test_setup_entry`                   | ❌         | Integration not found     |
 | `test_setup_entry_failed_connection` | ✅ PASSING | Works without integration |
-| `test_unload_entry` | ❌ | Integration not found |
-| `test_reload_entry` | ❌ | Integration not found |
-| `test_coordinator_update_success` | ❌ | Integration not found |
-| `test_coordinator_update_failed` | ✅ PASSING | Works without integration |
-| `test_coordinator_auth_failed` | ✅ PASSING | Works without integration |
+| `test_unload_entry`                  | ❌         | Integration not found     |
+| `test_reload_entry`                  | ❌         | Integration not found     |
+| `test_coordinator_update_success`    | ❌         | Integration not found     |
+| `test_coordinator_update_failed`     | ✅ PASSING | Works without integration |
+| `test_coordinator_auth_failed`       | ✅ PASSING | Works without integration |
 
 ### Config Flow Tests (`test_config_flow.py`) - 0/9 FAILING ❌
 
@@ -142,6 +144,7 @@ To fix the 13 failing tests, the integration needs to be properly registered in 
 3. **Option C**: Use Home Assistant's development environment
 
 Example fix (Option A):
+
 ```python
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
@@ -153,7 +156,8 @@ def auto_enable_custom_integrations(enable_custom_integrations):
 
 **You asked if tests were failing due to fundamental issues or missing real devices.**
 
-**Answer**: 
+**Answer**:
+
 - ❌ NOT due to missing real devices - mocking works perfectly (16/16 API tests pass)
 - ❌ NOT fundamental code issues - the test logic is sound
 - ✅ YES due to test infrastructure - Home Assistant needs to know where to find the integration
