@@ -9,6 +9,14 @@
           "username": "Username (optional)",
           "password": "Password (optional)"
         }
+      },
+      "reauth_confirm": {
+        "title": "Reauthenticate NRGkick",
+        "description": "The credentials for your NRGkick device need to be updated. Please enter the new username and password.",
+        "data": {
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        }
       }
     },
     "error": {
@@ -16,7 +24,9 @@
       "unknown": "An unexpected error occurred. Please check the logs for more information."
     },
     "abort": {
-      "already_configured": "This device is already configured."
+      "already_configured": "This device is already configured.",
+      "reauth_successful": "Reauthentication was successful.",
+      "reauth_failed": "Reauthentication failed. Please remove and re-add the integration."
     }
   },
   "options": {

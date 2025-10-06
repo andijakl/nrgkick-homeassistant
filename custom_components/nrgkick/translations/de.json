@@ -9,6 +9,14 @@
           "username": "Benutzername (optional)",
           "password": "Passwort (optional)"
         }
+      },
+      "reauth_confirm": {
+        "title": "NRGkick erneut authentifizieren",
+        "description": "Die Anmeldedaten für Ihr NRGkick-Gerät müssen aktualisiert werden. Bitte geben Sie den neuen Benutzernamen und das neue Passwort ein.",
+        "data": {
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        }
       }
     },
     "error": {
@@ -16,7 +24,9 @@
       "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfen Sie die Logs für weitere Informationen."
     },
     "abort": {
-      "already_configured": "Dieses Gerät ist bereits konfiguriert."
+      "already_configured": "Dieses Gerät ist bereits konfiguriert.",
+      "reauth_successful": "Die erneute Authentifizierung war erfolgreich.",
+      "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen. Bitte entfernen Sie die Integration und fügen Sie sie erneut hinzu."
     }
   },
   "options": {
