@@ -500,6 +500,23 @@ custom_components/nrgkick/
 4. Configure integration via UI
 5. Check logs for any errors
 
+### Testing
+
+The project includes comprehensive unit and integration tests:
+
+```bash
+# Run CI-compatible tests (same as GitHub Actions)
+./run-tests.sh ci
+
+# Run all tests (requires Home Assistant test environment)
+./run-tests.sh all
+
+# Generate coverage report
+./run-tests.sh coverage
+```
+
+See [tests/TESTING_STRATEGY.md](tests/TESTING_STRATEGY.md) for detailed testing documentation.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
 
 ## Contributing

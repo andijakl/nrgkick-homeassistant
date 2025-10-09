@@ -1,10 +1,10 @@
 @echo off
-REM Quick Start Script for Bronze Tier Preparation (Windows)
+REM Quick Start Script for Commit Preparation (Windows)
 REM This script sets up and runs all code quality checks
 
 echo.
 echo ====================================
-echo NRGkick Bronze Tier Preparation
+echo NRGkick Commit Preparation
 echo ====================================
 echo.
 
@@ -84,7 +84,7 @@ echo All tests passed!
 REM Summary
 echo.
 echo ========================================
-echo Bronze Tier Preparation Complete!
+echo Commit Preparation Complete!
 echo ========================================
 echo.
 echo Next steps:
@@ -94,17 +94,12 @@ echo    git diff
 echo.
 echo 2. If changes look good, commit them:
 echo    git add .
-echo    git commit -m "Apply code quality standards for Bronze Tier"
+echo    git commit -m "Your commit message"
 echo.
 echo 3. Push to GitHub:
 echo    git push
 echo.
 echo 4. Check that CI/CD workflows pass on GitHub
-echo.
-echo For more information, see:
-echo    - BRONZE_TIER_SUMMARY.md - Overview and results
-echo    - BRONZE_TIER_CHECKLIST.md - Detailed compliance review
-echo    - ACTION_ITEMS.md - Step-by-step guide
 echo.
 
 pause

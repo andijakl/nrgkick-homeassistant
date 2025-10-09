@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -13,6 +14,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.nrgkick.const import CONF_SCAN_INTERVAL, DOMAIN
 
 
+@pytest.mark.requires_integration
 async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -48,6 +50,7 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.requires_integration
 async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we can setup without credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -72,6 +75,7 @@ async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -
     assert result2["data"] == {CONF_HOST: "192.168.1.100"}
 
 
+@pytest.mark.requires_integration
 async def test_form_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -93,6 +97,7 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> Non
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.requires_integration
 async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
@@ -114,6 +119,7 @@ async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> 
     assert result2["errors"] == {"base": "unknown"}
 
 
+@pytest.mark.requires_integration
 async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle already configured."""
     entry = MockConfigEntry(
@@ -142,6 +148,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) ->
     assert result2["reason"] == "already_configured"
 
 
+@pytest.mark.requires_integration
 async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test reauth flow."""
     entry = MockConfigEntry(
@@ -188,6 +195,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     assert entry.data[CONF_PASSWORD] == "new_pass"
 
 
+@pytest.mark.requires_integration
 async def test_reauth_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
@@ -228,6 +236,7 @@ async def test_reauth_flow_cannot_connect(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.requires_integration
 async def test_options_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test options flow."""
     entry = MockConfigEntry(
@@ -267,6 +276,7 @@ async def test_options_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     assert entry.data[CONF_PASSWORD] == "new_pass"
 
 
+@pytest.mark.requires_integration
 async def test_options_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
@@ -297,6 +307,7 @@ async def test_options_flow_cannot_connect(
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.requires_integration
 async def test_options_flow_with_scan_interval(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
@@ -337,6 +348,7 @@ async def test_options_flow_with_scan_interval(
     assert entry.options[CONF_SCAN_INTERVAL] == 60
 
 
+@pytest.mark.requires_integration
 async def test_options_flow_invalid_scan_interval(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:

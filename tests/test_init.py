@@ -18,6 +18,7 @@ from custom_components.nrgkick import (
 from custom_components.nrgkick.const import DOMAIN
 
 
+@pytest.mark.requires_integration
 async def test_setup_entry(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -51,6 +52,7 @@ async def test_setup_entry_failed_connection(
         await async_setup_entry(hass, mock_config_entry)
 
 
+@pytest.mark.requires_integration
 async def test_unload_entry(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -69,6 +71,7 @@ async def test_unload_entry(
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
 
 
+@pytest.mark.requires_integration
 async def test_reload_entry(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -88,6 +91,7 @@ async def test_reload_entry(
         assert len(mock_reload.mock_calls) == 1
 
 
+@pytest.mark.requires_integration
 async def test_coordinator_update_success(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
