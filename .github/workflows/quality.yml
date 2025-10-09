@@ -73,7 +73,7 @@ jobs:
         run: pip install isort>=5.12.0
 
       - name: Run isort
-        run: isort --check-only --diff custom_components/ tests/
+        run: isort --profile=black --line-length=88 --multi-line=3 --trailing-comma --check-only --diff custom_components/ tests/
 
   flake8:
     name: Linting (Flake8)
