@@ -1,0 +1,82 @@
+name: Feature Request
+description: Suggest an idea for this integration
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for suggesting a new feature! Please provide as much detail as possible.
+
+  - type: textarea
+    id: feature-description
+    attributes:
+      label: Feature Description
+      description: A clear and concise description of what you want to happen
+      placeholder: "I would like the integration to support..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: use-case
+    attributes:
+      label: Use Case
+      description: Why would this feature be useful? What problem does it solve?
+      placeholder: "This would help me to..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposed-solution
+    attributes:
+      label: Proposed Solution
+      description: How do you envision this feature working?
+      placeholder: "The integration could add a new sensor/switch/service that..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives Considered
+      description: Have you considered any alternative solutions or workarounds?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: feature-type
+    attributes:
+      label: Feature Type
+      description: What type of feature is this?
+      options:
+        - New Sensor
+        - New Binary Sensor
+        - New Control (Switch/Number)
+        - New Service
+        - Automation/Script Enhancement
+        - Configuration Option
+        - Documentation Improvement
+        - Other
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: availability
+    attributes:
+      label: Availability
+      description: Is this feature supported by the NRGkick device?
+      options:
+        - label: This feature is supported by the NRGkick API
+          required: false
+        - label: I'm not sure if this is supported by the device
+          required: false
+        - label: This is a Home Assistant integration enhancement (not device-dependent)
+          required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add any other context, screenshots, or examples about the feature request here
+    validations:
+      required: false

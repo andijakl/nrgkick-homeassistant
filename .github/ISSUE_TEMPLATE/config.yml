@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 Community Discussions
+    url: https://github.com/andijakl/nrgkick-homeassistant/discussions
+    about: Ask questions, share ideas, or discuss the integration with the community
+  - name: 📖 Documentation
+    url: https://github.com/andijakl/nrgkick-homeassistant/blob/main/README.md
+    about: Read the integration documentation and setup guide
+  - name: 🏠 Home Assistant Community
+    url: https://community.home-assistant.io/
+    about: Get help from the broader Home Assistant community

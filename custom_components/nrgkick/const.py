@@ -6,9 +6,12 @@ DOMAIN: Final = "nrgkick"
 
 # Configuration
 CONF_HOST: Final = "host"
+CONF_SCAN_INTERVAL: Final = "scan_interval"
 
 # Default values
 DEFAULT_SCAN_INTERVAL: Final = 30
+MIN_SCAN_INTERVAL: Final = 10
+MAX_SCAN_INTERVAL: Final = 300
 
 # API Endpoints
 ENDPOINT_INFO: Final = "/info"

@@ -46,9 +46,7 @@ class NRGkickAPI:
         request_params = params if params is not None else {}
 
         async with asyncio.timeout(10):
-            async with session.get(
-                url, auth=auth, params=request_params
-            ) as response:
+            async with session.get(url, auth=auth, params=request_params) as response:
                 response.raise_for_status()
                 data = await response.json()
                 if data is None:
@@ -98,6 +96,6 @@ class NRGkickAPI:
         try:
             await self.get_info(["general"])
             return True
-        except Exception as err:
+        except Exception as err:  # pylint: disable=broad-exception-caught
             _LOGGER.error("Failed to connect to NRGkick: %s", err)
             return False

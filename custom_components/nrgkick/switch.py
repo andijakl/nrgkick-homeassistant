@@ -1,4 +1,5 @@
 """Switch platform for NRGkick."""
+# pylint: disable=duplicate-code
 
 from __future__ import annotations
 
@@ -36,7 +37,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NRGkickSwitch(CoordinatorEntity, SwitchEntity):
+class NRGkickSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstract-method
     """Representation of a NRGkick switch."""
 
     def __init__(

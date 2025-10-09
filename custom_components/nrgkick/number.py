@@ -67,7 +67,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NRGkickNumber(CoordinatorEntity, NumberEntity):
+class NRGkickNumber(CoordinatorEntity, NumberEntity):  # pylint: disable=abstract-method
     """Representation of a NRGkick number entity."""
 
     def __init__(

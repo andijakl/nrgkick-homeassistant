@@ -168,89 +168,22 @@ async def _request(self, endpoint: str, params: dict[str, Any] | None = None):
 
 ---
 
-### 4. 📋 Add Issue Templates
+### 4. ✅ Add Issue Templates (COMPLETED)
 
+**Status**: ✅ COMPLETED
 **Why**: Better user support and bug reporting
 
-**Create**: `.github/ISSUE_TEMPLATE/bug_report.yml`
+**Files Created**:
 
-```yaml
-name: Bug Report
-description: File a bug report
-title: "[Bug]: "
-labels: ["bug"]
-body:
-  - type: markdown
-    attributes:
-      value: |
-        Thanks for taking the time to fill out this bug report!
+- `.github/ISSUE_TEMPLATE/bug_report.yml` - Structured bug report template
+- `.github/ISSUE_TEMPLATE/feature_request.yml` - Feature request template
+- `.github/ISSUE_TEMPLATE/config.yml` - Issue template configuration
 
-  - type: textarea
-    id: what-happened
-    attributes:
-      label: What happened?
-      description: A clear description of what the bug is
-    validations:
-      required: true
+**Features**:
 
-  - type: textarea
-    id: expected
-    attributes:
-      label: Expected behavior
-      description: What you expected to happen
-    validations:
-      required: true
-
-  - type: input
-    id: version
-    attributes:
-      label: Integration Version
-      description: What version of the integration are you running?
-      placeholder: "0.1.1"
-    validations:
-      required: true
-
-  - type: input
-    id: ha-version
-    attributes:
-      label: Home Assistant Version
-      description: What version of Home Assistant are you running?
-      placeholder: "2024.10.0"
-    validations:
-      required: true
-
-  - type: textarea
-    id: logs
-    attributes:
-      label: Relevant log output
-      description: Please copy and paste any relevant log output
-      render: shell
-```
-
-**Create**: `.github/ISSUE_TEMPLATE/feature_request.yml`
-
-```yaml
-name: Feature Request
-description: Suggest an idea for this integration
-title: "[Feature]: "
-labels: ["enhancement"]
-body:
-  - type: textarea
-    id: feature-description
-    attributes:
-      label: Feature Description
-      description: A clear description of what you want to happen
-    validations:
-      required: true
-
-  - type: textarea
-    id: use-case
-    attributes:
-      label: Use Case
-      description: Why would this feature be useful?
-    validations:
-      required: true
-```
+- **Bug Report Template**: Includes fields for version info, logs, diagnostics, and troubleshooting checklist
+- **Feature Request Template**: Structured form with use case, feature type dropdown, and API availability check
+- **Config**: Disables blank issues and provides links to discussions, documentation, and community
 
 ---
 
@@ -360,14 +293,14 @@ Before submitting for Bronze Tier, verify:
 
 ## Timeline Estimate
 
-| Task                             | Estimated Time | Priority |
-| -------------------------------- | -------------- | -------- |
-| Install and run pre-commit       | 15 minutes     | High     |
-| Fix formatting/linting issues    | 30-60 minutes  | High     |
-| Update async_timeout usage       | 15 minutes     | Medium   |
-| Add issue templates              | 20 minutes     | Low      |
-| Create official docs (if needed) | 2-3 hours      | High\*   |
-| Test everything                  | 30 minutes     | High     |
+| Task                             | Estimated Time | Priority | Status      |
+| -------------------------------- | -------------- | -------- | ----------- |
+| Install and run pre-commit       | 15 minutes     | High     | ✅ Complete |
+| Fix formatting/linting issues    | 30-60 minutes  | High     | Pending     |
+| Update async_timeout usage       | 15 minutes     | Medium   | Pending     |
+| Add issue templates              | 20 minutes     | Low      | ✅ Complete |
+| Create official docs (if needed) | 2-3 hours      | High\*   | Pending     |
+| Test everything                  | 30 minutes     | High     | Pending     |
 
 \*Only required for official Home Assistant integration submission
 

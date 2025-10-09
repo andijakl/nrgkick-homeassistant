@@ -14,7 +14,13 @@ from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import NRGkickAPI
-from .const import DOMAIN
+from .const import (
+    CONF_SCAN_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    MAX_SCAN_INTERVAL,
+    MIN_SCAN_INTERVAL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,10 +53,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     }
 
 
+# pylint: disable=abstract-method  # is_matching is not required for HA config flows
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Handle a config flow for NRGkick."""
 
     VERSION = 1
+    # pylint: disable=unused-argument
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -140,21 +148,48 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            try:
-                # Validate the new settings
-                await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
-                # Update the config entry data
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data=user_input,
-                )
-                return self.async_create_entry(title="", data={})
+            # Validate scan interval
+            scan_interval = user_input.get(
+                CONF_SCAN_INTERVAL,
+                self.config_entry.options.get(
+                    CONF_SCAN_INTERVAL,
+                    self.config_entry.data.get(
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+                    ),
+                ),
+            )
+
+            if scan_interval < MIN_SCAN_INTERVAL or scan_interval > MAX_SCAN_INTERVAL:
+                errors[CONF_SCAN_INTERVAL] = "invalid_scan_interval"
+
+            if not errors:
+                try:
+                    # Validate connection settings if provided
+                    connection_data = {
+                        CONF_HOST: user_input[CONF_HOST],
+                        CONF_USERNAME: user_input.get(CONF_USERNAME),
+                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                    }
+                    await validate_input(self.hass, connection_data)
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except Exception:  # pylint: disable=broad-except
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    # Update the config entry with both connection data and options
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data=connection_data,
+                        options={CONF_SCAN_INTERVAL: scan_interval},
+                    )
+                    return self.async_create_entry(title="", data={})
+
+        # Get current values with defaults
+        current_scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL,
+            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        )
 
         # Show current settings as defaults
         data_schema = vol.Schema(
@@ -171,6 +206,13 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_PASSWORD,
                     default=self.config_entry.data.get(CONF_PASSWORD, ""),
                 ): str,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=current_scan_interval,
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
+                ),
             }
         )
 

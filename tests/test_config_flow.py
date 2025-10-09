@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.nrgkick.const import DOMAIN
+from custom_components.nrgkick.const import CONF_SCAN_INTERVAL, DOMAIN
 
 
 async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
@@ -295,3 +295,89 @@ async def test_options_flow_cannot_connect(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_options_flow_with_scan_interval(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test options flow with scan interval configuration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NRGkick Test",
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_USERNAME: "test_user",
+            CONF_PASSWORD: "test_pass",
+        },
+        entry_id="test_entry",
+        unique_id="TEST123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    with patch(
+        "custom_components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_USERNAME: "test_user",
+                CONF_PASSWORD: "test_pass",
+                CONF_SCAN_INTERVAL: 60,
+            },
+        )
+
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SCAN_INTERVAL] == 60
+
+
+async def test_options_flow_invalid_scan_interval(
+    hass: HomeAssistant, mock_nrgkick_api
+) -> None:
+    """Test options flow with invalid scan interval."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="NRGkick Test",
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="test_entry",
+        unique_id="TEST123456",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    with patch(
+        "custom_components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result2 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_SCAN_INTERVAL: 5,  # Too low
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"] == {CONF_SCAN_INTERVAL: "invalid_scan_interval"}
+
+    with patch(
+        "custom_components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result3 = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_SCAN_INTERVAL: 500,  # Too high
+            },
+        )
+
+    assert result3["type"] == FlowResultType.FORM
+    assert result3["errors"] == {CONF_SCAN_INTERVAL: "invalid_scan_interval"}

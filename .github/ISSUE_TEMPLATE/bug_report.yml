@@ -1,0 +1,96 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of what the bug is
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What you expected to happen
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Integration Version
+      description: What version of the integration are you running?
+      placeholder: "0.1.3"
+    validations:
+      required: true
+
+  - type: input
+    id: ha-version
+    attributes:
+      label: Home Assistant Version
+      description: What version of Home Assistant are you running?
+      placeholder: "2024.10.0"
+    validations:
+      required: true
+
+  - type: input
+    id: device-firmware
+    attributes:
+      label: NRGkick Firmware Version
+      description: What firmware version is running on your NRGkick device?
+      placeholder: "SmartModule 4.0.0.0"
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: Please copy and paste any relevant log output from Home Assistant logs
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics Data
+      description: |
+        If possible, download diagnostics from the integration:
+        Settings → Devices & Services → NRGkick → ⋮ → Download diagnostics
+        Then paste the relevant parts here (remove sensitive information like serial numbers, IP addresses, etc.)
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Troubleshooting Checklist
+      description: Please confirm you've tried these basic troubleshooting steps
+      options:
+        - label: I have restarted Home Assistant
+          required: false
+        - label: I have checked the Home Assistant logs for errors
+          required: false
+        - label: I have verified the device is accessible on the network
+          required: false
+        - label: I have verified the JSON API is enabled in the NRGkick app
+          required: false

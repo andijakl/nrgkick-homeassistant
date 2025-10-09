@@ -7,7 +7,7 @@
 ```
 Home Assistant
     ↓
-NRGkickDataUpdateCoordinator (polls every 30s)
+NRGkickDataUpdateCoordinator (polls at configurable interval, default: 30s)
     ↓
 NRGkickAPI (aiohttp HTTP client)
     ↓
@@ -22,7 +22,8 @@ custom_components/nrgkick/
 ├── api.py                # API client (NRGkickAPI)
 ├── binary_sensor.py      # Binary sensors (3 entities)
 ├── config_flow.py        # UI configuration flow
-├── const.py              # Constants (STATUS_MAP, DOMAIN, endpoints)
+├── const.py              # Constants (STATUS_MAP, DOMAIN, endpoints, scan interval limits)
+├── diagnostics.py        # Diagnostics data provider
 ├── manifest.json         # Metadata (domain, version, dependencies)
 ├── number.py             # Number controls (3 entities)
 ├── sensor.py             # Sensors (80+ entities)
@@ -40,10 +41,11 @@ custom_components/nrgkick/
 
 **Features**:
 
-- Polls device every 30 seconds
+- Polls device at configurable interval (default: 30s, range: 10-300s)
 - Fetches `/info`, `/control`, `/values` endpoints
 - Caches data for all entities
 - Handles errors and retries
+- Automatically reloads when scan interval is changed
 
 ### NRGkickAPI
 
@@ -78,9 +80,11 @@ custom_components/nrgkick/
 
 - Host (IP/hostname) input
 - Optional username/password
+- Configurable scan interval (10-300s)
 - Connection validation
 - Unique ID from serial number
 - Duplicate prevention
+- Options flow for reconfiguration
 
 ## Entity Types
 
@@ -194,18 +198,32 @@ Real-time telemetry:
 
 ```python
 STATUS_MAP = {
-    0: "Standby",
-    1: "Connected",
-    2: "Permitted",
+    0: "Unknown",
+    1: "Standby",
+    2: "Connected",
     3: "Charging",
-    4: "Error",
-    5: "Wakeup",
-    6: "Booting",
-    7: "Reserved",
+    6: "Error",
+    7: "Wakeup",
 }
 ```
 
 ## Configuration
+
+### Scan Interval
+
+**Constants** (in `const.py`):
+
+- `CONF_SCAN_INTERVAL = "scan_interval"` - Configuration key
+- `DEFAULT_SCAN_INTERVAL = 30` - Default interval in seconds
+- `MIN_SCAN_INTERVAL = 10` - Minimum allowed interval
+- `MAX_SCAN_INTERVAL = 300` - Maximum allowed interval
+
+**Usage**:
+
+- Configured via options flow in UI
+- Stored in `config_entry.options`
+- Falls back to `config_entry.data`, then default
+- Integration reloads automatically when changed
 
 ### manifest.json
 
@@ -213,11 +231,11 @@ STATUS_MAP = {
 {
   "domain": "nrgkick",
   "name": "NRGkick",
-  "version": "0.1.0",
+  "version": "0.1.3",
   "config_flow": true,
   "documentation": "https://github.com/andijakl/nrgkick-homeassistant",
   "issue_tracker": "https://github.com/andijakl/nrgkick-homeassistant/issues",
-  "requirements": ["aiohttp", "async-timeout"],
+  "requirements": ["aiohttp>=3.8.0"],
   "codeowners": ["@andijakl"],
   "iot_class": "local_polling"
 }
@@ -301,7 +319,10 @@ Pattern for control entities:
 - [ ] All sensors show data
 - [ ] Switch toggle works
 - [ ] Number entities update device
-- [ ] Coordinator polls every 30s
+- [ ] Coordinator polls at configured interval
+- [ ] Scan interval configuration (10-300s range)
+- [ ] Invalid scan interval values are rejected
+- [ ] Scan interval changes trigger coordinator reload
 - [ ] Device disconnection handling
 - [ ] Device reconnection recovery
 - [ ] Multiple device support
@@ -312,7 +333,7 @@ Pattern for control entities:
 
 - Memory: ~5MB per device
 - CPU: Negligible (async I/O)
-- Network: 3 HTTP requests every 30s
+- Network: 3 HTTP requests per scan interval (default: every 30s, configurable: 10-300s)
 
 **Optimization**:
 
@@ -320,6 +341,7 @@ Pattern for control entities:
 - Shared data across entities
 - Async/await throughout
 - Connection pooling (aiohttp session reuse)
+- Configurable scan interval to balance responsiveness vs. load
 
 ## Future Enhancements
 

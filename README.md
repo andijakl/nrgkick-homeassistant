@@ -168,10 +168,31 @@ If your device IP address changes or you need to update credentials:
 1. Go to **Settings** → **Devices & Services**
 2. Find the **NRGkick** integration
 3. Click **⋮** (three dots) → **Configure**
-4. Update IP address, username, or password as needed
+4. Update IP address, username, password, or scan interval as needed
 5. Click **Submit**
 
 The integration will automatically reload with the new settings.
+
+### Adjusting the Scan Interval
+
+The scan interval determines how often Home Assistant polls your NRGkick device for updates. You can adjust this to balance between data freshness and device load:
+
+**To change the scan interval:**
+
+1. Go to **Settings** → **Devices & Services**
+2. Find the **NRGkick** integration
+3. Click **⋮** (three dots) → **Configure**
+4. Set **Scan Interval** to your preferred value (10-300 seconds)
+5. Click **Submit**
+
+**Recommendations:**
+
+- **Default (30s)**: Good balance for most users
+- **Fast updates (10-20s)**: Better for automations requiring quick response
+- **Conservative (60-120s)**: Reduces network traffic and device load
+- **Slow updates (180-300s)**: For monitoring-only scenarios
+
+**Note**: Lower intervals provide more responsive data but may increase network traffic and device load slightly.
 
 ## Usage
 
@@ -433,7 +454,13 @@ The integration uses the NRGkick Gen2 Local REST JSON API:
 
 ### Update Interval
 
-The integration polls the device every **30 seconds** to retrieve current data. This balances responsiveness with device load.
+The integration polls the device at a configurable interval (default: **30 seconds**) to retrieve current data. You can adjust this interval from 10 to 300 seconds through the integration's configuration options to balance between data freshness and device load.
+
+**To adjust the scan interval:**
+
+1. Go to **Settings** → **Devices & Services** → **NRGkick** → **Configure**
+2. Set your preferred **Scan Interval** (10-300 seconds)
+3. Click **Submit** - the integration will reload automatically
 
 ### Data Coordinator
 

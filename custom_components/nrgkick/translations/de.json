@@ -37,12 +37,17 @@
         "data": {
           "host": "IP-Adresse oder Hostname",
           "username": "Benutzername (optional)",
-          "password": "Passwort (optional)"
+          "password": "Passwort (optional)",
+          "scan_interval": "Abfrageintervall (Sekunden)"
+        },
+        "data_description": {
+          "scan_interval": "Wie oft das Gerät auf Updates abgefragt werden soll (10-300 Sekunden, Standard: 30)"
         }
       }
     },
     "error": {
       "cannot_connect": "Verbindung zum Gerät mit den neuen Einstellungen fehlgeschlagen. Bitte überprüfen Sie die Verbindungsdetails.",
+      "invalid_scan_interval": "Das Abfrageintervall muss zwischen 10 und 300 Sekunden liegen.",
       "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfen Sie die Logs für weitere Informationen."
     }
   }
