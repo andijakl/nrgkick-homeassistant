@@ -115,7 +115,7 @@ jobs:
           pip install -r requirements_dev.txt
 
       - name: Run Pylint
-        run: pylint custom_components/nrgkick/ --disable=C0111,C0103,W0212,R0913,R0902,R0914 --max-line-length=88 || true
+        run: pylint custom_components/nrgkick/ --disable=C0111,C0103,W0212,R0913,R0902,R0914,R0801 --max-line-length=88 || true
 
   mypy:
     name: Type checking (MyPy)

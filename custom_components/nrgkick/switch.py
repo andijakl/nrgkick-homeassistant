@@ -1,4 +1,5 @@
 """Switch platform for NRGkick."""
+
 # pylint: disable=duplicate-code
 
 from __future__ import annotations
