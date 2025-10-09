@@ -10,7 +10,18 @@ A comprehensive Home Assistant integration for the **NRGkick Gen2** EV charging 
 
 ## Features
 
-### 📊 Comprehensive Monitoring (80+ Sensors)
+### � Automatic Discovery
+
+The integration now supports **automatic network discovery** via mDNS/Zeroconf:
+
+- NRGkick devices are automatically detected on your local network
+- No need to manually find the IP address
+- Automatic IP address updates if your device moves to a different IP
+- Simply confirm the discovered device and optionally enter credentials
+
+When a NRGkick device is found on your network, Home Assistant will show a notification allowing you to add it with just a few clicks!
+
+### �📊 Comprehensive Monitoring (80+ Sensors)
 
 **Power & Energy**
 
@@ -118,14 +129,40 @@ config/
         ├── manifest.json
         ├── number.py
         ├── sensor.py
-        ├── strings.json
+        ├── strings.json          # Base English translations
         ├── switch.py
         └── translations/
-            ├── de.json
-            └── en.json
+            └── de.json           # German translations
 ```
 
 ## Configuration
+
+### Automatic Discovery (Recommended)
+
+The easiest way to set up the integration is through **automatic discovery**:
+
+1. Ensure your NRGkick device has the **JSON API enabled** (see prerequisites below)
+2. Make sure your NRGkick is on the same network as Home Assistant
+3. Home Assistant will automatically discover your device and show a notification
+4. Click on the notification or go to **Settings** → **Devices & Services**
+5. Click **Configure** on the discovered NRGkick device
+6. (Optional) Enter username and password if BasicAuth is enabled on your device
+7. Click **Submit**
+
+The integration will automatically track your device even if its IP address changes!
+
+### Manual Configuration
+
+If automatic discovery doesn't work, you can manually add your NRGkick:
+
+1. Go to **Settings** → **Devices & Services**
+2. Click **+ Add Integration** (bottom right)
+3. Search for **NRGkick**
+4. Enter device information:
+   - **Host**: IP address or hostname (e.g., `192.168.1.100` or `nrgkick.local`)
+   - **Username**: (Optional) Only if BasicAuth is enabled
+   - **Password**: (Optional) Only if BasicAuth is enabled
+5. Click **Submit**
 
 ### Prerequisites
 
@@ -136,15 +173,16 @@ config/
 3. Enable **JSON API** (or "Native Web API")
 4. (Optional) Enable **BasicAuth** and set username/password for security
 
-**Find your NRGkick IP address:**
+**Find your NRGkick IP address (for manual configuration):**
 
 - Via NRGkick app: Settings → Network Information
 - Via router: Check DHCP client list for device named "NRGkick"
 - Via mDNS: Device advertises as `_nrgkick._tcp` (may be accessible as `nrgkick.local`)
+- Or just wait for automatic discovery! 🎉
 
-**💡 Tip**: Set a static IP or DHCP reservation in your router for reliability
+**💡 Tip**: With automatic discovery enabled, you don't need to worry about IP addresses. The integration will automatically track your device even if the IP changes!
 
-### Setup Steps
+### Setup Steps (Manual Configuration)
 
 1. Go to **Settings** → **Devices & Services**
 2. Click **+ Add Integration** (bottom right)
@@ -485,11 +523,10 @@ custom_components/nrgkick/
 ├── manifest.json         # Integration metadata
 ├── number.py             # Number entity controls
 ├── sensor.py             # Sensor platform (80+ sensors)
-├── strings.json          # UI strings
+├── strings.json          # UI strings (English/base)
 ├── switch.py             # Switch platform
 └── translations/         # Internationalization
-    ├── de.json
-    └── en.json
+    └── de.json           # German translations
 ```
 
 ### Local Development

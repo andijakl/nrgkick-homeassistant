@@ -10,6 +10,14 @@
           "password": "Password (optional)"
         }
       },
+      "zeroconf_confirm": {
+        "title": "Discovered NRGkick: {name}",
+        "description": "A NRGkick device was discovered on your network. If authentication is enabled on the device, please enter the credentials below.",
+        "data": {
+          "username": "Username (optional)",
+          "password": "Password (optional)"
+        }
+      },
       "reauth_confirm": {
         "title": "Reauthenticate NRGkick",
         "description": "The credentials for your NRGkick device need to be updated. Please enter the new username and password.",
@@ -26,7 +34,9 @@
     "abort": {
       "already_configured": "This device is already configured.",
       "reauth_successful": "Reauthentication was successful.",
-      "reauth_failed": "Reauthentication failed. Please remove and re-add the integration."
+      "reauth_failed": "Reauthentication failed. Please remove and re-add the integration.",
+      "json_api_disabled": "The JSON API is not enabled on this NRGkick device. Please enable it in the NRGkick app.",
+      "no_serial_number": "Could not determine the serial number of the discovered device."
     }
   },
   "options": {

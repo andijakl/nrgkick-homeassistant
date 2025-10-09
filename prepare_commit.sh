@@ -1,10 +1,10 @@
 #!/bin/bash
-# Quick Start Script for Bronze Tier Preparation
+# Quick Start Script for Commit Preparation
 # This script sets up and runs all code quality checks
 
 set -e  # Exit on error
 
-echo "🎯 NRGkick Bronze Tier Preparation Script"
+echo "🎯 NRGkick Commit Preparation Script"
 echo "=========================================="
 echo ""
 

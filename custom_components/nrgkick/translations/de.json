@@ -10,6 +10,14 @@
           "password": "Passwort (optional)"
         }
       },
+      "zeroconf_confirm": {
+        "title": "NRGkick gefunden: {name}",
+        "description": "Ein NRGkick-Gerät wurde in Ihrem Netzwerk gefunden. Falls auf dem Gerät eine Authentifizierung aktiviert ist, geben Sie bitte unten die Anmeldedaten ein.",
+        "data": {
+          "username": "Benutzername (optional)",
+          "password": "Passwort (optional)"
+        }
+      },
       "reauth_confirm": {
         "title": "NRGkick erneut authentifizieren",
         "description": "Die Anmeldedaten für Ihr NRGkick-Gerät müssen aktualisiert werden. Bitte geben Sie den neuen Benutzernamen und das neue Passwort ein.",
@@ -26,7 +34,9 @@
     "abort": {
       "already_configured": "Dieses Gerät ist bereits konfiguriert.",
       "reauth_successful": "Die erneute Authentifizierung war erfolgreich.",
-      "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen. Bitte entfernen Sie die Integration und fügen Sie sie erneut hinzu."
+      "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen. Bitte entfernen Sie die Integration und fügen Sie sie erneut hinzu.",
+      "json_api_disabled": "Die JSON-API ist auf diesem NRGkick-Gerät nicht aktiviert. Bitte aktivieren Sie sie in der NRGkick-App.",
+      "no_serial_number": "Die Seriennummer des gefundenen Geräts konnte nicht ermittelt werden."
     }
   },
   "options": {

@@ -22,3 +22,4 @@ homeassistant>=2023.1.0
 
 # API Dependencies
 aiohttp>=3.8.0
+zeroconf>=0.131.0

@@ -8,9 +8,10 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.components.zeroconf import ZeroconfServiceInfo
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import NRGkickAPI
@@ -58,11 +59,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
     """Handle a config flow for NRGkick."""
 
     VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._discovered_host: str | None = None
+        self._discovered_name: str | None = None
+
     # pylint: disable=unused-argument
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -82,18 +89,97 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_reauth(self, entry_data: Mapping[str, Any]) -> FlowResult:
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        _LOGGER.debug("Discovered NRGkick device: %s", discovery_info)
+
+        # Extract device information from mDNS metadata
+        serial = discovery_info.properties.get("serial_number")
+        device_name = discovery_info.properties.get("device_name", "NRGkick")
+        model_type = discovery_info.properties.get("model_type", "NRGkick")
+        json_api_enabled = discovery_info.properties.get("json_api_enabled", "0")
+
+        # Verify JSON API is enabled
+        if json_api_enabled != "1":
+            _LOGGER.debug("NRGkick device %s does not have JSON API enabled", serial)
+            return self.async_abort(reason="json_api_disabled")
+
+        if not serial:
+            _LOGGER.debug("NRGkick device discovered without serial number")
+            return self.async_abort(reason="no_serial_number")
+
+        # Set unique ID to prevent duplicate entries
+        await self.async_set_unique_id(serial)
+        # Update the host if the device is already configured (IP might have changed)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
+
+        # Store discovery info for the confirmation step
+        self._discovered_host = discovery_info.host
+        self._discovered_name = device_name or model_type
+        self.context["title_placeholders"] = {
+            "name": self._discovered_name or "NRGkick"
+        }
+
+        # Proceed to confirmation step
+        return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm discovery."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            # Build the connection data
+            data = {
+                CONF_HOST: self._discovered_host,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
+
+            try:
+                info = await validate_input(self.hass, data)
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["title"], data=data)
+
+        # Show confirmation form with optional authentication
+        return self.async_show_form(
+            step_id="zeroconf_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={"name": self._discovered_name or "NRGkick"},
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
         """Handle reauthentication."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle reauthentication confirmation."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+            entry_id = self.context.get("entry_id")
+            if not entry_id:
+                return self.async_abort(reason="reauth_failed")
+
+            entry = self.hass.config_entries.async_get_entry(entry_id)
             if entry is None:
                 return self.async_abort(reason="reauth_failed")
 
@@ -143,7 +229,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Manage the options."""
         errors: dict[str, str] = {}
 
