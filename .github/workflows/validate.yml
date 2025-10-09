@@ -21,14 +21,10 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install homeassistant
-
-      - name: Validate manifest
-        run: |
-          python -m script.hassfest --integration-path custom_components/nrgkick
+      - name: Validate with hassfest
+        uses: home-assistant/actions/hassfest@master
+        with:
+          integration-path: custom_components/nrgkick
 
       - name: Check manifest version matches tags
         if: startsWith(github.ref, 'refs/tags/')
