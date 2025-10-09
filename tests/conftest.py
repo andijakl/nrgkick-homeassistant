@@ -23,9 +23,7 @@ def mock_setup_entry() -> Generator[AsyncMock, None, None]:
 @pytest.fixture
 def mock_nrgkick_api():
     """Mock NRGkickAPI."""
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI", autospec=True
-    ) as mock_api:
+    with patch("custom_components.nrgkick.api.NRGkickAPI", autospec=True) as mock_api:
         api = mock_api.return_value
         api.test_connection = AsyncMock(return_value=True)
         api.get_info = AsyncMock(
