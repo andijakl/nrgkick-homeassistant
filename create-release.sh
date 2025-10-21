@@ -109,17 +109,81 @@ fi
 read -p "Run validation checks first? (recommended) (y/n) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    if [ -f "validate.sh" ]; then
-        echo -e "${CYAN}Running validation...${NC}"
-        echo ""
-        bash validate.sh
-        echo ""
-        echo -e "${GREEN}Validation passed! Continuing with release...${NC}"
-        echo ""
+    echo -e "${CYAN}Running validation (excluding integration tests)...${NC}"
+    echo ""
+
+    # Activate virtual environment if it exists
+    if [ -d "venv" ]; then
+        source venv/bin/activate
     else
-        echo -e "${YELLOW}Warning: validate.sh not found, skipping validation${NC}"
-        echo ""
+        echo -e "${YELLOW}Warning: Virtual environment not found at ./venv${NC}"
+        echo -e "${YELLOW}Creating virtual environment...${NC}"
+        python3 -m venv venv
+        source venv/bin/activate
+        echo -e "${GREEN}[OK] Virtual environment created${NC}"
     fi
+
+    # Install dependencies
+    echo -e "${CYAN}Installing dependencies...${NC}"
+    pip install --upgrade pip > /dev/null 2>&1
+    pip install -r requirements_dev.txt > /dev/null 2>&1
+    echo -e "${GREEN}[OK] Dependencies installed${NC}"
+    echo ""
+
+    # Run pre-commit checks
+    echo -e "${CYAN}Running pre-commit checks...${NC}"
+    if command -v pre-commit &> /dev/null; then
+        pre-commit install > /dev/null 2>&1
+
+        # Run pre-commit, but allow it to continue with warnings
+        set +e  # Temporarily disable exit on error
+        pre-commit run --all-files
+        PRE_COMMIT_EXIT=$?
+        set -e  # Re-enable exit on error
+
+        if [ $PRE_COMMIT_EXIT -eq 0 ]; then
+            echo ""
+            echo -e "${GREEN}[OK] All pre-commit checks passed${NC}"
+        else
+            echo ""
+            echo -e "${YELLOW}⚠️  Some pre-commit checks have warnings or made changes${NC}"
+            echo -e "${YELLOW}   Review output above for any critical issues${NC}"
+        fi
+    else
+        echo -e "${YELLOW}Warning: pre-commit not found, skipping pre-commit checks${NC}"
+    fi
+    echo ""
+
+    # Run CI-compatible tests only (excludes integration tests)
+    echo -e "${CYAN}Running tests (excluding integration tests that require Home Assistant)...${NC}"
+    echo ""
+
+    # Run pytest with marker to exclude integration tests
+    set +e  # Temporarily disable exit on error
+    pytest tests/ -v -m "not requires_integration" --cov=custom_components.nrgkick --cov-report=term-missing
+    PYTEST_EXIT=$?
+    set -e  # Re-enable exit on error
+
+    echo ""
+    if [ $PYTEST_EXIT -eq 0 ]; then
+        echo -e "${GREEN}✅ All CI-compatible tests passed!${NC}"
+    else
+        echo -e "${RED}❌ Some tests failed${NC}"
+        echo ""
+        echo -e "${YELLOW}Note: Integration tests requiring Home Assistant are excluded${NC}"
+        echo -e "${YELLOW}To run all tests including integration tests, use: ./validate.sh${NC}"
+        echo ""
+        read -p "Continue with release creation anyway? (y/n) " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+            echo -e "${RED}Release creation aborted${NC}"
+            exit 1
+        fi
+    fi
+
+    echo ""
+    echo -e "${GREEN}Validation complete! Continuing with release...${NC}"
+    echo ""
 else
     echo -e "${YELLOW}Skipping validation. Use ./validate.sh to validate manually.${NC}"
     echo ""
@@ -187,13 +251,16 @@ echo -e "${CYAN}Next steps:${NC}"
 echo ""
 echo "  1. Test the release package by installing it in Home Assistant"
 echo ""
-echo "  2. If everything works, commit and tag the release:"
+echo "  2. Run full validation including integration tests (optional):"
+echo "     ./validate.sh"
+echo ""
+echo "  3. If everything works, commit and tag the release:"
 echo "     git add ."
 echo "     git commit -m 'Release $VERSION_TAG'"
 echo "     git tag -a $VERSION_TAG -m 'Release $VERSION_TAG'"
 echo "     git push origin main --tags"
 echo ""
-echo "  3. Create GitHub release:"
+echo "  4. Create GitHub release:"
 echo "     - Go to: https://github.com/andijakl/nrgkick-homeassistant/releases/new"
 echo "     - Select tag: $VERSION_TAG"
 echo "     - Upload: $RELEASES_DIR/$ZIP_FILE_NAME"
