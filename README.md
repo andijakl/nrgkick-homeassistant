@@ -10,7 +10,7 @@ A comprehensive Home Assistant integration for the **NRGkick Gen2** EV charging 
 
 ## Features
 
-### � Automatic Discovery
+### 📡 Automatic Discovery
 
 The integration now supports **automatic network discovery** via mDNS/Zeroconf:
 
@@ -21,7 +21,7 @@ The integration now supports **automatic network discovery** via mDNS/Zeroconf:
 
 When a NRGkick device is found on your network, Home Assistant will show a notification allowing you to add it with just a few clicks!
 
-### �📊 Comprehensive Monitoring (80+ Sensors)
+### 📊 Comprehensive Monitoring (80+ Sensors)
 
 **Power & Energy**
 
