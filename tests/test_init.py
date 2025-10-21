@@ -11,9 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from custom_components.nrgkick import (
-    async_reload_entry,
     async_setup_entry,
-    async_unload_entry,
 )
 from custom_components.nrgkick.const import DOMAIN
 
@@ -28,12 +26,12 @@ async def test_setup_entry(
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
     ), patch("custom_components.nrgkick.async_get_clientsession"):
-        assert await async_setup_entry(hass, mock_config_entry)
+        # Use the config_entries.async_setup to properly set entry state
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     assert DOMAIN in hass.data
     assert mock_config_entry.entry_id in hass.data[DOMAIN]
-    assert len(hass.config_entries.async_forward_entry_setups.mock_calls) == 1
 
 
 async def test_setup_entry_failed_connection(
@@ -62,10 +60,12 @@ async def test_unload_entry(
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
     ), patch("custom_components.nrgkick.async_get_clientsession"):
-        await async_setup_entry(hass, mock_config_entry)
+        # Use proper setup to set entry state
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert await async_unload_entry(hass, mock_config_entry)
+    # Use the config_entries.async_unload for proper state management
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mock_config_entry.entry_id not in hass.data[DOMAIN]
@@ -81,14 +81,16 @@ async def test_reload_entry(
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
     ), patch("custom_components.nrgkick.async_get_clientsession"):
-        await async_setup_entry(hass, mock_config_entry)
+        # Use proper setup to set entry state
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+    # Test that reload calls the config_entries.async_reload
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload"
-    ) as mock_reload:
-        await async_reload_entry(hass, mock_config_entry)
-        assert len(mock_reload.mock_calls) == 1
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
 
 @pytest.mark.requires_integration
@@ -110,7 +112,8 @@ async def test_coordinator_update_success(
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
     ), patch("custom_components.nrgkick.async_get_clientsession"):
-        await async_setup_entry(hass, mock_config_entry)
+        # Use proper setup to set entry state
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
         coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]

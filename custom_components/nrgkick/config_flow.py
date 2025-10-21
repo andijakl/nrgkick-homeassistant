@@ -97,8 +97,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
 
         # Extract device information from mDNS metadata
         serial = discovery_info.properties.get("serial_number")
-        device_name = discovery_info.properties.get("device_name", "NRGkick")
-        model_type = discovery_info.properties.get("model_type", "NRGkick")
+        device_name = discovery_info.properties.get("device_name")
+        model_type = discovery_info.properties.get("model_type")
         json_api_enabled = discovery_info.properties.get("json_api_enabled", "0")
 
         # Verify JSON API is enabled
@@ -117,10 +117,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
 
         # Store discovery info for the confirmation step
         self._discovered_host = discovery_info.host
-        self._discovered_name = device_name or model_type
-        self.context["title_placeholders"] = {
-            "name": self._discovered_name or "NRGkick"
-        }
+        # Fallback: device_name -> model_type -> "NRGkick"
+        self._discovered_name = device_name or model_type or "NRGkick"
+        self.context["title_placeholders"] = {"name": self._discovered_name}
 
         # Proceed to confirmation step
         return await self.async_step_zeroconf_confirm()

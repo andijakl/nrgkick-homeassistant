@@ -10,6 +10,16 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from custom_components.nrgkick.const import DOMAIN
 
+# This fixture is used by the pytest-homeassistant-custom-component
+# package to enable custom component loading in integration tests
+pytest_plugins = "pytest_homeassistant_custom_component"
+
+
+@pytest.fixture(autouse=True)
+def auto_enable_custom_integrations(enable_custom_integrations):
+    """Enable custom integrations defined in the test dir."""
+    yield
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock, None, None]:
