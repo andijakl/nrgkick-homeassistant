@@ -184,9 +184,10 @@ The repository includes three helper scripts to streamline development and relea
 
 1. **If version provided**: Prompts to update `manifest.json` to the new version
 2. **If no version**: Uses existing version from `manifest.json`
-3. Optionally runs `validate.sh` first (recommended)
-4. Creates ZIP package in `releases/` directory
-5. Shows next steps for GitHub release
+3. Optionally updates pre-commit hooks to latest versions (recommended)
+4. Optionally runs `validate.sh` first (recommended)
+5. Creates ZIP package in `releases/` directory
+6. Shows next steps for GitHub release
 
 **When to use**:
 

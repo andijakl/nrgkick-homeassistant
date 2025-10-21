@@ -78,6 +78,33 @@ echo -e "${YELLOW}Creating release package for $VERSION_TAG${NC}"
 echo -e "${YELLOW}=========================================${NC}"
 echo ""
 
+# Ask if pre-commit hooks should be updated
+read -p "Update pre-commit hooks to latest versions? (recommended) (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if command -v pre-commit &> /dev/null; then
+        echo -e "${CYAN}Updating pre-commit hooks...${NC}"
+        echo ""
+        pre-commit autoupdate
+        echo ""
+        echo -e "${GREEN}[OK] Pre-commit hooks updated${NC}"
+        echo ""
+
+        # Check if there are changes to commit
+        if ! git diff --quiet .pre-commit-config.yaml; then
+            echo -e "${YELLOW}Note: .pre-commit-config.yaml has been updated${NC}"
+            echo -e "${YELLOW}These changes will need to be committed separately${NC}"
+            echo ""
+        fi
+    else
+        echo -e "${YELLOW}Warning: pre-commit not found, skipping hook updates${NC}"
+        echo ""
+    fi
+else
+    echo -e "${YELLOW}Skipping pre-commit hook updates${NC}"
+    echo ""
+fi
+
 # Ask if validation should be run
 read -p "Run validation checks first? (recommended) (y/n) " -n 1 -r
 echo
