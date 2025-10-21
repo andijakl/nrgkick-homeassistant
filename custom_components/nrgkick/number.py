@@ -85,7 +85,7 @@ class NRGkickNumber(CoordinatorEntity, NumberEntity):  # pylint: disable=abstrac
         """Initialize the number entity."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_name = name
+        self._attr_name = f"NRGkick {name}"
         self._attr_native_unit_of_measurement = unit
         self._attr_native_min_value = min_value
         self._attr_native_max_value = max_value
@@ -109,7 +109,7 @@ class NRGkickNumber(CoordinatorEntity, NumberEntity):  # pylint: disable=abstrac
     @property
     def translation_key(self) -> str:
         """Return the translation key to translate the entity's name and states."""
-        return self._key
+        return f"nrgkick_{self._key}"
 
     @property
     def native_value(self) -> float | None:

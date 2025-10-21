@@ -537,35 +537,17 @@ custom_components/nrgkick/
 4. Configure integration via UI
 5. Check logs for any errors
 
-### Testing
+### Contributing
 
-The project includes comprehensive unit and integration tests:
+Want to contribute? Check out [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
-```bash
-# Run CI-compatible tests (same as GitHub Actions)
-./run-tests.sh ci
+- Development environment setup
+- Code style guidelines
+- Testing procedures
+- Pull request process
+- Release workflow
 
-# Run all tests (requires Home Assistant test environment)
-./run-tests.sh all
-
-# Generate coverage report
-./run-tests.sh coverage
-```
-
-See [tests/TESTING_STRATEGY.md](tests/TESTING_STRATEGY.md) for detailed testing documentation.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for contribution guidelines.
-
-## Contributing
-
-Contributions are welcome! Please:
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Submit a pull request
-
-See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed guidelines.
+The project includes comprehensive tests and automated quality checks to ensure code quality.
 
 ## License
 

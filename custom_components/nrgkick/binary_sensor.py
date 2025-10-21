@@ -70,7 +70,7 @@ class NRGkickBinarySensor(CoordinatorEntity, BinarySensorEntity):
         """Initialize the binary sensor."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_name = name
+        self._attr_name = f"NRGkick {name}"
         self._attr_device_class = device_class
         self._value_path = value_path
         self._value_fn = value_fn
@@ -91,7 +91,7 @@ class NRGkickBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def translation_key(self) -> str:
         """Return the translation key to translate the entity's name and states."""
-        return self._key
+        return f"nrgkick_{self._key}"
 
     @property
     def is_on(self) -> bool | None:

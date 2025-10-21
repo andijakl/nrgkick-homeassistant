@@ -1,11 +1,13 @@
 #!/bin/bash
-# Quick Start Script for Commit Preparation
-# This script sets up and runs all code quality checks
+# Validation Script for NRGkick Integration
+# This script runs all code quality checks and tests
+# Usage: ./validate.sh
 
 set -e  # Exit on error
 
-echo "🎯 NRGkick Commit Preparation Script"
+echo "🎯 NRGkick Code Validation Script"
 echo "=========================================="
+echo "This will run all code quality checks and tests"
 echo ""
 
 # Check if we're in the right directory
@@ -94,20 +96,22 @@ fi
 # Summary
 echo ""
 echo "=========================================="
-echo "🎉 Commit Preparation Complete!"
+echo "🎉 Validation Complete!"
 echo "=========================================="
+echo ""
+echo "Your code passed all quality checks and tests."
 echo ""
 echo "Next steps:"
 echo "1. Review any changes made by pre-commit hooks:"
 echo "   git status"
 echo "   git diff"
 echo ""
-echo "2. If changes look good, commit them:"
+echo "2. Stage and commit your changes:"
 echo "   git add ."
-echo "   git commit -m 'Your Commit Message'"
+echo "   git commit -m 'Your commit message'"
 echo ""
 echo "3. Push to GitHub:"
 echo "   git push"
 echo ""
-echo "4. Check that CI/CD workflows pass on GitHub"
+echo "4. For releases, use: ./create-release.sh"
 echo ""

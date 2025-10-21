@@ -15,24 +15,55 @@ CYAN='\033[0;36m'
 WHITE='\033[1;37m'
 NC='\033[0m' # No Color
 
-# Get version from manifest.json if not provided
-if [ -z "$VERSION" ]; then
-    echo -e "${CYAN}No version specified, reading from manifest.json...${NC}"
-    MANIFEST_PATH="custom_components/nrgkick/manifest.json"
+MANIFEST_PATH="custom_components/nrgkick/manifest.json"
 
-    if [ ! -f "$MANIFEST_PATH" ]; then
-        echo -e "${RED}ERROR: manifest.json not found at $MANIFEST_PATH${NC}"
+# Check manifest.json exists
+if [ ! -f "$MANIFEST_PATH" ]; then
+    echo -e "${RED}ERROR: manifest.json not found at $MANIFEST_PATH${NC}"
+    exit 1
+fi
+
+# Get current version from manifest.json
+CURRENT_VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$MANIFEST_PATH" | sed 's/.*"\([^"]*\)".*/\1/')
+
+# Determine if we need to update the version
+if [ -z "$VERSION" ]; then
+    # No version provided, use current version from manifest
+    VERSION="$CURRENT_VERSION"
+    echo -e "${CYAN}Using version from manifest.json: $VERSION${NC}"
+else
+    # Version provided as parameter
+    # Validate version format
+    if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+        echo -e "${RED}ERROR: Invalid version format. Expected: X.Y.Z (e.g., 0.1.0)${NC}"
         exit 1
     fi
 
-    # Extract version from manifest.json using grep and sed
-    VERSION=$(grep -o '"version"[[:space:]]*:[[:space:]]*"[^"]*"' "$MANIFEST_PATH" | sed 's/.*"\([^"]*\)".*/\1/')
-    echo -e "${CYAN}Found version: $VERSION${NC}"
+    # Check if version is different from current
+    if [ "$VERSION" != "$CURRENT_VERSION" ]; then
+        echo -e "${YELLOW}Current version in manifest.json: $CURRENT_VERSION${NC}"
+        echo -e "${YELLOW}New version specified: $VERSION${NC}"
+        echo ""
+        read -p "Update manifest.json to version $VERSION? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            # Update version in manifest.json
+            sed -i.bak "s/\"version\": \"$CURRENT_VERSION\"/\"version\": \"$VERSION\"/" "$MANIFEST_PATH"
+            rm -f "$MANIFEST_PATH.bak"
+            echo -e "${GREEN}[OK] Updated manifest.json to version $VERSION${NC}"
+            echo ""
+        else
+            echo -e "${RED}Aborted. Version not updated.${NC}"
+            exit 1
+        fi
+    else
+        echo -e "${CYAN}Version $VERSION matches manifest.json${NC}"
+    fi
 fi
 
-# Validate version format
+# Final version validation
 if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-    echo -e "${RED}ERROR: Invalid version format. Expected: X.Y.Z (e.g., 0.1.0)${NC}"
+    echo -e "${RED}ERROR: Invalid version format in manifest.json. Expected: X.Y.Z${NC}"
     exit 1
 fi
 
@@ -42,8 +73,30 @@ RELEASES_DIR="releases"
 TEMP_DIR="release-temp"
 
 echo ""
-echo -e "${YELLOW}Creating release package for version $VERSION_TAG...${NC}"
+echo -e "${YELLOW}=========================================${NC}"
+echo -e "${YELLOW}Creating release package for $VERSION_TAG${NC}"
+echo -e "${YELLOW}=========================================${NC}"
 echo ""
+
+# Ask if validation should be run
+read -p "Run validation checks first? (recommended) (y/n) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    if [ -f "validate.sh" ]; then
+        echo -e "${CYAN}Running validation...${NC}"
+        echo ""
+        bash validate.sh
+        echo ""
+        echo -e "${GREEN}Validation passed! Continuing with release...${NC}"
+        echo ""
+    else
+        echo -e "${YELLOW}Warning: validate.sh not found, skipping validation${NC}"
+        echo ""
+    fi
+else
+    echo -e "${YELLOW}Skipping validation. Use ./validate.sh to validate manually.${NC}"
+    echo ""
+fi
 
 # Create releases directory if it doesn't exist
 if [ ! -d "$RELEASES_DIR" ]; then
@@ -104,10 +157,19 @@ echo ""
 echo -e "${YELLOW}================================================${NC}"
 echo ""
 echo -e "${CYAN}Next steps:${NC}"
-echo "  1. git add . && git commit -m 'Prepare release $VERSION_TAG'"
-echo "  2. git tag -a $VERSION_TAG -m 'Release $VERSION_TAG'"
-echo "  3. git push origin main --tags"
-echo "  4. Create GitHub release at:"
-echo "     https://github.com/andijakl/nrgkick-homeassistant/releases/new"
-echo "  5. Upload $ZIP_FILE_NAME from $RELEASES_DIR/ as release asset"
+echo ""
+echo "  1. Test the release package by installing it in Home Assistant"
+echo ""
+echo "  2. If everything works, commit and tag the release:"
+echo "     git add ."
+echo "     git commit -m 'Release $VERSION_TAG'"
+echo "     git tag -a $VERSION_TAG -m 'Release $VERSION_TAG'"
+echo "     git push origin main --tags"
+echo ""
+echo "  3. Create GitHub release:"
+echo "     - Go to: https://github.com/andijakl/nrgkick-homeassistant/releases/new"
+echo "     - Select tag: $VERSION_TAG"
+echo "     - Upload: $RELEASES_DIR/$ZIP_FILE_NAME"
+echo "     - Add release notes"
+echo "     - Publish release"
 echo ""

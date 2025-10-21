@@ -7,6 +7,6 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/andijakl/nrgkick-homeassistant/issues",
   "requirements": ["aiohttp>=3.8.0"],
-  "version": "0.1.6",
+  "version": "0.2.0",
   "zeroconf": ["_nrgkick._tcp.local."]
 }

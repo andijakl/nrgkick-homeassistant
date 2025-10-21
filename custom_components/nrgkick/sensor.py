@@ -677,7 +677,7 @@ class NRGkickSensor(CoordinatorEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_name = name
+        self._attr_name = f"NRGkick {name}"
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
@@ -706,7 +706,7 @@ class NRGkickSensor(CoordinatorEntity, SensorEntity):
     @property
     def translation_key(self) -> str:
         """Return the translation key to translate the entity's name and states."""
-        return self._key
+        return f"nrgkick_{self._key}"
 
     @property
     def native_value(self) -> float | int | str | None:

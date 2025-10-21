@@ -52,7 +52,7 @@ class NRGkickSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstrac
         """Initialize the switch."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_name = name
+        self._attr_name = f"NRGkick {name}"
         self._attr_icon = icon
         self._value_path = value_path
 
@@ -72,7 +72,7 @@ class NRGkickSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstrac
     @property
     def translation_key(self) -> str:
         """Return the translation key to translate the entity's name and states."""
-        return self._key
+        return f"nrgkick_{self._key}"
 
     @property
     def is_on(self) -> bool | None:
