@@ -627,7 +627,7 @@ This ensures compatibility across supported Home Assistant versions.
 - [pytest markers](https://docs.pytest.org/en/stable/example/markers.html)
 - [pytest-asyncio](https://pytest-asyncio.readthedocs.io/)
 - [Home Assistant Testing Guide](https://developers.home-assistant.io/docs/development_testing)
-- [Home Assistant Config Entry](https://developers.home-assistant.io/docs/config_entries_index)
+- [pytest-homeassistant-custom-component](https://github.com/MatthewFlamm/pytest-homeassistant-custom-component)
 
 ### Related Files
 

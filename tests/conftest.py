@@ -64,14 +64,9 @@ def mock_nrgkick_api():
 @pytest.fixture
 def mock_config_entry():
     """Mock config entry."""
-    from types import MappingProxyType
+    from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-    from homeassistant.config_entries import ConfigEntry
-
-    # Create a mock config entry using Home Assistant's native class
-    entry = ConfigEntry(
-        version=1,
-        minor_version=0,
+    return MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={
@@ -79,13 +74,9 @@ def mock_config_entry():
             CONF_USERNAME: "test_user",
             CONF_PASSWORD: "test_pass",
         },
-        options={},
-        source="user",
         entry_id="test_entry_id",
         unique_id="TEST123456",
-        discovery_keys=MappingProxyType({}),
     )
-    return entry
 
 
 @pytest.fixture

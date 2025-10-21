@@ -3,40 +3,17 @@
 from __future__ import annotations
 
 from ipaddress import ip_address
-from types import MappingProxyType
 from unittest.mock import patch
 
 import pytest
 from homeassistant import config_entries
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.nrgkick.const import CONF_SCAN_INTERVAL, DOMAIN
-
-
-def create_mock_config_entry(
-    domain: str = DOMAIN,
-    title: str = "NRGkick Test",
-    data: dict | None = None,
-    unique_id: str | None = None,
-    entry_id: str = "test_entry",
-) -> ConfigEntry:
-    """Create a mock config entry for testing."""
-    return ConfigEntry(
-        version=1,
-        minor_version=0,
-        domain=domain,
-        title=title,
-        data=data or {},
-        options={},
-        source="user",
-        entry_id=entry_id,
-        unique_id=unique_id,
-        discovery_keys=MappingProxyType({}),
-    )
 
 
 @pytest.mark.requires_integration
@@ -147,7 +124,7 @@ async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> 
 @pytest.mark.requires_integration
 async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle already configured."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
@@ -176,7 +153,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) ->
 @pytest.mark.requires_integration
 async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test reauth flow."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={
@@ -225,7 +202,7 @@ async def test_reauth_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test reauth flow with connection error."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
@@ -264,7 +241,7 @@ async def test_reauth_flow_cannot_connect(
 @pytest.mark.requires_integration
 async def test_options_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test options flow."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={
@@ -306,7 +283,7 @@ async def test_options_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test options flow with connection error."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
@@ -337,7 +314,7 @@ async def test_options_flow_with_scan_interval(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test options flow with scan interval configuration."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={
@@ -378,7 +355,7 @@ async def test_options_flow_invalid_scan_interval(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test options flow with invalid scan interval."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
@@ -526,7 +503,7 @@ async def test_zeroconf_already_configured(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test zeroconf discovery when device is already configured."""
-    entry = create_mock_config_entry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.200"},  # Different IP
