@@ -19,7 +19,21 @@ fi
 # Check Python version
 echo "📋 Checking Python version..."
 python_version=$(python3 --version 2>&1 | awk '{print $2}')
+python_major=$(echo $python_version | cut -d. -f1)
+python_minor=$(echo $python_version | cut -d. -f2)
 echo "   Python version: $python_version"
+
+if [ "$python_major" -lt 3 ] || ([ "$python_major" -eq 3 ] && [ "$python_minor" -lt 13 ]); then
+    echo "   ⚠️  Warning: Python 3.13+ is recommended for latest dependencies"
+    echo "   Current version: $python_version"
+    echo "   Some test dependencies require Python 3.13+"
+    read -p "   Continue anyway? (y/n) " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        echo "Exiting. Please upgrade to Python 3.13+"
+        exit 1
+    fi
+fi
 
 # Create virtual environment if it doesn't exist
 if [ ! -d "venv" ]; then
@@ -36,14 +50,18 @@ source venv/bin/activate
 # Install dependencies
 echo ""
 echo "📦 Installing dependencies..."
-pip install --upgrade pip > /dev/null 2>&1
-pip install -r requirements_dev.txt > /dev/null 2>&1
-pip install pre-commit > /dev/null 2>&1
+echo "   Upgrading pip..."
+pip install --upgrade pip --quiet || { echo "❌ Failed to upgrade pip"; exit 1; }
+echo "   Installing development requirements..."
+pip install -r requirements_dev.txt --quiet || { echo "❌ Failed to install requirements"; exit 1; }
+echo "   Installing pre-commit..."
+pip install pre-commit --quiet || { echo "❌ Failed to install pre-commit"; exit 1; }
+echo "   ✓ Dependencies installed successfully"
 
 # Install pre-commit hooks
 echo ""
 echo "🔗 Installing pre-commit hooks..."
-pre-commit install
+pre-commit install > /dev/null 2>&1 || { echo "⚠️  Pre-commit hooks installation skipped (may already be installed)"; }
 
 # Run pre-commit on all files
 echo ""
@@ -84,7 +102,10 @@ fi
 # Run tests
 echo ""
 echo "🧪 Running tests..."
-if pytest tests/ -v --cov=custom_components.nrgkick --cov-report=term-missing; then
+echo "   Running CI-compatible tests (unit tests only)"
+echo "   Integration tests are skipped (run './run-tests.sh all' for full suite)"
+echo ""
+if pytest tests/ -v -m "not requires_integration" --cov=custom_components.nrgkick --cov-report=term-missing; then
     echo ""
     echo "✅ All tests passed!"
 else

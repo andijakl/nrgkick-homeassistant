@@ -46,9 +46,11 @@ We welcome feature suggestions! Please create an issue with:
 
 ### Prerequisites
 
-- Python 3.11 or newer
+- Python 3.13 or newer (recommended)
 - Home Assistant development environment
 - Access to a NRGkick Gen2 device for testing
+
+**Note:** Python 3.13+ is required for the latest test dependencies. Python 3.11+ will work for the integration itself.
 
 ### Setting Up Development Environment
 

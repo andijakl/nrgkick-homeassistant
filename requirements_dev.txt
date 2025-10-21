@@ -1,9 +1,11 @@
 # Development dependencies for NRGkick Home Assistant Integration
 
 # Testing
-pytest>=8.4.0
+# Testing dependencies
+# pytest version managed by pytest-homeassistant-custom-component
+# pytest>=8.4.0
 # pytest-asyncio version managed by pytest-homeassistant-custom-component
-pytest-homeassistant-custom-component>=0.13.0
+pytest-homeassistant-custom-component>=0.13.288
 pytest-cov>=7.0.0
 pytest-timeout>=2.4.0
 
@@ -22,4 +24,4 @@ homeassistant>=2024.1.0
 
 # API Dependencies
 aiohttp>=3.11.11
-zeroconf>=0.148.0
+zeroconf>=0.147.0
