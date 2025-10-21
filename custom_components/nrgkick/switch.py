@@ -28,10 +28,10 @@ async def async_setup_entry(
     entities: list[NRGkickSwitch] = [
         NRGkickSwitch(
             coordinator,
-            "charge_pause",
-            "Charge Pause",
-            "mdi:pause",
-            ["control", "charge_pause"],
+            key="charge_pause",
+            name="Charge Pause",
+            icon="mdi:pause",
+            value_path=["control", "charge_pause"],
         ),
     ]
 
@@ -44,6 +44,7 @@ class NRGkickSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstrac
     def __init__(
         self,
         coordinator: NRGkickDataUpdateCoordinator,
+        *,
         key: str,
         name: str,
         icon: str,

@@ -28,27 +28,27 @@ async def async_setup_entry(
     entities: list[NRGkickBinarySensor] = [
         NRGkickBinarySensor(
             coordinator,
-            "charging",
-            "Charging",
-            BinarySensorDeviceClass.BATTERY_CHARGING,
-            ["values", "general", "status"],
+            key="charging",
+            name="Charging",
+            device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+            value_path=["values", "general", "status"],
             value_fn=lambda x: (
                 x == STATUS_CHARGING if isinstance(x, int) else x == "CHARGING"
             ),
         ),
         NRGkickBinarySensor(
             coordinator,
-            "charge_permitted",
-            "Charge Permitted",
-            BinarySensorDeviceClass.POWER,
-            ["values", "general", "charge_permitted"],
+            key="charge_permitted",
+            name="Charge Permitted",
+            device_class=BinarySensorDeviceClass.POWER,
+            value_path=["values", "general", "charge_permitted"],
         ),
         NRGkickBinarySensor(
             coordinator,
-            "charge_pause",
-            "Charge Pause",
-            None,
-            ["control", "charge_pause"],
+            key="charge_pause",
+            name="Charge Pause",
+            device_class=None,
+            value_path=["control", "charge_pause"],
         ),
     ]
 
@@ -61,6 +61,7 @@ class NRGkickBinarySensor(CoordinatorEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: NRGkickDataUpdateCoordinator,
+        *,
         key: str,
         name: str,
         device_class: BinarySensorDeviceClass | None,
