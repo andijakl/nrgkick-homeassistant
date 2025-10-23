@@ -4,75 +4,35 @@
 [![GitHub Release](https://img.shields.io/github/release/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/releases)
 [![License](https://img.shields.io/github/license/andijakl/nrgkick-homeassistant.svg)](LICENSE)
 
-A comprehensive Home Assistant integration for the **NRGkick Gen2** EV charging controller, providing local control and monitoring through the device's REST JSON API.
-
-> **✨ Easy Setup**: UI-based configuration flow. No YAML editing required!
+Home Assistant integration for the NRGkick Gen2 EV charging controller using the local REST JSON API.
 
 ## Features
 
-### 📡 Automatic Discovery
+### Automatic Discovery
 
-The integration now supports **automatic network discovery** via mDNS/Zeroconf:
+Supports automatic network discovery via mDNS/Zeroconf. Devices are automatically detected on your local network and tracked even if the IP address changes.
 
-- NRGkick devices are automatically detected on your local network
-- No need to manually find the IP address
-- Automatic IP address updates if your device moves to a different IP
-- Simply confirm the discovered device and optionally enter credentials
+### Monitoring (80+ Sensors)
 
-When a NRGkick device is found on your network, Home Assistant will show a notification allowing you to add it with just a few clicks!
+- **Power & Energy**: Active/reactive/apparent power, power factor, session/total energy, per-phase monitoring
+- **Electrical**: Voltage, current, frequency (total and per-phase), neutral current
+- **Status**: Charging status, rate, relay state, charge count, error/warning codes
+- **Temperature**: Housing, per-phase connector, domestic plug
+- **Network**: IP/MAC address, WiFi SSID/RSSI
+- **Device Info**: Connector details, grid info, firmware versions
+- **Session**: Connect time, charging time
 
-### 📊 Comprehensive Monitoring (80+ Sensors)
+### Controls
 
-**Power & Energy**
+- **Charging Current**: 6-32A (range based on device rating)
+- **Charge Pause**: Pause/resume charging
+- **Energy Limit**: 0-100,000 Wh (0 = unlimited)
+- **Phase Count**: 1-3 phases (if supported)
 
-- Total active/reactive/apparent power, power factor
-- Total charged energy, session energy
-- Per-phase power monitoring (L1, L2, L3)
-- Peak power tracking
+### Binary Sensors
 
-**Electrical Measurements**
-
-- Voltage, current, frequency (total and per-phase)
-- Neutral current monitoring
-- Power factor per phase
-
-**Device Status**
-
-- Charging status (Standby/Connected/Charging/Error)
-- Charging rate, relay state
-- Charge count, RCD trigger status
-- Warning and error codes
-
-**Temperature Monitoring**
-
-- Housing temperature
-- Per-phase connector temperatures (L1, L2, L3)
-- Domestic plug temperatures
-
-**Network & Device Information**
-
-- IP address, MAC address
-- WiFi SSID and signal strength (RSSI)
-- Connector details (type, serial, max current)
-- Grid information (voltage, frequency, phases)
-- Firmware versions
-
-**Session Statistics**
-
-- Vehicle connect time
-- Vehicle charging time
-
-### 🎛️ Controls
-
-- **Charging Current** - Adjust from 6A to 32A (dynamic range based on device rating)
-- **Charge Pause Switch** - Pause/resume charging instantly
-- **Energy Limit** - Set session energy limit (0-100,000 Wh, 0 = unlimited)
-- **Phase Count** - Switch between 1-3 phases (if supported by device)
-
-### 🔌 Binary Sensors
-
-- Charging active status
-- Charge permitted indicator
+- Charging active
+- Charge permitted
 - Charge pause status
 
 ## Requirements
@@ -137,164 +97,51 @@ config/
 
 ## Configuration
 
-### Automatic Discovery (Recommended)
-
-The easiest way to set up the integration is through **automatic discovery**:
-
-1. Ensure your NRGkick device has the **JSON API enabled** (see prerequisites below)
-2. Make sure your NRGkick is on the same network as Home Assistant
-3. Home Assistant will automatically discover your device and show a notification
-4. Click on the notification or go to **Settings** → **Devices & Services**
-5. Click **Configure** on the discovered NRGkick device
-6. (Optional) Enter username and password if BasicAuth is enabled on your device
-7. Click **Submit**
-
-The integration will automatically track your device even if its IP address changes!
-
-### Manual Configuration
-
-If automatic discovery doesn't work, you can manually add your NRGkick:
-
-1. Go to **Settings** → **Devices & Services**
-2. Click **+ Add Integration** (bottom right)
-3. Search for **NRGkick**
-4. Enter device information:
-   - **Host**: IP address or hostname (e.g., `192.168.1.100` or `nrgkick.local`)
-   - **Username**: (Optional) Only if BasicAuth is enabled
-   - **Password**: (Optional) Only if BasicAuth is enabled
-5. Click **Submit**
-
 ### Prerequisites
 
-**Enable JSON API on your NRGkick:**
+Enable JSON API on your NRGkick device:
 
-1. Open the NRGkick mobile app
-2. Go to **Settings** → **API Settings**
-3. Enable **JSON API** (or "Native Web API")
-4. (Optional) Enable **BasicAuth** and set username/password for security
+1. Open NRGkick mobile app → **Settings** → **API Settings**
+2. Enable **JSON API**
+3. (Optional) Enable **BasicAuth** and set credentials
 
-**Find your NRGkick IP address (for manual configuration):**
+### Setup
 
-- Via NRGkick app: Settings → Network Information
-- Via router: Check DHCP client list for device named "NRGkick"
-- Via mDNS: Device advertises as `_nrgkick._tcp` (may be accessible as `nrgkick.local`)
-- Or just wait for automatic discovery! 🎉
+**Automatic Discovery (Recommended)**
 
-**💡 Tip**: With automatic discovery enabled, you don't need to worry about IP addresses. The integration will automatically track your device even if the IP changes!
+Home Assistant will automatically discover NRGkick devices on your network. Click the notification or go to **Settings** → **Devices & Services** → **Configure** the discovered device. Enter credentials if BasicAuth is enabled.
 
-### Setup Steps (Manual Configuration)
+**Manual Configuration**
 
-1. Go to **Settings** → **Devices & Services**
-2. Click **+ Add Integration** (bottom right)
-3. Search for **NRGkick**
-4. Enter device information:
-   - **Host**: IP address or hostname (e.g., `192.168.1.100` or `nrgkick.local`)
-   - **Username**: (Optional) Only if BasicAuth is enabled
-   - **Password**: (Optional) Only if BasicAuth is enabled
-5. Click **Submit**
+1. **Settings** → **Devices & Services** → **Add Integration** → **NRGkick**
+2. Enter host (IP address or `nrgkick.local`) and credentials (if using BasicAuth)
+3. Click **Submit**
 
-The integration will verify the connection and automatically create all entities.
+**Multiple Devices**: Repeat setup for each device. Each is identified by its unique serial number.
 
-### Multiple Devices
+**Reconfiguration**: **Settings** → **Devices & Services** → **NRGkick** → **⋮** → **Configure** to update IP, credentials, or scan interval.
 
-To add multiple NRGkick devices, repeat the configuration steps for each device. Each will be identified by its unique serial number.
-
-### Reconfiguring Connection Settings
-
-If your device IP address changes or you need to update credentials:
-
-1. Go to **Settings** → **Devices & Services**
-2. Find the **NRGkick** integration
-3. Click **⋮** (three dots) → **Configure**
-4. Update IP address, username, password, or scan interval as needed
-5. Click **Submit**
-
-The integration will automatically reload with the new settings.
-
-### Adjusting the Scan Interval
-
-The scan interval determines how often Home Assistant polls your NRGkick device for updates. You can adjust this to balance between data freshness and device load:
-
-**To change the scan interval:**
-
-1. Go to **Settings** → **Devices & Services**
-2. Find the **NRGkick** integration
-3. Click **⋮** (three dots) → **Configure**
-4. Set **Scan Interval** to your preferred value (10-300 seconds)
-5. Click **Submit**
-
-**Recommendations:**
-
-- **Default (30s)**: Good balance for most users
-- **Fast updates (10-20s)**: Better for automations requiring quick response
-- **Conservative (60-120s)**: Reduces network traffic and device load
-- **Slow updates (180-300s)**: For monitoring-only scenarios
-
-**Note**: Lower intervals provide more responsive data but may increase network traffic and device load slightly.
+**Scan Interval**: Default 30s, adjustable 10-300s via configuration options. Lower values provide fresher data but increase network traffic.
 
 ## Usage
 
-### Entity Overview
+### Entity Naming
 
-All entities follow the naming pattern: `{domain}.nrgkick_{entity_name}`
+All entities follow the pattern: `{domain}.nrgkick_{entity_name}`
 
 **Key Entities:**
 
-- `sensor.nrgkick_total_active_power` - Current power draw (W)
-- `sensor.nrgkick_charged_energy` - Current session energy (Wh)
+- `sensor.nrgkick_total_active_power` - Current power (W)
+- `sensor.nrgkick_current_session_energy` - Session energy (Wh)
 - `sensor.nrgkick_charging_status` - Status text
 - `binary_sensor.nrgkick_charging` - Charging on/off
-- `switch.nrgkick_charge_pause` - Pause/resume control
-- `number.nrgkick_charging_current` - Current setting (6-32A)
+- `switch.nrgkick_charge_pause` - Pause/resume
+- `number.nrgkick_charging_current` - Current limit (6-32A)
 - `number.nrgkick_energy_limit` - Energy limit (Wh)
-- `number.nrgkick_phase_count` - Phase selection (1-3)
 
-### Automation Examples
+### Examples
 
-**Solar-powered charging:**
-
-```yaml
-automation:
-  - alias: "NRGkick Solar Charging"
-    trigger:
-      - platform: numeric_state
-        entity_id: sensor.solar_power
-        above: 3000
-    action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.nrgkick_charge_pause
-      - service: number.set_value
-        target:
-          entity_id: number.nrgkick_charging_current
-        data:
-          value: 16
-```
-
-**Time-based charging (off-peak hours):**
-
-```yaml
-automation:
-  - alias: "NRGkick Scheduled Charging"
-    trigger:
-      - platform: time
-        at: "23:00:00" # Start at 11 PM
-    condition:
-      - condition: state
-        entity_id: binary_sensor.nrgkick_charging
-        state: "off"
-    action:
-      - service: switch.turn_off
-        target:
-          entity_id: switch.nrgkick_charge_pause
-      - service: number.set_value
-        target:
-          entity_id: number.nrgkick_charging_current
-        data:
-          value: 16
-```
-
-**Pause during peak hours:**
+**Basic Automation** (pause during peak hours):
 
 ```yaml
 automation:
@@ -308,206 +155,65 @@ automation:
           entity_id: switch.nrgkick_charge_pause
 ```
 
-**Charging complete notification:**
-
-```yaml
-automation:
-  - alias: "NRGkick Charging Complete"
-    trigger:
-      - platform: state
-        entity_id: binary_sensor.nrgkick_charging
-        from: "on"
-        to: "off"
-    condition:
-      - condition: numeric_state
-        entity_id: sensor.nrgkick_charged_energy
-        above: 1000
-    action:
-      - service: notify.mobile_app
-        data:
-          title: "Charging Complete"
-          message: "EV charged {{ states('sensor.nrgkick_charged_energy') | float / 1000 | round(2) }} kWh"
-```
-
-**Dynamic current based on available power:**
-
-```yaml
-automation:
-  - alias: "NRGkick Dynamic Current"
-    trigger:
-      - platform: state
-        entity_id: sensor.available_power
-    action:
-      - service: number.set_value
-        target:
-          entity_id: number.nrgkick_charging_current
-        data:
-          value: >
-            {% set available = states('sensor.available_power') | float %}
-            {% set voltage = 230 %}
-            {% set max_current = (available / voltage) | round(0, 'floor') %}
-            {{ [6, [max_current, 32] | min] | max }}
-```
-
-### Dashboard Examples
-
-**Status Card:**
+**Basic Dashboard Card**:
 
 ```yaml
 type: entities
-title: NRGkick Status
+title: NRGkick
 entities:
-  - entity: sensor.nrgkick_charging_status
-    name: Status
-  - entity: binary_sensor.nrgkick_charging
-    name: Charging Active
-  - entity: sensor.nrgkick_total_active_power
-    name: Power
-  - entity: sensor.nrgkick_charging_current
-    name: Current
-  - entity: sensor.nrgkick_charged_energy
-    name: Session Energy
-  - entity: sensor.nrgkick_housing_temperature
-    name: Temperature
+  - sensor.nrgkick_charging_status
+  - binary_sensor.nrgkick_charging
+  - sensor.nrgkick_total_active_power
+  - switch.nrgkick_charge_pause
+  - number.nrgkick_charging_current
 ```
 
-**Control Card:**
+**More Examples:**
 
-```yaml
-type: entities
-title: NRGkick Control
-entities:
-  - entity: switch.nrgkick_charge_pause
-    name: Pause Charging
-  - entity: number.nrgkick_charging_current
-    name: Charging Current
-  - entity: number.nrgkick_energy_limit
-    name: Energy Limit
-  - entity: number.nrgkick_phase_count
-    name: Phase Count
-```
-
-**Gauge Card:**
-
-```yaml
-type: gauge
-entity: sensor.nrgkick_total_active_power
-name: Charging Power
-min: 0
-max: 22000
-severity:
-  green: 0
-  yellow: 11000
-  red: 18000
-```
-
-**Energy Bar Card:**
-
-```yaml
-type: custom:bar-card
-entity: sensor.nrgkick_charged_energy
-name: Session Energy
-unit_of_measurement: Wh
-max: 50000
-positions:
-  icon: outside
-  indicator: inside
-  name: inside
-  value: inside
-```
-
-More examples available in [`examples/`](examples/) directory.
+- **Automations**: See [`examples/automations.yaml`](examples/automations.yaml) for solar charging, time-based control, notifications, temperature protection, and more
+- **Dashboard Cards**: See [`examples/lovelace_cards.yaml`](examples/lovelace_cards.yaml) for status cards, gauges, graphs, mobile layouts, and custom cards
 
 ## Troubleshooting
 
-### Cannot Connect Error
+### Connection Issues
 
-**Possible causes:**
+- Verify IP address is correct (ping device)
+- Ensure JSON API is enabled in NRGkick app
+- Check Home Assistant and NRGkick are on same network/VLAN
+- Check logs: **Settings** → **System** → **Logs**
 
-- Wrong IP address
-- Device not on same network
-- JSON API not enabled
-- Firewall blocking connection
+### Authentication Errors
 
-**Solutions:**
-
-1. Verify IP address (ping the device)
-2. Check NRGkick app: JSON API is enabled
-3. Ensure Home Assistant and NRGkick are on same network/VLAN
-4. Check Home Assistant logs: **Settings** → **System** → **Logs**
-
-### Invalid Authentication Error
-
-**Solutions:**
-
-1. Verify username/password in NRGkick app
-2. Check BasicAuth is enabled in app
-3. Try without credentials if BasicAuth is disabled
+- Verify credentials match NRGkick app settings
+- Ensure BasicAuth is enabled in app if using credentials
+- Try without credentials if BasicAuth is disabled
 
 ### Data Not Updating
 
-**Solutions:**
+- Check logs for errors
+- Reload integration: **Settings** → **Devices & Services** → **NRGkick** → **⋮** → **Reload**
+- Verify device is powered and connected
 
-1. Check logs for errors
-2. Verify device is powered and connected
-3. Reload integration: **Settings** → **Devices & Services** → **NRGkick** → **⋮** → **Reload**
-4. Restart Home Assistant
+### Missing or Unknown Sensors
 
-### Some Sensors Show "Unknown"
-
-**Normal behavior:**
-
-- Per-phase sensors only show data during 3-phase charging
-- Some values depend on device model and firmware version
-- Temperature sensors may not be available on all connectors
-
-### Entities Not Visible or Missing
-
-**Possible causes:**
-
-- Integration failed to load
-- Coordinator not fetching data
-- Device connection lost
-
-**Solutions:**
-
-1. Download diagnostics: **Integration** → **⋮** → **Download diagnostics**
-2. Check if `coordinator_last_update_success` is `true`
-3. Verify `data` section contains info/control/values
-4. If data is `null`, check logs for specific error messages
-5. Try reconfiguring the integration with current connection details
+- Per-phase sensors (L2, L3) only show data during multi-phase charging
+- Temperature sensors may not be available on all connector types
+- Download diagnostics: **Integration** → **⋮** → **Download diagnostics** to check `coordinator_last_update_success` and data structure
 
 ## Technical Details
 
-### API Information
+### API
 
-The integration uses the NRGkick Gen2 Local REST JSON API:
+Uses NRGkick Gen2 Local REST JSON API (`http://{device_ip}`):
 
-- **Base URL**: `http://{device_ip}`
-- **Endpoints**:
-  - `GET /info` - Device information, network, hardware/software versions
-  - `GET /control` - Charging control parameters
-  - `GET /values` - Real-time telemetry data
-  - `GET /control?param=value` - Set control parameters
+- `GET /info` - Device information
+- `GET /control` - Control parameters
+- `GET /values` - Real-time telemetry
+- `GET /control?param=value` - Set parameters
 
-### Update Interval
+### Update Mechanism
 
-The integration polls the device at a configurable interval (default: **30 seconds**) to retrieve current data. You can adjust this interval from 10 to 300 seconds through the integration's configuration options to balance between data freshness and device load.
-
-**To adjust the scan interval:**
-
-1. Go to **Settings** → **Devices & Services** → **NRGkick** → **Configure**
-2. Set your preferred **Scan Interval** (10-300 seconds)
-3. Click **Submit** - the integration will reload automatically
-
-### Data Coordinator
-
-Uses Home Assistant's `DataUpdateCoordinator` pattern:
-
-- Efficient data fetching with single API call cycle
-- Automatic retry on failures
-- Shared data across all entities
-- Built-in state management
+Polls device every 30 seconds (configurable 10-300s). Uses Home Assistant's `DataUpdateCoordinator` for efficient data fetching and automatic retry on failures.
 
 ## Development
 
@@ -553,22 +259,11 @@ The project includes comprehensive tests and automated quality checks to ensure 
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
 
-## Acknowledgments
+## Support
 
-- **DiniTech GmbH** - For creating the NRGkick Gen2 EV charger
-- **Home Assistant Community** - For the excellent platform and documentation
-- **Contributors** - For testing, feedback, and improvements
+- [GitHub Issues](https://github.com/andijakl/nrgkick-homeassistant/issues)
+- [GitHub Discussions](https://github.com/andijakl/nrgkick-homeassistant/discussions)
 
 ## Disclaimer
 
-This is an unofficial integration and is not affiliated with, endorsed by, or supported by DiniTech GmbH. Use at your own risk.
-
-## Support
-
-- **Issues**: [GitHub Issues](https://github.com/andijakl/nrgkick-homeassistant/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/andijakl/nrgkick-homeassistant/discussions)
-- **Home Assistant Community**: [Community Forum](https://community.home-assistant.io/)
-
----
-
-**Made with ❤️ for the Home Assistant community**
+Unofficial integration, not affiliated with DiniTech GmbH. Use at your own risk.

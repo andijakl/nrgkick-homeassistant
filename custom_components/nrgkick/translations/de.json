@@ -3,27 +3,40 @@
     "step": {
       "user": {
         "title": "Mit NRGkick verbinden",
-        "description": "Geben Sie die Verbindungsdetails für Ihr NRGkick-Gerät ein.",
+        "description": "Geben Sie die Verbindungsdetails für Ihr NRGkick-Gerät ein.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick-App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).\n\nEinrichtungsanleitung: https://github.com/andijakl/nrgkick-homeassistant#configuration",
         "data": {
           "host": "IP-Adresse oder Hostname",
           "username": "Benutzername (optional)",
           "password": "Passwort (optional)"
+        },
+        "data_description": {
+          "host": "IP-Adresse (z.B. 192.168.1.100) oder Hostname (z.B. nrgkick.local)",
+          "username": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
+          "password": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist"
         }
       },
       "zeroconf_confirm": {
         "title": "NRGkick gefunden: {name}",
-        "description": "Ein NRGkick-Gerät wurde in Ihrem Netzwerk gefunden. Falls auf dem Gerät eine Authentifizierung aktiviert ist, geben Sie bitte unten die Anmeldedaten ein.",
+        "description": "Ein NRGkick-Gerät wurde in Ihrem Netzwerk gefunden.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick-App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth). Lassen Sie die Felder leer, wenn BasicAuth nicht aktiviert ist.\n\nWeitere Informationen: https://github.com/andijakl/nrgkick-homeassistant#configuration",
         "data": {
           "username": "Benutzername (optional)",
           "password": "Passwort (optional)"
+        },
+        "data_description": {
+          "username": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
+          "password": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist"
         }
       },
       "reauth_confirm": {
         "title": "NRGkick erneut authentifizieren",
-        "description": "Die Anmeldedaten für Ihr NRGkick-Gerät müssen aktualisiert werden. Bitte geben Sie den neuen Benutzernamen und das neue Passwort ein.",
+        "description": "Die Authentifizierung ist fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.\n\nAnmeldedaten werden in der NRGkick-App konfiguriert: Einstellungen → API-Einstellungen → BasicAuth.\n\nFehlerbehebung: https://github.com/andijakl/nrgkick-homeassistant#troubleshooting",
         "data": {
-          "username": "Benutzername (optional)",
-          "password": "Passwort (optional)"
+          "username": "Benutzername",
+          "password": "Passwort"
+        },
+        "data_description": {
+          "username": "In der NRGkick-App konfigurierter Benutzername",
+          "password": "In der NRGkick-App konfiguriertes Passwort"
         }
       }
     },
@@ -43,7 +56,7 @@
     "step": {
       "init": {
         "title": "NRGkick-Verbindung neu konfigurieren",
-        "description": "Aktualisieren Sie die Verbindungsdetails für Ihr NRGkick-Gerät. Die Integration wird nach dem Speichern neu gestartet.",
+        "description": "Aktualisieren Sie die Verbindungsdetails für Ihr NRGkick-Gerät. Die Integration wird nach dem Speichern neu gestartet.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick-App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).",
         "data": {
           "host": "IP-Adresse oder Hostname",
           "username": "Benutzername (optional)",
@@ -51,6 +64,9 @@
           "scan_interval": "Abfrageintervall (Sekunden)"
         },
         "data_description": {
+          "host": "IP-Adresse oder Hostname Ihres NRGkick-Geräts",
+          "username": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
+          "password": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
           "scan_interval": "Wie oft das Gerät auf Updates abgefragt werden soll (10-300 Sekunden, Standard: 30)"
         }
       }

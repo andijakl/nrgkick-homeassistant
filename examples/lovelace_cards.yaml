@@ -4,6 +4,144 @@
 # Customize colors, icons, and layouts to match your theme
 
 # ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+#
+# If entities show as "entity not found":
+# 1. Go to Settings → Devices & Services → NRGkick
+# 2. Click on your NRGkick device
+# 3. Verify all entities are listed and enabled
+# 4. Some entities may be disabled by default - enable them if needed
+# 5. Check that the device is online and communicating with Home Assistant
+# 6. The entity naming follows the pattern: domain.nrgkick_<entity_key>
+#    Example: sensor.nrgkick_charging_status, switch.nrgkick_charge_pause
+# 7. If you have multiple NRGkick devices, entity names may have a suffix like _2
+#
+# If entities show as "unavailable":
+# - Check network connection to your NRGkick device
+# - Verify the IP address is correct in the integration settings
+# - Check Home Assistant logs for connection errors
+# - Restart the NRGkick integration or Home Assistant if needed
+#
+# Note:
+# - Some sensor values will be 0 or null when not actively charging
+# - Per-phase sensors (L2, L3) may be 0 if you're using single-phase charging
+# - Temperature sensors update only when the device is active
+# - Energy limit and phase count controls depend on device capabilities
+#
+# ============================================================================
+# AVAILABLE ENTITIES REFERENCE
+# ============================================================================
+#
+# BINARY SENSORS:
+#   binary_sensor.nrgkick_charging - Is currently charging
+#   binary_sensor.nrgkick_charge_permitted - Charge is permitted
+#   binary_sensor.nrgkick_charge_pause - Charge is paused
+#
+# SENSORS (Power & Energy):
+#   sensor.nrgkick_total_active_power - Current power consumption (W)
+#   sensor.nrgkick_total_reactive_power - Reactive power (VAR)
+#   sensor.nrgkick_total_apparent_power - Apparent power (VA)
+#   sensor.nrgkick_total_power_factor - Power factor (%)
+#   sensor.nrgkick_peak_power - Peak power (W)
+#   sensor.nrgkick_current_session_energy - Energy charged this session (Wh)
+#   sensor.nrgkick_total_charged_energy - Total lifetime energy (Wh)
+#
+# SENSORS (Electrical):
+#   sensor.nrgkick_charging_voltage - Current voltage (V)
+#   sensor.nrgkick_charging_current - Current draw (A)
+#   sensor.nrgkick_set_current - Configured current limit (A)
+#   sensor.nrgkick_grid_frequency - Grid frequency (Hz)
+#   sensor.nrgkick_rated_current - Device rated current (A)
+#
+# SENSORS (Per-Phase, L1/L2/L3):
+#   sensor.nrgkick_l1_voltage, l2_voltage, l3_voltage
+#   sensor.nrgkick_l1_current, l2_current, l3_current
+#   sensor.nrgkick_l1_active_power, l2_active_power, l3_active_power
+#   sensor.nrgkick_l1_power_factor, l2_power_factor, l3_power_factor
+#   sensor.nrgkick_n_current - Neutral current
+#
+# SENSORS (Status & Info):
+#   sensor.nrgkick_charging_status - Current status text
+#   sensor.nrgkick_charging_rate - Charging rate
+#   sensor.nrgkick_vehicle_connect_time - Time since vehicle connected (s)
+#   sensor.nrgkick_vehicle_charging_time - Time spent charging (s)
+#   sensor.nrgkick_charge_count - Number of charge sessions
+#   sensor.nrgkick_error_code - Error code (if any)
+#   sensor.nrgkick_warning_code - Warning code (if any)
+#
+# SENSORS (Temperature):
+#   sensor.nrgkick_housing_temperature - Housing temp (°C)
+#   sensor.nrgkick_connector_l1_temperature - Connector L1 temp (°C)
+#   sensor.nrgkick_connector_l2_temperature - Connector L2 temp (°C)
+#   sensor.nrgkick_connector_l3_temperature - Connector L3 temp (°C)
+#   sensor.nrgkick_domestic_plug_1_temperature - Plug 1 temp (°C)
+#   sensor.nrgkick_domestic_plug_2_temperature - Plug 2 temp (°C)
+#
+# SENSORS (Network):
+#   sensor.nrgkick_ip_address - Device IP address
+#   sensor.nrgkick_mac_address - Device MAC address
+#   sensor.nrgkick_wifi_ssid - Connected WiFi network
+#   sensor.nrgkick_wifi_signal_strength - WiFi RSSI (dBm)
+#
+# SWITCHES:
+#   switch.nrgkick_charge_pause - Pause/resume charging
+#
+# NUMBERS (Controls):
+#   number.nrgkick_charging_current - Set charging current (6-32A)
+#   number.nrgkick_energy_limit - Set energy limit (Wh, 0=unlimited)
+#   number.nrgkick_phase_count - Set phase count (1-3)
+#
+# ============================================================================
+
+# ============================================================================
+# VERIFICATION CARD (Add this first to test your setup)
+# ============================================================================
+# This minimal card helps verify that entities are properly configured.
+# If this works, the other cards should work too.
+
+type: entities
+title: NRGkick - Setup Verification
+entities:
+  - entity: binary_sensor.nrgkick_charging
+    name: Charging Active (Binary Sensor Test)
+  - entity: sensor.nrgkick_charging_status
+    name: Status (Sensor Test)
+  - entity: switch.nrgkick_charge_pause
+    name: Charge Pause (Switch Test)
+  - entity: number.nrgkick_charging_current
+    name: Set Current (Number Test)
+
+# ============================================================================
+# DEVICE INFO & DIAGNOSTICS CARD
+# ============================================================================
+# Shows device information and network details for troubleshooting
+
+type: entities
+title: NRGkick Device Info
+entities:
+  - entity: sensor.nrgkick_charging_status
+    name: Current Status
+  - entity: sensor.nrgkick_ip_address
+    name: IP Address
+  - entity: sensor.nrgkick_wifi_ssid
+    name: WiFi Network
+  - entity: sensor.nrgkick_wifi_signal_strength
+    name: Signal Strength
+  - entity: sensor.nrgkick_rated_current
+    name: Device Rated Current
+  - entity: sensor.nrgkick_connector_phase_count
+    name: Connector Phases
+  - entity: sensor.nrgkick_grid_voltage
+    name: Grid Voltage
+  - entity: sensor.nrgkick_grid_phases
+    name: Grid Phases
+  - entity: sensor.nrgkick_error_code
+    name: Error Code
+  - entity: sensor.nrgkick_warning_code
+    name: Warning Code
+
+# ============================================================================
 # BASIC STATUS CARD
 # ============================================================================
 
@@ -191,11 +329,8 @@ series:
 type: entities
 title: Current Session
 entities:
-  - type: attribute
-    entity: sensor.nrgkick_current_session_energy
-    attribute: unit_of_measurement
-    name: Energy
-    suffix: " Wh"
+  - entity: sensor.nrgkick_current_session_energy
+    name: Session Energy
   - entity: sensor.nrgkick_vehicle_connect_time
     name: Connect Time
   - entity: sensor.nrgkick_vehicle_charging_time
@@ -203,6 +338,8 @@ entities:
   - type: divider
   - entity: sensor.nrgkick_total_charged_energy
     name: Total Lifetime Energy
+  - entity: sensor.nrgkick_charge_count
+    name: Total Charge Sessions
 
 # ============================================================================
 # QUICK ACTION CARD
