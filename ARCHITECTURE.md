@@ -662,7 +662,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
 
 **Config Flow Integration Points:**
 
-1. **Exception Handling**: Custom exceptions like `CannotConnect` are caught in `async_step_user()` and converted to error keys. Home Assistant looks up these keys in `strings.json` to display localized error messages.
+1. **Exception Handling**: Custom exceptions like `CannotConnect` are caught in `async_step_user()` and converted to error keys. Home Assistant looks up these keys in the `translations/` directory to display localized error messages.
 
 2. **Unique ID System**: `async_set_unique_id()` registers the device's serial number with Home Assistant. This prevents duplicate config entries for the same device and enables IP address updates during discovery.
 
@@ -1100,7 +1100,6 @@ custom_components/nrgkick/
 ├── number.py                   # 3 number entities (current, limit, phases)
 │
 ├── diagnostics.py              # Diagnostics data provider
-├── strings.json                # UI strings (config flow)
 └── translations/               # Entity name translations
     ├── en.json
     └── de.json

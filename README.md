@@ -89,9 +89,9 @@ config/
         ├── manifest.json
         ├── number.py
         ├── sensor.py
-        ├── strings.json          # Base English translations
         ├── switch.py
         └── translations/
+            ├── en.json           # English translations
             └── de.json           # German translations
 ```
 
@@ -229,9 +229,9 @@ custom_components/nrgkick/
 ├── manifest.json         # Integration metadata
 ├── number.py             # Number entity controls
 ├── sensor.py             # Sensor platform (80+ sensors)
-├── strings.json          # UI strings (English/base)
 ├── switch.py             # Switch platform
 └── translations/         # Internationalization
+    ├── en.json           # English translations
     └── de.json           # German translations
 ```
 
