@@ -20,7 +20,7 @@ flake8>=7.3.0
 types-aiofiles>=23.0.0
 
 # Home Assistant (for development/testing)
-homeassistant>=2024.1.0
+homeassistant>=2025.10.0
 
 # API Dependencies
 aiohttp>=3.11.11
