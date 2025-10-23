@@ -293,7 +293,6 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 - **Entity Notifications**: When data is successfully fetched, the coordinator automatically notifies all registered `CoordinatorEntity` instances by calling their update methods. This is handled by the base class.
 
 - **Error Handling**: The coordinator catches two types of custom exceptions:
-
   - `NRGkickApiClientAuthenticationError` → Raises `ConfigEntryAuthFailed` to trigger Home Assistant's re-authentication flow
   - `NRGkickApiClientCommunicationError` → Raises `UpdateFailed` to log the error and retry later
 
@@ -373,7 +372,6 @@ class NRGkickAPI:
 **Design Considerations:**
 
 - **Custom Exception Hierarchy**: Three exception types provide clear error semantics:
-
   - `NRGkickApiClientError` (base) - Catch-all for API errors
   - `NRGkickApiClientCommunicationError` - Network issues, timeouts, connection failures
   - `NRGkickApiClientAuthenticationError` - Invalid credentials (401/403 responses)
@@ -587,7 +585,6 @@ graph LR
 **Entity Counts:**
 
 - **Sensors (80+)**: Read-only data display
-
   - Power & Energy (8): Total power, per-phase power, energy counters
   - Electrical Values (18): L1/L2/L3 voltage, current, power factor
   - Temperatures (6): Housing, connector pins, domestic plugs
@@ -595,13 +592,11 @@ graph LR
   - Status (10+): Charging state, warnings, errors, timers
 
 - **Binary Sensors (3)**: Boolean states
-
   - Charging (device_class: `battery_charging`)
   - Charge Permitted (device_class: `power`)
   - Charge Pause (no device class)
 
 - **Switches (1)**: Toggle control
-
   - Charge Pause (icon: `mdi:pause`)
 
 - **Numbers (3)**: Numeric input controls

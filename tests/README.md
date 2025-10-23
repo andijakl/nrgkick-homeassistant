@@ -73,7 +73,6 @@ These tests validate individual components in isolation using mocks:
 These tests use Home Assistant's integration loader and test environment, powered by `pytest-homeassistant-custom-component`:
 
 - **Config Flow Tests** (`test_config_flow.py`): 15 tests
-
   - User setup flow
   - Reauthentication
   - Options/reconfiguration

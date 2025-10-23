@@ -176,17 +176,14 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
    ```
 
 2. **Modern Import Paths** (HA 2025.10+):
-
    - ✅ `from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo`
    - ❌ `from homeassistant.components.zeroconf import ZeroconfServiceInfo` (deprecated in HA 2026.2)
 
 3. **Options Flow** (HA 2025.12+):
-
    - ✅ No explicit `__init__` in `OptionsFlowHandler` - base class provides `self.config_entry` property
    - ❌ `def __init__(self, config_entry): self.config_entry = config_entry` (deprecated, removed in HA 2025.12)
 
 4. **Exception Handling**:
-
    - Use custom exceptions, not generic `Exception`
    - Chain exceptions with `raise ... from err`
    - Catch specific exception types in config flow
