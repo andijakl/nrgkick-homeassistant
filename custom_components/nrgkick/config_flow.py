@@ -153,6 +153,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                # Create entry directly - HA will show device/area assignment UI
+                # This is the final step, so "Skip and finish" is appropriate
                 return self.async_create_entry(title=info["title"], data=data)
 
         # Show confirmation form with optional authentication
