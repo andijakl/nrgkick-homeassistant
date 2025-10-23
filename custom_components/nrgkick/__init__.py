@@ -6,7 +6,6 @@ import logging
 from datetime import timedelta
 from typing import Any
 
-import aiohttp
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -14,7 +13,11 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import NRGkickAPI
+from .api import (
+    NRGkickAPI,
+    NRGkickApiClientAuthenticationError,
+    NRGkickApiClientCommunicationError,
+)
 from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -76,10 +79,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         self.entry = entry
 
         # Get scan interval from options or use default
-        scan_interval = entry.options.get(
-            CONF_SCAN_INTERVAL,
-            entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-        )
+        scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
         super().__init__(
             hass,
@@ -100,12 +100,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
                 "control": control,
                 "values": values,
             }
-        except aiohttp.ClientResponseError as err:
-            if err.status == 401:
-                raise ConfigEntryAuthFailed(
-                    "Authentication failed. Please reconfigure the integration "
-                    "with valid credentials."
-                ) from err
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
-        except Exception as err:
+        except NRGkickApiClientAuthenticationError as err:
+            raise ConfigEntryAuthFailed from err
+        except NRGkickApiClientCommunicationError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

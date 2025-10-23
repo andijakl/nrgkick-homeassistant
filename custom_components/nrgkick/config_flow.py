@@ -8,13 +8,17 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .api import NRGkickAPI
+from .api import (
+    NRGkickAPI,
+    NRGkickApiClientAuthenticationError,
+    NRGkickApiClientCommunicationError,
+)
 from .const import (
     CONF_SCAN_INTERVAL,
     DEFAULT_SCAN_INTERVAL,
@@ -44,8 +48,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         session=session,
     )
 
-    if not await api.test_connection():
-        raise CannotConnect
+    await api.test_connection()
 
     info = await api.get_info(["general"])
     return {
@@ -75,7 +78,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
-            except CannotConnect:
+            except NRGkickApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -140,7 +145,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
 
             try:
                 info = await validate_input(self.hass, data)
-            except CannotConnect:
+            except NRGkickApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception")
@@ -190,7 +197,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
 
             try:
                 await validate_input(self.hass, data)
-            except CannotConnect:
+            except NRGkickApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except Exception:  # pylint: disable=broad-except
                 _LOGGER.exception("Unexpected exception during reauthentication")
@@ -216,15 +225,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
         config_entry: config_entries.ConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
+        return OptionsFlowHandler()
 
 
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for NRGkick."""
-
-    def __init__(self, config_entry: config_entries.ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -233,67 +238,60 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate scan interval
-            scan_interval = user_input.get(
-                CONF_SCAN_INTERVAL,
-                self.config_entry.options.get(
-                    CONF_SCAN_INTERVAL,
-                    self.config_entry.data.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ),
+            # Create a temporary API client to test the new settings
+            session = async_get_clientsession(self.hass)
+            api = NRGkickAPI(
+                host=user_input[CONF_HOST],
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
+                session=session,
             )
 
-            if scan_interval < MIN_SCAN_INTERVAL or scan_interval > MAX_SCAN_INTERVAL:
-                errors[CONF_SCAN_INTERVAL] = "invalid_scan_interval"
-
-            if not errors:
-                try:
-                    # Validate connection settings if provided
-                    connection_data = {
+            try:
+                await api.test_connection()
+            except NRGkickApiClientCommunicationError:
+                errors["base"] = "cannot_connect"
+            except NRGkickApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception during options flow")
+                errors["base"] = "unknown"
+            else:
+                # Settings are valid, update the config entry data
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={
+                        **self.config_entry.data,
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_USERNAME: user_input.get(CONF_USERNAME),
                         CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-                    }
-                    await validate_input(self.hass, connection_data)
-                except CannotConnect:
-                    errors["base"] = "cannot_connect"
-                except Exception:  # pylint: disable=broad-except
-                    _LOGGER.exception("Unexpected exception")
-                    errors["base"] = "unknown"
-                else:
-                    # Update the config entry with both connection data and options
-                    self.hass.config_entries.async_update_entry(
-                        self.config_entry,
-                        data=connection_data,
-                        options={CONF_SCAN_INTERVAL: scan_interval},
-                    )
-                    return self.async_create_entry(title="", data={})
+                    },
+                )
+                # Reload the integration to apply the new settings
+                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
+                # Return with options (data becomes the options in options flow)
+                return self.async_create_entry(
+                    title="",
+                    data={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
+                )
 
-        # Get current values with defaults
-        current_scan_interval = self.config_entry.options.get(
-            CONF_SCAN_INTERVAL,
-            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        # Get current values for the form
+        host = self.config_entry.data.get(CONF_HOST, "")
+        username = self.config_entry.data.get(CONF_USERNAME, "")
+        password = self.config_entry.data.get(CONF_PASSWORD, "")
+        scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
 
-        # Show current settings as defaults
+        # Show form with current settings as defaults
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_HOST,
-                    default=self.config_entry.data.get(CONF_HOST, ""),
-                ): str,
-                vol.Optional(
-                    CONF_USERNAME,
-                    default=self.config_entry.data.get(CONF_USERNAME, ""),
-                ): str,
-                vol.Optional(
-                    CONF_PASSWORD,
-                    default=self.config_entry.data.get(CONF_PASSWORD, ""),
-                ): str,
+                vol.Required(CONF_HOST, default=host): str,
+                vol.Optional(CONF_USERNAME, default=username): str,
+                vol.Optional(CONF_PASSWORD, default=password): str,
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
-                    default=current_scan_interval,
+                    default=scan_interval,
                 ): vol.All(
                     vol.Coerce(int),
                     vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
@@ -302,9 +300,7 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         )
 
         return self.async_show_form(
-            step_id="init",
-            data_schema=data_schema,
-            errors=errors,
+            step_id="init", data_schema=data_schema, errors=errors
         )
 
 

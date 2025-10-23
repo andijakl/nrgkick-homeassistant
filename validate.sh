@@ -102,10 +102,9 @@ fi
 # Run tests
 echo ""
 echo "🧪 Running tests..."
-echo "   Running CI-compatible tests (unit tests only)"
-echo "   Integration tests are skipped (run './run-tests.sh all' for full suite)"
+echo "   Running complete test suite (including integration tests)"
 echo ""
-if pytest tests/ -v -m "not requires_integration" --cov=custom_components.nrgkick --cov-report=term-missing; then
+if pytest tests/ -v --cov=custom_components.nrgkick --cov-report=term-missing; then
     echo ""
     echo "✅ All tests passed!"
 else

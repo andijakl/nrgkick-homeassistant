@@ -13,6 +13,11 @@
                     "host": "IP address (e.g., 192.168.1.100) or hostname (e.g., nrgkick.local)",
                     "username": "Only needed if BasicAuth is enabled on the device",
                     "password": "Only needed if BasicAuth is enabled on the device"
+                },
+                "error": {
+                    "cannot_connect": "Failed to connect to the device. Please check the IP address and ensure the device is reachable.",
+                    "invalid_auth": "Invalid username or password. Please check your credentials.",
+                    "unknown": "An unexpected error occurred. Please check the logs for more information."
                 }
             },
             "zeroconf_confirm": {
@@ -25,6 +30,11 @@
                 "data_description": {
                     "username": "Only needed if BasicAuth is enabled on the device",
                     "password": "Only needed if BasicAuth is enabled on the device"
+                },
+                "error": {
+                    "cannot_connect": "Failed to connect to the device. Please check the IP address and ensure the device is reachable.",
+                    "invalid_auth": "Invalid username or password. Please check your credentials.",
+                    "unknown": "An unexpected error occurred. Please check the logs for more information."
                 }
             },
             "reauth_confirm": {
@@ -37,12 +47,13 @@
                 "data_description": {
                     "username": "Username configured in the NRGkick mobile app",
                     "password": "Password configured in the NRGkick mobile app"
+                },
+                "error": {
+                    "cannot_connect": "Failed to connect to the device. Please check the IP address and ensure the device is reachable.",
+                    "invalid_auth": "Invalid username or password. Please check your credentials.",
+                    "unknown": "An unexpected error occurred. Please check the logs for more information."
                 }
             }
-        },
-        "error": {
-            "cannot_connect": "Failed to connect to the device. Please check the IP address and ensure the device is reachable.",
-            "unknown": "An unexpected error occurred. Please check the logs for more information."
         },
         "abort": {
             "already_configured": "This device is already configured.",
@@ -68,13 +79,13 @@
                     "username": "Only needed if BasicAuth is enabled on the device",
                     "password": "Only needed if BasicAuth is enabled on the device",
                     "scan_interval": "How often to poll the device for updates (10-300 seconds, default: 30)"
+                },
+                "error": {
+                    "cannot_connect": "Failed to connect to the device with the new settings. Please verify the connection details.",
+                    "invalid_scan_interval": "Scan interval must be between 10 and 300 seconds.",
+                    "unknown": "An unexpected error occurred. Please check the logs for more information."
                 }
             }
-        },
-        "error": {
-            "cannot_connect": "Failed to connect to the device with the new settings. Please verify the connection details.",
-            "invalid_scan_interval": "Scan interval must be between 10 and 300 seconds.",
-            "unknown": "An unexpected error occurred. Please check the logs for more information."
         }
     }
 }

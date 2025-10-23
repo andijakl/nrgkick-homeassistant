@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock
 
+import aiohttp
 import pytest
-from aiohttp import ClientError, ClientResponseError
 
-from custom_components.nrgkick.api import NRGkickAPI
+from custom_components.nrgkick.api import (
+    NRGkickAPI,
+    NRGkickApiClientAuthenticationError,
+    NRGkickApiClientCommunicationError,
+)
 
 
 @pytest.fixture
@@ -181,51 +186,43 @@ async def test_api_with_auth(mock_session):
     assert auth.password == "test_pass"
 
 
-async def test_test_connection_success(mock_session):
-    """Test successful connection test."""
-    api = NRGkickAPI(host="192.168.1.100", session=mock_session)
-    mock_session.get.return_value.__aenter__.return_value.json.return_value = {
-        "general": {"device_name": "Test"}
-    }
-
-    result = await api.test_connection()
-
-    assert result is True
+async def test_test_connection_success(mock_session) -> None:
+    """Test connection test success."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+    assert await api.test_connection()
 
 
-async def test_test_connection_failure(mock_session):
-    """Test failed connection test."""
-    api = NRGkickAPI(host="192.168.1.100", session=mock_session)
-    mock_session.get.return_value.__aenter__.return_value.raise_for_status.side_effect = (
-        ClientError()
-    )
+async def test_test_connection_failure(mock_session) -> None:
+    """Test connection test failure."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+    mock_session.get.side_effect = aiohttp.ClientError
 
-    result = await api.test_connection()
-
-    assert result is False
+    with pytest.raises(NRGkickApiClientCommunicationError):
+        await api.test_connection()
 
 
-async def test_api_timeout(mock_session):
-    """Test API timeout handling."""
-    api = NRGkickAPI(host="192.168.1.100", session=mock_session)
-    mock_session.get.return_value.__aenter__.side_effect = TimeoutError()
+async def test_api_timeout(mock_session) -> None:
+    """Test API timeout."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+    mock_session.get.side_effect = asyncio.TimeoutError
 
-    with pytest.raises(TimeoutError):
+    with pytest.raises(NRGkickApiClientCommunicationError):
         await api.get_info()
 
 
-async def test_api_client_error(mock_session):
-    """Test API client error handling."""
-    api = NRGkickAPI(host="192.168.1.100", session=mock_session)
-    error = ClientResponseError(
-        request_info=AsyncMock(),
-        history=(),
-        status=500,
-        message="Internal Server Error",
-    )
-    mock_session.get.return_value.__aenter__.return_value.raise_for_status.side_effect = (
-        error
-    )
+async def test_api_client_error(mock_session) -> None:
+    """Test API client error."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+    mock_session.get.side_effect = aiohttp.ClientError
 
-    with pytest.raises(ClientResponseError):
+    with pytest.raises(NRGkickApiClientCommunicationError):
+        await api.get_info()
+
+
+async def test_api_auth_error(mock_session) -> None:
+    """Test API authentication error."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+    mock_session.get.return_value.__aenter__.return_value.status = 401
+
+    with pytest.raises(NRGkickApiClientAuthenticationError):
         await api.get_info()

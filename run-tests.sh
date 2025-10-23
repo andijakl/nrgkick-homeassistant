@@ -17,18 +17,19 @@ show_help() {
     echo "Usage: ./run-tests.sh [option]"
     echo ""
     echo "Options:"
-    echo "  all              Run all tests (requires HA environment)"
-    echo "  ci               Run only CI-compatible tests (no integration tests)"
-    echo "  integration      Run only integration tests (local only)"
+    echo "  all              Run all tests (default)"
+    echo "  ci               Run only non-integration tests (for CI without full HA)"
+    echo "  integration      Run only integration tests"
     echo "  api              Run only API tests"
-    echo "  coverage         Run CI tests with HTML coverage report"
-    echo "  coverage-all     Run all tests with HTML coverage report"
+    echo "  coverage         Run all tests with HTML coverage report"
+    echo "  coverage-ci      Run CI tests with HTML coverage report"
     echo "  help             Show this help message"
     echo ""
     echo "Examples:"
-    echo "  ./run-tests.sh ci              # Run what GitHub Actions runs"
-    echo "  ./run-tests.sh all             # Run complete test suite"
-    echo "  ./run-tests.sh coverage        # Generate coverage report"
+    echo "  ./run-tests.sh              # Run all tests (default)"
+    echo "  ./run-tests.sh all          # Run all tests explicitly"
+    echo "  ./run-tests.sh ci           # Run what GitHub Actions runs"
+    echo "  ./run-tests.sh coverage     # Generate coverage report"
 }
 
 check_venv() {
@@ -45,13 +46,13 @@ run_all_tests() {
 }
 
 run_ci_tests() {
-    echo -e "${BLUE}Running CI-compatible tests (no integration tests)...${NC}"
+    echo -e "${BLUE}Running CI tests (non-integration tests only)...${NC}"
+    echo -e "${YELLOW}Note: Integration tests are skipped (use 'all' to run them)${NC}"
     pytest tests/ -v -m "not requires_integration"
 }
 
 run_integration_tests() {
     echo -e "${BLUE}Running integration tests only...${NC}"
-    echo -e "${YELLOW}Note: These require a full Home Assistant test environment${NC}"
     pytest tests/ -v -m "requires_integration"
 }
 
@@ -61,8 +62,8 @@ run_api_tests() {
 }
 
 run_coverage() {
-    echo -e "${BLUE}Running CI tests with coverage...${NC}"
-    pytest tests/ -v -m "not requires_integration" \
+    echo -e "${BLUE}Running all tests with coverage...${NC}"
+    pytest tests/ -v \
         --cov=custom_components.nrgkick \
         --cov-report=html \
         --cov-report=term
@@ -71,10 +72,10 @@ run_coverage() {
     echo "Open with: xdg-open htmlcov/index.html (Linux) or open htmlcov/index.html (macOS)"
 }
 
-run_coverage_all() {
-    echo -e "${BLUE}Running all tests with coverage...${NC}"
-    echo -e "${YELLOW}Note: Integration tests require a full Home Assistant environment${NC}"
-    pytest tests/ -v \
+run_coverage_ci() {
+    echo -e "${BLUE}Running CI tests with coverage...${NC}"
+    echo -e "${YELLOW}Note: Integration tests are excluded${NC}"
+    pytest tests/ -v -m "not requires_integration" \
         --cov=custom_components.nrgkick \
         --cov-report=html \
         --cov-report=term
@@ -85,7 +86,7 @@ run_coverage_all() {
 # Main script
 check_venv
 
-case "${1:-help}" in
+case "${1:-all}" in
     all)
         run_all_tests
         ;;
@@ -101,11 +102,17 @@ case "${1:-help}" in
     coverage)
         run_coverage
         ;;
-    coverage-all)
-        run_coverage_all
+    coverage-ci)
+        run_coverage_ci
         ;;
-    help|--help|-h|*)
+    help|--help|-h)
         show_help
+        ;;
+    *)
+        echo -e "${RED}Unknown option: $1${NC}"
+        echo ""
+        show_help
+        exit 1
         ;;
 esac
 

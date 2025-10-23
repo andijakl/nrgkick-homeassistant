@@ -3,7 +3,7 @@
 # See https://pre-commit.com/hooks.html for more hooks
 
 default_language_version:
-  python: python3.12
+  python: python3.13
 
 repos:
   # General file checks
@@ -33,7 +33,7 @@ repos:
       - id: black
         args:
           - --line-length=88
-        language_version: python3.12
+        language_version: python3.13
 
   # Import sorting with isort
   - repo: https://github.com/pycqa/isort
@@ -85,7 +85,7 @@ repos:
           - --disable=C0111,C0103,W0212,R0913,R0902,R0914,R0801
           - --max-line-length=88
         additional_dependencies:
-          - homeassistant>=2023.1.0
+          - homeassistant>=2025.10.0
           - aiohttp>=3.8.0
         exclude: ^tests/
 
@@ -103,8 +103,8 @@ repos:
   #       require_serial: true
 
   # Prettier for JSON, YAML, Markdown
-  - repo: https://github.com/pre-commit/mirrors-prettier
-    rev: v4.0.0-alpha.8
+  - repo: https://github.com/rbubley/mirrors-prettier
+    rev: v3.3.3
     hooks:
       - id: prettier
         types_or: [json, yaml, markdown]

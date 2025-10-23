@@ -119,7 +119,7 @@ Home Assistant will automatically discover NRGkick devices on your network. Clic
 
 **Multiple Devices**: Repeat setup for each device. Each is identified by its unique serial number.
 
-**Reconfiguration**: **Settings** → **Devices & Services** → **NRGkick** → **⋮** → **Configure** to update IP, credentials, or scan interval.
+**Reconfiguration**: To update the IP address, credentials, or scan interval, go to **Settings** → **Devices & Services**, find the NRGkick integration, and click **Configure**. The integration will validate the new settings and reload automatically.
 
 **Scan Interval**: Default 30s, adjustable 10-300s via configuration options. Lower values provide fresher data but increase network traffic.
 

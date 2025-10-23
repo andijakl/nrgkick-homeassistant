@@ -6,23 +6,27 @@ from ipaddress import ip_address
 from unittest.mock import patch
 
 import pytest
-from homeassistant import config_entries
+from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.nrgkick.const import CONF_SCAN_INTERVAL, DOMAIN
+from custom_components.nrgkick.api import (
+    NRGkickApiClientAuthenticationError,
+    NRGkickApiClientCommunicationError,
+)
+from custom_components.nrgkick.const import CONF_SCAN_INTERVAL
+
+from . import create_mock_config_entry
 
 
 @pytest.mark.requires_integration
 async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
     with patch(
@@ -42,7 +46,7 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "NRGkick Test"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.100",
@@ -56,7 +60,7 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
 async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we can setup without credentials."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
@@ -72,7 +76,7 @@ async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "NRGkick Test"
     assert result2["data"] == {CONF_HOST: "192.168.1.100"}
 
@@ -81,10 +85,10 @@ async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -
 async def test_form_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_nrgkick_api.test_connection.return_value = False
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
     with patch(
         "custom_components.nrgkick.config_flow.NRGkickAPI",
@@ -95,15 +99,40 @@ async def test_form_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) -> Non
             {CONF_HOST: "192.168.1.100"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_form_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -> None:
+    """Test we handle invalid auth error."""
+    result = await hass.config_entries.flow.async_init(
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
+    )
+
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
+
+    with patch(
+        "custom_components.nrgkick.config_flow.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+                CONF_USERNAME: "test-username",
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 @pytest.mark.requires_integration
 async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
 
     mock_nrgkick_api.test_connection.side_effect = Exception("Unexpected error")
@@ -117,15 +146,15 @@ async def test_form_unknown_exception(hass: HomeAssistant, mock_nrgkick_api) -> 
             {CONF_HOST: "192.168.1.100"},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
 
 @pytest.mark.requires_integration
 async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test we handle already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
+    entry = create_mock_config_entry(
+        domain="nrgkick",
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
         entry_id="test_entry",
@@ -134,7 +163,7 @@ async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) ->
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
@@ -146,15 +175,15 @@ async def test_form_already_configured(hass: HomeAssistant, mock_nrgkick_api) ->
             {CONF_HOST: "192.168.1.100"},
         )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
 
 
 @pytest.mark.requires_integration
 async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test reauth flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
+    entry = create_mock_config_entry(
+        domain="nrgkick",
         title="NRGkick Test",
         data={
             CONF_HOST: "192.168.1.100",
@@ -167,7 +196,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": entry.entry_id,
@@ -176,7 +205,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
         data=entry.data,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
     with patch(
@@ -191,7 +220,7 @@ async def test_reauth_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
             },
         )
 
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
     assert entry.data[CONF_USERNAME] == "new_user"
     assert entry.data[CONF_PASSWORD] == "new_pass"
@@ -202,8 +231,8 @@ async def test_reauth_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test reauth flow with connection error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
+    entry = create_mock_config_entry(
+        domain="nrgkick",
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.100"},
         entry_id="test_entry",
@@ -212,7 +241,7 @@ async def test_reauth_flow_cannot_connect(
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={
             "source": config_entries.SOURCE_REAUTH,
             "entry_id": entry.entry_id,
@@ -220,7 +249,7 @@ async def test_reauth_flow_cannot_connect(
         data=entry.data,
     )
 
-    mock_nrgkick_api.test_connection.return_value = False
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
     with patch(
         "custom_components.nrgkick.config_flow.NRGkickAPI",
@@ -234,67 +263,77 @@ async def test_reauth_flow_cannot_connect(
             },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.requires_integration
-async def test_options_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
-    """Test options flow."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
+async def test_options_flow_success(hass: HomeAssistant, mock_nrgkick_api) -> None:
+    """Test a successful options flow."""
+    entry = create_mock_config_entry(
+        domain="nrgkick",
         title="NRGkick Test",
         data={
             CONF_HOST: "192.168.1.100",
-            CONF_USERNAME: "test_user",
-            CONF_PASSWORD: "test_pass",
+            CONF_USERNAME: "old_user",
+            CONF_PASSWORD: "old_pass",
         },
+        options={CONF_SCAN_INTERVAL: 30},
         entry_id="test_entry",
         unique_id="TEST123456",
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
         "custom_components.nrgkick.config_flow.NRGkickAPI",
         return_value=mock_nrgkick_api,
-    ):
+    ), patch("homeassistant.config_entries.ConfigEntries.async_reload") as mock_reload:
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {
+            user_input={
                 CONF_HOST: "192.168.1.200",
                 CONF_USERNAME: "new_user",
                 CONF_PASSWORD: "new_pass",
+                CONF_SCAN_INTERVAL: 60,
             },
         )
+        await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    assert entry.data[CONF_HOST] == "192.168.1.200"
-    assert entry.data[CONF_USERNAME] == "new_user"
-    assert entry.data[CONF_PASSWORD] == "new_pass"
+        assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result2["data"] == {CONF_SCAN_INTERVAL: 60}
+
+        # Wait for config entry to be updated
+        await hass.async_block_till_done()
+
+        # Re-fetch the entry from hass to get updated values
+        updated_entry = hass.config_entries.async_get_entry(entry.entry_id)
+        assert updated_entry is not None
+        assert updated_entry.data[CONF_HOST] == "192.168.1.200"
+        assert updated_entry.data[CONF_USERNAME] == "new_user"
+        assert updated_entry.data[CONF_PASSWORD] == "new_pass"
+        assert updated_entry.options.get(CONF_SCAN_INTERVAL) == 60
+        assert len(mock_reload.mock_calls) == 1
 
 
 @pytest.mark.requires_integration
 async def test_options_flow_cannot_connect(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
-    """Test options flow with connection error."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="NRGkick Test",
+    """Test options flow with a connection error."""
+    entry = create_mock_config_entry(
+        domain="nrgkick",
         data={CONF_HOST: "192.168.1.100"},
         entry_id="test_entry",
-        unique_id="TEST123456",
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    mock_nrgkick_api.test_connection.return_value = False
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
     with patch(
         "custom_components.nrgkick.config_flow.NRGkickAPI",
@@ -302,35 +341,29 @@ async def test_options_flow_cannot_connect(
     ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {CONF_HOST: "192.168.1.200"},
+            user_input={
+                CONF_HOST: "192.168.1.200",
+                "scan_interval": 30,
+            },
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
 @pytest.mark.requires_integration
-async def test_options_flow_with_scan_interval(
-    hass: HomeAssistant, mock_nrgkick_api
-) -> None:
-    """Test options flow with scan interval configuration."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="NRGkick Test",
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_USERNAME: "test_user",
-            CONF_PASSWORD: "test_pass",
-        },
+async def test_options_flow_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -> None:
+    """Test options flow with an authentication error."""
+    entry = create_mock_config_entry(
+        domain="nrgkick",
+        data={CONF_HOST: "192.168.1.100"},
         entry_id="test_entry",
-        unique_id="TEST123456",
     )
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "init"
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
 
     with patch(
         "custom_components.nrgkick.config_flow.NRGkickAPI",
@@ -338,74 +371,15 @@ async def test_options_flow_with_scan_interval(
     ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            {
+            user_input={
                 CONF_HOST: "192.168.1.100",
-                CONF_USERNAME: "test_user",
-                CONF_PASSWORD: "test_pass",
-                CONF_SCAN_INTERVAL: 60,
-            },
-        )
-        # Wait for the entry to be updated
-        await hass.async_block_till_done()
-
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
-    # Verify the config data is correct (data dict is updated by the options flow)
-    assert entry.data[CONF_HOST] == "192.168.1.100"
-    assert entry.data[CONF_USERNAME] == "test_user"
-    assert entry.data[CONF_PASSWORD] == "test_pass"
-    # Note: Due to how MockConfigEntry works in tests, the options dict may not auto-update
-    # The important thing is the flow completed successfully (CREATE_ENTRY)
-
-
-@pytest.mark.requires_integration
-async def test_options_flow_invalid_scan_interval(
-    hass: HomeAssistant, mock_nrgkick_api
-) -> None:
-    """Test options flow with invalid scan interval."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="NRGkick Test",
-        data={CONF_HOST: "192.168.1.100"},
-        entry_id="test_entry",
-        unique_id="TEST123456",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.options.async_init(entry.entry_id)
-
-    # Voluptuous Range validator in the schema will catch invalid values
-    # as InvalidData exception. HA wraps this and shows validation errors.
-    from homeassistant.data_entry_flow import InvalidData
-
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), pytest.raises(InvalidData) as exc_info:
-        await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_SCAN_INTERVAL: 5,  # Too low - schema validation will catch this
+                CONF_USERNAME: "wrong_user",
+                "scan_interval": 30,
             },
         )
 
-    # Verify the error is about scan_interval
-    assert "scan_interval" in str(exc_info.value)
-
-    # Test with value too high
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), pytest.raises(InvalidData) as exc_info2:
-        await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            {
-                CONF_HOST: "192.168.1.100",
-                CONF_SCAN_INTERVAL: 500,  # Too high - schema validation will catch this
-            },
-        )
-
-    assert "scan_interval" in str(exc_info2.value)
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_auth"}
 
 
 # Zeroconf Discovery Tests
@@ -431,12 +405,12 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
     assert result["description_placeholders"] == {"name": "NRGkick Test"}
 
@@ -456,7 +430,7 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result2["title"] == "NRGkick Test"
     assert result2["data"] == {
         CONF_HOST: "192.168.1.100",
@@ -487,7 +461,7 @@ async def test_zeroconf_discovery_without_credentials(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
@@ -505,7 +479,7 @@ async def test_zeroconf_discovery_without_credentials(
         )
         await hass.async_block_till_done()
 
-    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
     # When no credentials provided, they are stored as None in the data
     assert result2["data"] == {
         CONF_HOST: "192.168.1.100",
@@ -519,8 +493,8 @@ async def test_zeroconf_already_configured(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
     """Test zeroconf discovery when device is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
+    entry = create_mock_config_entry(
+        domain="nrgkick",
         title="NRGkick Test",
         data={CONF_HOST: "192.168.1.200"},  # Different IP
         entry_id="test_entry",
@@ -543,12 +517,12 @@ async def test_zeroconf_already_configured(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     # Verify IP was updated
     assert entry.data[CONF_HOST] == "192.168.1.100"
@@ -572,12 +546,12 @@ async def test_zeroconf_json_api_disabled(hass: HomeAssistant) -> None:
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "json_api_disabled"
 
 
@@ -599,12 +573,12 @@ async def test_zeroconf_no_serial_number(hass: HomeAssistant) -> None:
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_serial_number"
 
 
@@ -626,12 +600,12 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) ->
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    mock_nrgkick_api.test_connection.return_value = False
+    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
 
     with patch(
         "custom_components.nrgkick.config_flow.NRGkickAPI",
@@ -642,7 +616,7 @@ async def test_zeroconf_cannot_connect(hass: HomeAssistant, mock_nrgkick_api) ->
             {},
         )
 
-    assert result2["type"] == FlowResultType.FORM
+    assert result2["type"] == data_entry_flow.FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
@@ -668,11 +642,11 @@ async def test_zeroconf_fallback_to_model_type(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
+        "nrgkick",
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=discovery_info,
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
     # When device_name is not in properties, it falls back to model_type
     assert result["description_placeholders"] == {"name": "NRGkick Gen2 SIM"}

@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
-from aiohttp import ClientResponseError
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from custom_components.nrgkick import (
-    async_setup_entry,
+from custom_components.nrgkick import async_setup_entry
+from custom_components.nrgkick.api import (
+    NRGkickApiClientAuthenticationError,
+    NRGkickApiClientCommunicationError,
 )
 from custom_components.nrgkick.const import DOMAIN
+
+from . import async_setup_entry_with_return, create_mock_config_entry
 
 
 @pytest.mark.requires_integration
@@ -125,41 +128,36 @@ async def test_coordinator_update_success(
 
 
 async def test_coordinator_update_failed(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+    hass: HomeAssistant, mock_nrgkick_api, caplog
 ) -> None:
-    """Test coordinator update failure."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_nrgkick_api.get_info.side_effect = Exception("Update failed")
+    """Test coordinator update failed."""
+    entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
+    entry.add_to_hass(hass)
+    mock_nrgkick_api.get_values.side_effect = NRGkickApiClientCommunicationError
 
     with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"), pytest.raises(
-        Exception
+        "custom_components.nrgkick.NRGkickAPI",
+        return_value=mock_nrgkick_api,
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        await async_setup_entry_with_return(hass, entry)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_coordinator_auth_failed(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+    hass: HomeAssistant, mock_nrgkick_api, caplog
 ) -> None:
-    """Test coordinator handles authentication failure."""
-    mock_config_entry.add_to_hass(hass)
-
-    # Create a mock 401 response error
-    mock_response = AsyncMock()
-    mock_response.status = 401
-    mock_error = ClientResponseError(
-        request_info=AsyncMock(),
-        history=(),
-        status=401,
-        message="Unauthorized",
-    )
-
-    mock_nrgkick_api.get_info.side_effect = mock_error
+    """Test coordinator auth failed."""
+    entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
+    entry.add_to_hass(hass)
+    mock_nrgkick_api.get_values.side_effect = NRGkickApiClientAuthenticationError
 
     with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
-        with pytest.raises(ConfigEntryAuthFailed):
-            await async_setup_entry(hass, mock_config_entry)
+        "custom_components.nrgkick.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ):
+        await async_setup_entry_with_return(hass, entry)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_ERROR

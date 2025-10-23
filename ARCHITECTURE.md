@@ -17,13 +17,14 @@
 
 ## Overview
 
-The NRGkick integration is a local polling-based Home Assistant custom component that communicates with NRGkick Gen2 EV charging devices through their HTTP REST JSON API. The architecture is built on Home Assistant's standard integration patterns:
+The NRGkick integration is a local polling-based Home Assistant custom component that communicates with NRGkick Gen2 EV charging devices through their HTTP REST JSON API. The architecture follows Home Assistant 2025.10+ standards:
 
-- **Config Flow**: Provides UI-based configuration instead of requiring manual YAML editing. Handles validation, unique device identification, and options management.
-- **DataUpdateCoordinator**: Implements the coordinator pattern to centralize API polling. This prevents multiple entities from making redundant HTTP requests.
+- **Config Flow**: Provides UI-based configuration with validation, unique device identification, and comprehensive options management including connection reconfiguration.
+- **DataUpdateCoordinator**: Implements the coordinator pattern to centralize API polling, preventing multiple entities from making redundant HTTP requests.
+- **Custom Exception Hierarchy**: Uses typed exceptions (`NRGkickApiClientCommunicationError`, `NRGkickApiClientAuthenticationError`) for proper error handling and re-authentication flows.
 - **Platform Entities**: Implements Home Assistant entity platforms (sensor, binary_sensor, switch, number) to expose device data and controls.
 - **Async/Await**: Uses Python's async/await throughout to prevent blocking the Home Assistant event loop during network I/O.
-- **Zeroconf Discovery**: Implements Home Assistant's discovery mechanism to detect devices via mDNS broadcasts.
+- **Zeroconf Discovery**: Implements Home Assistant's discovery mechanism to detect devices via mDNS broadcasts using modern import paths.
 
 ---
 
@@ -275,14 +276,14 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
                 "control": control,
                 "values": values,
             }
-        except aiohttp.ClientResponseError as err:
-            if err.status == 401:
-                # ConfigEntryAuthFailed triggers HA's reauth flow
-                # User sees notification to reconfigure credentials
-                raise ConfigEntryAuthFailed(...)
+        except NRGkickApiClientAuthenticationError as err:
+            # ConfigEntryAuthFailed triggers HA's reauth flow
+            # User sees notification to reconfigure credentials
+            raise ConfigEntryAuthFailed from err
+        except NRGkickApiClientCommunicationError as err:
             # UpdateFailed logs the error and schedules retry
             # Entities become unavailable until next successful update
-            raise UpdateFailed(...)
+            raise UpdateFailed(f"Error communicating with API: {err}") from err
 ```
 
 **How the Coordinator Integrates:**
@@ -291,7 +292,12 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 
 - **Entity Notifications**: When data is successfully fetched, the coordinator automatically notifies all registered `CoordinatorEntity` instances by calling their update methods. This is handled by the base class.
 
-- **Error Handling**: If `_async_update_data()` raises `UpdateFailed`, the coordinator logs the error, marks entities as unavailable, and retries after the next interval. If it raises `ConfigEntryAuthFailed`, Home Assistant triggers a reauthentication flow in the UI.
+- **Error Handling**: The coordinator catches two types of custom exceptions:
+
+  - `NRGkickApiClientAuthenticationError` → Raises `ConfigEntryAuthFailed` to trigger Home Assistant's re-authentication flow
+  - `NRGkickApiClientCommunicationError` → Raises `UpdateFailed` to log the error and retry later
+
+  When errors occur, entities become unavailable until the next successful update.
 
 - **Data Availability**: The returned dictionary is stored in `coordinator.data` and remains available to entities between updates. This allows entities to access the last known good data even if a poll fails.
 
@@ -323,9 +329,18 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 
 ### 2. API Client (`api.py::NRGkickAPI`)
 
-The API client encapsulates all HTTP communication with the device. It's a simple wrapper around aiohttp with basic error handling:
+The API client encapsulates all HTTP communication with the device. It uses a custom exception hierarchy for proper error handling:
 
 ```python
+class NRGkickApiClientError(Exception):
+    """Base exception for NRGkick API client errors."""
+
+class NRGkickApiClientCommunicationError(NRGkickApiClientError):
+    """Exception to indicate communication errors."""
+
+class NRGkickApiClientAuthenticationError(NRGkickApiClientError):
+    """Exception to indicate authentication errors."""
+
 class NRGkickAPI:
     def __init__(self, host: str, username: str | None, password: str | None,
                  session: aiohttp.ClientSession | None):
@@ -340,19 +355,36 @@ class NRGkickAPI:
         url = f"{self._base_url}{endpoint}"
         auth = aiohttp.BasicAuth(self.username, self.password) if self.username else None
 
-        async with asyncio.timeout(10):  # 10-second timeout
-            async with self._session.get(url, auth=auth, params=params) as response:
-                response.raise_for_status()  # Raises ClientResponseError on 4xx/5xx
-                return await response.json()
+        try:
+            async with asyncio.timeout(10):  # 10-second timeout
+                async with self._session.get(url, auth=auth, params=params) as response:
+                    if response.status in (401, 403):
+                        raise NRGkickApiClientAuthenticationError(
+                            "Authentication failed"
+                        )
+                    response.raise_for_status()
+                    return await response.json()
+        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
+            raise NRGkickApiClientCommunicationError(
+                f"Error communicating with API: {err}"
+            ) from err
 ```
 
 **Design Considerations:**
 
+- **Custom Exception Hierarchy**: Three exception types provide clear error semantics:
+
+  - `NRGkickApiClientError` (base) - Catch-all for API errors
+  - `NRGkickApiClientCommunicationError` - Network issues, timeouts, connection failures
+  - `NRGkickApiClientAuthenticationError` - Invalid credentials (401/403 responses)
+
+  This typed approach allows the coordinator to handle authentication errors differently (trigger re-auth) versus communication errors (retry).
+
 - **Session Management**: The session is passed in from Home Assistant rather than created internally. This allows the integration to leverage Home Assistant's connection pooling and SSL context.
 
-- **Timeout Handling**: The 10-second timeout prevents hung connections from blocking the coordinator indefinitely. If the timeout expires, `asyncio.timeout` raises `TimeoutError`, which the coordinator catches and converts to `UpdateFailed`.
+- **Timeout Handling**: The 10-second timeout prevents hung connections from blocking the coordinator indefinitely. If the timeout expires, `asyncio.timeout` raises `TimeoutError`, which is caught and converted to `NRGkickApiClientCommunicationError`.
 
-- **Error Propagation**: `raise_for_status()` converts HTTP error codes (4xx, 5xx) into `ClientResponseError` exceptions. The coordinator catches these and checks the status code to determine if it's an authentication error (401) or a different type of failure.
+- **Authentication Error Detection**: The API explicitly checks for 401/403 status codes before calling `raise_for_status()`, converting them to `NRGkickApiClientAuthenticationError` for proper re-authentication flow handling.
 
 - **Query Parameters**: Both read operations (filtering sections) and write operations (control commands) use GET requests with query parameters. While this isn't RESTful best practice, it matches the device's API design.
 
@@ -555,6 +587,7 @@ graph LR
 **Entity Counts:**
 
 - **Sensors (80+)**: Read-only data display
+
   - Power & Energy (8): Total power, per-phase power, energy counters
   - Electrical Values (18): L1/L2/L3 voltage, current, power factor
   - Temperatures (6): Housing, connector pins, domestic plugs
@@ -562,11 +595,13 @@ graph LR
   - Status (10+): Charging state, warnings, errors, timers
 
 - **Binary Sensors (3)**: Boolean states
+
   - Charging (device_class: `battery_charging`)
   - Charge Permitted (device_class: `power`)
   - Charge Pause (no device class)
 
 - **Switches (1)**: Toggle control
+
   - Charge Pause (icon: `mdi:pause`)
 
 - **Numbers (3)**: Numeric input controls
@@ -647,9 +682,8 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
     """Validate the user input allows us to connect."""
     api = NRGkickAPI(host=data[CONF_HOST], ...)
 
-    # Test connection
-    if not await api.test_connection():
-        raise CannotConnect
+    # Test connection - raises custom exceptions
+    await api.test_connection()
 
     # Fetch device info for unique ID
     info = await api.get_info(["general"])
@@ -662,7 +696,7 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
 
 **Config Flow Integration Points:**
 
-1. **Exception Handling**: Custom exceptions like `CannotConnect` are caught in `async_step_user()` and converted to error keys. Home Assistant looks up these keys in the `translations/` directory to display localized error messages.
+1. **Exception Handling**: Custom exceptions (`NRGkickApiClientCommunicationError`, `NRGkickApiClientAuthenticationError`) are caught in `async_step_user()` and converted to error keys. Home Assistant looks up these keys in the `translations/` directory to display localized error messages.
 
 2. **Unique ID System**: `async_set_unique_id()` registers the device's serial number with Home Assistant. This prevents duplicate config entries for the same device and enables IP address updates during discovery.
 
@@ -670,9 +704,11 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict:
 
 ### 2. Zeroconf Discovery
 
-Home Assistant automatically calls `async_step_zeroconf()` when it detects an mDNS service matching the types listed in `manifest.json`:
+Home Assistant automatically calls `async_step_zeroconf()` when it detects an mDNS service matching the types listed in `manifest.json`. The integration uses the modern import path for `ZeroconfServiceInfo`:
 
 ```python
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
 async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> ConfigFlowResult:
     """Handle zeroconf discovery."""
     # Extract mDNS metadata
@@ -698,6 +734,8 @@ async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> Conf
 
 **Discovery Integration:**
 
+- **Modern Import Path**: Uses `homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo` instead of the deprecated `homeassistant.components.zeroconf.ZeroconfServiceInfo` (deprecated in HA Core 2026.2).
+
 - **Service Matching**: Home Assistant's Zeroconf component listens for mDNS broadcasts. When it sees `_nrgkick._tcp.local.`, it instantiates a ConfigFlow and calls `async_step_zeroconf()` with service info.
 
 - **Property Extraction**: The device broadcasts TXT records as key-value pairs in `discovery_info.properties`. These are parsed as strings, so boolean checks compare against "0" or "1".
@@ -715,56 +753,106 @@ async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> Conf
 
 ### 3. Options Flow (Reconfiguration)
 
-The options flow is similar to the config flow but modifies an existing entry rather than creating a new one. Home Assistant calls `async_get_options_flow()` when the user clicks "Configure" on an existing integration:
+The `OptionsFlowHandler` class allows users to modify settings after initial setup. It follows the modern pattern where `config_entry` is provided by the base class:
 
 ```python
+from homeassistant import config_entries
+
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for NRGkick."""
 
+    # No __init__ method - base class provides self.config_entry property
+
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
+        errors = {}
+
         if user_input is not None:
             # Validate scan interval
             scan_interval = user_input[CONF_SCAN_INTERVAL]
             if not (MIN_SCAN_INTERVAL <= scan_interval <= MAX_SCAN_INTERVAL):
                 errors[CONF_SCAN_INTERVAL] = "invalid_scan_interval"
+            else:
+                try:
+                    # Validate new connection settings
+                    await validate_input(self.hass, user_input)
 
-            # Validate new connection settings
-            await validate_input(self.hass, user_input)
+                    # Update connection settings in entry.data
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry,
+                        data={
+                            CONF_HOST: user_input[CONF_HOST],
+                            CONF_USERNAME: user_input.get(CONF_USERNAME),
+                            CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                        },
+                    )
 
-            # Update both data (connection) and options (scan interval)
-            self.hass.config_entries.async_update_entry(
-                self.config_entry,
-                data={CONF_HOST: ..., CONF_USERNAME: ..., CONF_PASSWORD: ...},
-                options={CONF_SCAN_INTERVAL: scan_interval},
-            )
+                    # Return options via data parameter
+                    return self.async_create_entry(
+                        title="",
+                        data={CONF_SCAN_INTERVAL: scan_interval},
+                    )
 
-            return self.async_create_entry(title="", data={})
+                except NRGkickApiClientAuthenticationError:
+                    errors["base"] = "invalid_auth"
+                except NRGkickApiClientCommunicationError:
+                    errors["base"] = "cannot_connect"
+                except NRGkickApiClientError:
+                    errors["base"] = "unknown"
+
+        # Pre-fill form with current values
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema({
+                vol.Required(
+                    CONF_HOST,
+                    default=self.config_entry.data[CONF_HOST]
+                ): str,
+                vol.Optional(
+                    CONF_USERNAME,
+                    default=self.config_entry.data.get(CONF_USERNAME)
+                ): str,
+                vol.Optional(
+                    CONF_PASSWORD,
+                    default=self.config_entry.data.get(CONF_PASSWORD)
+                ): str,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL,
+                    default=self.config_entry.options.get(
+                        CONF_SCAN_INTERVAL,
+                        DEFAULT_SCAN_INTERVAL
+                    ),
+                ): vol.All(
+                    vol.Coerce(int),
+                    vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
+                ),
+            }),
+            errors=errors,
+        )
+
+
+@staticmethod
+@callback
+def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    """Get the options flow for this handler."""
+    return OptionsFlowHandler()  # No parameters - base class provides config_entry
 ```
 
-**Options Flow Mechanics:**
+**Modern Options Flow Pattern (HA 2025.12+):**
 
-1. **Separate from Config Flow**: The options flow is a separate class but follows the same pattern. It has access to `self.config_entry` to read current values.
+1. **No Explicit `__init__`**: The base `OptionsFlow` class provides `self.config_entry` as a property. Explicit assignment via `self.config_entry = config_entry` in `__init__` is deprecated and will be removed in Home Assistant 2025.12.
 
-2. **Data vs Options Storage**: Connection settings (host, credentials) are stored in `entry.data`, while user preferences (scan interval) are stored in `entry.options`. This separation allows options changes to trigger reloads without re-validating connection settings.
+2. **Base Class Property**: Access `self.config_entry` directly without initialization - it's automatically set by the framework before `async_step_init()` is called.
 
-3. **Update Listener Trigger**: After `async_update_entry()`, Home Assistant calls the update listener registered in `async_setup_entry()`, which triggers `async_reload_entry()`.
+3. **Options Flow Factory**: The `async_get_options_flow()` method returns an instance without passing `config_entry` - the framework injects it after instantiation.
 
-4. **Coordinator Recreation**: The reload unloads all entities, destroys the old coordinator (stopping its polling loop), creates a new coordinator with the updated scan interval, and recreates all entities.
+4. **Full Reconfiguration**: This options flow allows changing ALL settings (host, credentials, scan interval), not just preferences. Connection settings are updated in `entry.data` via `async_update_entry()`, while options are returned via `async_create_entry(data={...})`.
 
-**Options Schema:**
+5. **Data vs Options Storage**: Connection settings (host, credentials) are stored in `entry.data`, while user preferences (scan interval) are stored in `entry.options`. This separation allows options changes to trigger reloads without re-validating connection settings.
 
-```python
-vol.Schema({
-    vol.Required(CONF_HOST, default=current_host): str,
-    vol.Optional(CONF_USERNAME, default=current_username): str,
-    vol.Optional(CONF_PASSWORD, default=current_password): str,
-    vol.Optional(CONF_SCAN_INTERVAL, default=current_interval): vol.All(
-        vol.Coerce(int),
-        vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
-    ),
-})
-```
+6. **Update Listener Trigger**: After options flow completion, Home Assistant calls the update listener registered in `async_setup_entry()`, which triggers `async_reload_entry()`.
+
+7. **Coordinator Recreation**: The reload unloads all entities, destroys the old coordinator (stopping its polling loop), creates a new coordinator with the updated settings, and recreates all entities.
 
 ### 4. Configuration Storage
 
@@ -911,27 +999,33 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 Home Assistant's reauth flow is triggered when the coordinator raises `ConfigEntryAuthFailed`. This exception type signals that credentials are invalid rather than a temporary network error:
 
 ```python
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from .api import NRGkickApiClientAuthenticationError
+
 async def _async_update_data(self) -> dict:
     try:
-        # ... API calls
-    except aiohttp.ClientResponseError as err:
-        if err.status == 401:
-            # Triggers reauth flow in UI
-            raise ConfigEntryAuthFailed(
-                "Authentication failed. Please reconfigure the integration "
-                "with valid credentials."
-            ) from err
+        # Fetch data from all API endpoints
+        info = await self.api_client.get_info()
+        control = await self.api_client.get_control()
+        values = await self.api_client.get_values()
+        return {**info, **control, **values}
+    except NRGkickApiClientAuthenticationError as err:
+        # Triggers reauth flow in UI
+        raise ConfigEntryAuthFailed(
+            "Authentication failed. Please reconfigure the integration "
+            "with valid credentials."
+        ) from err
 ```
 
 **Reauth Steps:**
 
-1. **Error Detection**: During `_async_update_data()`, aiohttp raises `ClientResponseError` with `status=401`. The coordinator catches this and re-raises as `ConfigEntryAuthFailed`.
+1. **Error Detection**: During `_async_update_data()`, the API client raises `NRGkickApiClientAuthenticationError` when it detects 401/403 status codes. The coordinator catches this and re-raises as `ConfigEntryAuthFailed`.
 
 2. **UI Notification**: Home Assistant catches `ConfigEntryAuthFailed` and displays a persistent notification with a "Reconfigure" button. The integration continues running but entities show as unavailable.
 
 3. **Reauth Flow**: Clicking "Reconfigure" calls `async_step_reauth_confirm()` on a new ConfigFlow instance. The context includes `entry_id` so the flow knows which entry to update.
 
-4. **Credential Update**: After validating new credentials, the flow calls `async_update_entry()` to replace `entry.data` with the new username/password.
+4. **Credential Update**: After validating new credentials with `validate_input()` (which may raise `NRGkickApiClientAuthenticationError` again if credentials are still invalid), the flow calls `async_update_entry()` to replace `entry.data` with the new username/password.
 
 5. **Automatic Reload**: Updating entry data triggers the same reload mechanism as options changes, recreating the coordinator with new credentials.
 

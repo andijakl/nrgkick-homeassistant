@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Mit NRGkick verbinden",
-        "description": "Geben Sie die Verbindungsdetails für Ihr NRGkick-Gerät ein.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick-App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).\n\nEinrichtungsanleitung: https://github.com/andijakl/nrgkick-homeassistant#configuration",
+        "description": "Verbindungsdetails für dein NRGkick-Gerät eingeben.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).\n\nFür eine Einrichtungsanleitung siehe: https://github.com/andijakl/nrgkick-homeassistant#configuration",
         "data": {
           "host": "IP-Adresse oder Hostname",
           "username": "Benutzername (optional)",
@@ -11,52 +11,63 @@
         },
         "data_description": {
           "host": "IP-Adresse (z.B. 192.168.1.100) oder Hostname (z.B. nrgkick.local)",
-          "username": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
-          "password": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist"
+          "username": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
+          "password": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist"
+        },
+        "error": {
+          "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte IP-Adresse prüfen und sicherstellen, dass das Gerät erreichbar ist.",
+          "invalid_auth": "Ungültiger Benutzername oder Passwort. Bitte Anmeldedaten überprüfen.",
+          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       },
       "zeroconf_confirm": {
         "title": "NRGkick gefunden: {name}",
-        "description": "Ein NRGkick-Gerät wurde in Ihrem Netzwerk gefunden.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick-App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth). Lassen Sie die Felder leer, wenn BasicAuth nicht aktiviert ist.\n\nWeitere Informationen: https://github.com/andijakl/nrgkick-homeassistant#configuration",
+        "description": "Ein NRGkick-Gerät wurde in deinem Netzwerk gefunden.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth). Leer lassen, wenn BasicAuth nicht aktiviert ist.\n\nFür weitere Informationen siehe: https://github.com/andijakl/nrgkick-homeassistant#configuration",
         "data": {
           "username": "Benutzername (optional)",
           "password": "Passwort (optional)"
         },
         "data_description": {
-          "username": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
-          "password": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist"
+          "username": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
+          "password": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist"
+        },
+        "error": {
+          "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte IP-Adresse prüfen und sicherstellen, dass das Gerät erreichbar ist.",
+          "invalid_auth": "Ungültiger Benutzername oder Passwort. Bitte Anmeldedaten überprüfen.",
+          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       },
       "reauth_confirm": {
         "title": "NRGkick erneut authentifizieren",
-        "description": "Die Authentifizierung ist fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten.\n\nAnmeldedaten werden in der NRGkick-App konfiguriert: Einstellungen → API-Einstellungen → BasicAuth.\n\nFehlerbehebung: https://github.com/andijakl/nrgkick-homeassistant#troubleshooting",
+        "description": "Die Authentifizierung ist fehlgeschlagen. Bitte deine Anmeldedaten überprüfen.\n\nDie Anmeldedaten werden in der NRGkick Mobile App konfiguriert: Einstellungen → API-Einstellungen → BasicAuth.\n\nZur Fehlerbehebung siehe: https://github.com/andijakl/nrgkick-homeassistant#troubleshooting",
         "data": {
           "username": "Benutzername",
           "password": "Passwort"
         },
         "data_description": {
-          "username": "In der NRGkick-App konfigurierter Benutzername",
-          "password": "In der NRGkick-App konfiguriertes Passwort"
+          "username": "In der NRGkick Mobile App konfigurierter Benutzername",
+          "password": "In der NRGkick Mobile App konfiguriertes Passwort"
+        },
+        "error": {
+          "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte IP-Adresse prüfen und sicherstellen, dass das Gerät erreichbar ist.",
+          "invalid_auth": "Ungültiger Benutzername oder Passwort. Bitte Anmeldedaten überprüfen.",
+          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte überprüfen Sie die IP-Adresse und stellen Sie sicher, dass das Gerät erreichbar ist.",
-      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfen Sie die Logs für weitere Informationen."
     },
     "abort": {
       "already_configured": "Dieses Gerät ist bereits konfiguriert.",
       "reauth_successful": "Die erneute Authentifizierung war erfolgreich.",
-      "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen. Bitte entfernen Sie die Integration und fügen Sie sie erneut hinzu.",
-      "json_api_disabled": "Die JSON-API ist auf diesem NRGkick-Gerät nicht aktiviert. Bitte aktivieren Sie sie in der NRGkick-App.",
-      "no_serial_number": "Die Seriennummer des gefundenen Geräts konnte nicht ermittelt werden."
+      "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen. Bitte die Integration entfernen und neu hinzufügen.",
+      "json_api_disabled": "Die JSON-API ist auf diesem NRGkick-Gerät nicht aktiviert. Bitte in der NRGkick-App aktivieren.",
+      "no_serial_number": "Die Seriennummer des erkannten Geräts konnte nicht ermittelt werden."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "NRGkick-Verbindung neu konfigurieren",
-        "description": "Aktualisieren Sie die Verbindungsdetails für Ihr NRGkick-Gerät. Die Integration wird nach dem Speichern neu gestartet.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick-App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).",
+        "description": "Verbindungsdetails für dein NRGkick-Gerät aktualisieren. Die Integration wird nach dem Speichern neu gestartet.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).",
         "data": {
           "host": "IP-Adresse oder Hostname",
           "username": "Benutzername (optional)",
@@ -64,17 +75,17 @@
           "scan_interval": "Abfrageintervall (Sekunden)"
         },
         "data_description": {
-          "host": "IP-Adresse oder Hostname Ihres NRGkick-Geräts",
-          "username": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
-          "password": "Nur erforderlich, wenn BasicAuth am Gerät aktiviert ist",
-          "scan_interval": "Wie oft das Gerät auf Updates abgefragt werden soll (10-300 Sekunden, Standard: 30)"
+          "host": "IP-Adresse oder Hostname deines NRGkick-Geräts",
+          "username": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
+          "password": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
+          "scan_interval": "Wie oft das Gerät nach Updates abgefragt werden soll (10-300 Sekunden, Standard: 30)"
+        },
+        "error": {
+          "cannot_connect": "Verbindung zum Gerät mit den neuen Einstellungen fehlgeschlagen. Bitte die Verbindungsdetails überprüfen.",
+          "invalid_scan_interval": "Das Abfrageintervall muss zwischen 10 und 300 Sekunden liegen.",
+          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "Verbindung zum Gerät mit den neuen Einstellungen fehlgeschlagen. Bitte überprüfen Sie die Verbindungsdetails.",
-      "invalid_scan_interval": "Das Abfrageintervall muss zwischen 10 und 300 Sekunden liegen.",
-      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte überprüfen Sie die Logs für weitere Informationen."
     }
   }
 }

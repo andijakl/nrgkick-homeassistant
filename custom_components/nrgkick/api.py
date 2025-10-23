@@ -7,8 +7,21 @@ import logging
 from typing import Any, cast
 
 import aiohttp
+from aiohttp import ClientError
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class NRGkickApiClientError(Exception):
+    """Base exception for NRGkick API client errors."""
+
+
+class NRGkickApiClientCommunicationError(NRGkickApiClientError):
+    """Exception for NRGkick API client communication errors."""
+
+
+class NRGkickApiClientAuthenticationError(NRGkickApiClientError):
+    """Exception for NRGkick API client authentication errors."""
 
 
 class NRGkickAPI:
@@ -45,13 +58,24 @@ class NRGkickAPI:
 
         request_params = params if params is not None else {}
 
-        async with asyncio.timeout(10):
-            async with session.get(url, auth=auth, params=request_params) as response:
-                response.raise_for_status()
-                data = await response.json()
-                if data is None:
-                    return {}
-                return data
+        try:
+            async with asyncio.timeout(10):
+                async with session.get(
+                    url, auth=auth, params=request_params
+                ) as response:
+                    if response.status in (401, 403):
+                        raise NRGkickApiClientAuthenticationError(
+                            "Invalid username or password"
+                        )
+                    response.raise_for_status()
+                    data = await response.json()
+                    if data is None:
+                        return {}
+                    return data
+        except (asyncio.TimeoutError, ClientError) as exc:
+            raise NRGkickApiClientCommunicationError(
+                f"Failed to connect to NRGkick: {exc}"
+            ) from exc
 
     async def get_info(self, sections: list[str] | None = None) -> dict[str, Any]:
         """Get device information."""
@@ -93,9 +117,5 @@ class NRGkickAPI:
 
     async def test_connection(self) -> bool:
         """Test if we can connect to the device."""
-        try:
-            await self.get_info(["general"])
-            return True
-        except Exception as err:  # pylint: disable=broad-exception-caught
-            _LOGGER.error("Failed to connect to NRGkick: %s", err)
-            return False
+        await self.get_info(["general"])
+        return True
