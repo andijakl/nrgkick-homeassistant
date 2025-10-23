@@ -13,11 +13,6 @@
           "host": "IP-Adresse (z.B. 192.168.1.100) oder Hostname (z.B. nrgkick.local)",
           "username": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
           "password": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist"
-        },
-        "error": {
-          "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte IP-Adresse prüfen und sicherstellen, dass das Gerät erreichbar ist.",
-          "invalid_auth": "Ungültiger Benutzername oder Passwort. Bitte Anmeldedaten überprüfen.",
-          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       },
       "zeroconf_confirm": {
@@ -30,11 +25,6 @@
         "data_description": {
           "username": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
           "password": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist"
-        },
-        "error": {
-          "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte IP-Adresse prüfen und sicherstellen, dass das Gerät erreichbar ist.",
-          "invalid_auth": "Ungültiger Benutzername oder Passwort. Bitte Anmeldedaten überprüfen.",
-          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       },
       "reauth_confirm": {
@@ -47,13 +37,13 @@
         "data_description": {
           "username": "In der NRGkick Mobile App konfigurierter Benutzername",
           "password": "In der NRGkick Mobile App konfiguriertes Passwort"
-        },
-        "error": {
-          "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte IP-Adresse prüfen und sicherstellen, dass das Gerät erreichbar ist.",
-          "invalid_auth": "Ungültiger Benutzername oder Passwort. Bitte Anmeldedaten überprüfen.",
-          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Gerät fehlgeschlagen. Bitte IP-Adresse prüfen und sicherstellen, dass das Gerät erreichbar ist.",
+      "invalid_auth": "Ungültiger Benutzername oder Passwort. Bitte Anmeldedaten überprüfen.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
     },
     "abort": {
       "already_configured": "Dieses Gerät ist bereits konfiguriert.",
@@ -79,13 +69,13 @@
           "username": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
           "password": "Nur erforderlich, wenn BasicAuth auf dem Gerät aktiviert ist",
           "scan_interval": "Wie oft das Gerät nach Updates abgefragt werden soll (10-300 Sekunden, Standard: 30)"
-        },
-        "error": {
-          "cannot_connect": "Verbindung zum Gerät mit den neuen Einstellungen fehlgeschlagen. Bitte die Verbindungsdetails überprüfen.",
-          "invalid_scan_interval": "Das Abfrageintervall muss zwischen 10 und 300 Sekunden liegen.",
-          "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
         }
       }
+    },
+    "error": {
+      "cannot_connect": "Verbindung zum Gerät mit den neuen Einstellungen fehlgeschlagen. Bitte die Verbindungsdetails überprüfen.",
+      "invalid_scan_interval": "Das Abfrageintervall muss zwischen 10 und 300 Sekunden liegen.",
+      "unknown": "Ein unerwarteter Fehler ist aufgetreten. Bitte die Protokolle auf weitere Informationen prüfen."
     }
   }
 }
