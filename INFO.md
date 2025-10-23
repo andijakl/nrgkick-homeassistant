@@ -1,359 +1,163 @@
-# Developer Documentation
+# NRGkick Integration - Technical Reference
 
-## Architecture
+Quick reference for NRGkick Home Assistant integration internals. For architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md). For user documentation, see [README.md](README.md).
 
-### Overview
-
-```
-Home Assistant
-    ↓
-NRGkickDataUpdateCoordinator (polls at configurable interval, default: 30s)
-    ↓
-NRGkickAPI (aiohttp HTTP client)
-    ↓
-NRGkick Device (REST JSON API: /info, /control, /values)
-```
-
-### Component Structure
+## File Structure
 
 ```
 custom_components/nrgkick/
-├── __init__.py           # Integration entry point, coordinator
-├── api.py                # API client (NRGkickAPI)
-├── binary_sensor.py      # Binary sensors (3 entities)
-├── config_flow.py        # UI configuration flow
-├── const.py              # Constants (STATUS_MAP, DOMAIN, endpoints, scan interval limits)
-├── diagnostics.py        # Diagnostics data provider
-├── manifest.json         # Metadata (domain, version, dependencies)
-├── number.py             # Number controls (3 entities)
-├── sensor.py             # Sensors (80+ entities)
-├── switch.py             # Switches (1 entity)
-└── translations/         # i18n (en, de)
+├── __init__.py           # Coordinator, setup/teardown
+├── api.py                # REST client, custom exceptions
+├── binary_sensor.py      # 3 binary sensors
+├── config_flow.py        # UI flows (user, zeroconf, reauth, options)
+├── const.py              # Constants, STATUS_MAP, entity definitions
+├── diagnostics.py        # Diagnostics provider
+├── manifest.json         # Integration metadata
+├── number.py             # 3 number controls
+├── sensor.py             # 80+ sensors
+├── switch.py             # 1 switch
+└── translations/         # en.json, de.json
 ```
 
-## Key Classes
+## Core Classes
 
-### NRGkickDataUpdateCoordinator
+**`NRGkickDataUpdateCoordinator`** (`__init__.py`)
 
-**File**: `__init__.py`
+- Polls device every 10-300s (default: 30s)
+- Fetches `/info`, `/control`, `/values`
+- Distributes data to 80+ entities
+- Handles `ConfigEntryAuthFailed` for reauth flow
 
-**Purpose**: Manages data fetching and distribution to entities
+**`NRGkickAPI`** (`api.py`)
 
-**Features**:
+- aiohttp client with 10s timeout
+- Optional BasicAuth
+- Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError`, `NRGkickApiClientError`
+- Methods: `get_info()`, `get_control()`, `get_values()`, `set_current()`, `set_charge_pause()`, `set_energy_limit()`, `set_phase_count()`, `test_connection()`
 
-- Polls device at configurable interval (default: 30s, range: 10-300s)
-- Fetches `/info`, `/control`, `/values` endpoints
-- Caches data for all entities
-- Handles errors and retries
-- Automatically reloads when scan interval is changed
+**`ConfigFlow`** (`config_flow.py`)
 
-### NRGkickAPI
+- Modern import: `homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo`
+- Discovery via `_nrgkick._tcp.local.`
+- Options flow with no explicit `__init__` (HA 2025.12+ pattern)
+- Full reconfiguration support (host, credentials, scan_interval)
 
-**File**: `api.py`
+## Entity Distribution
 
-**Purpose**: HTTP client for NRGkick REST API
+- **Sensors**: 80+ (power, energy, voltage, current, temperatures, status, network, versions)
+- **Binary Sensors**: 3 (charging, charge_permitted, charge_pause)
+- **Switch**: 1 (charge_pause toggle)
+- **Numbers**: 3 (charging_current 6-32A, energy_limit 0-100kWh, phase_count 1-3)
 
-**Methods**:
-
-- `get_info(sections)` - Device info
-- `get_control()` - Control parameters
-- `get_values(sections)` - Real-time values
-- `set_current(float)` - Set charging current
-- `set_charge_pause(bool)` - Pause/resume
-- `set_energy_limit(int)` - Set energy limit (Wh)
-- `set_phase_count(int)` - Set phase count (1-3)
-- `test_connection()` - Connectivity check
-
-**Features**:
-
-- Optional BasicAuth support
-- 10-second timeout
-- Error handling
-
-### ConfigFlow
-
-**File**: `config_flow.py`
-
-**Purpose**: UI-based configuration
-
-**Features**:
-
-- Host (IP/hostname) input
-- Optional username/password
-- Configurable scan interval (10-300s)
-- Connection validation
-- Unique ID from serial number
-- Duplicate prevention
-- Options flow for reconfiguration
-
-## Entity Types
-
-### Sensors (80+)
-
-**Categories**:
-
-- Power & Energy (8 sensors)
-- Per-phase metrics (18 sensors: L1/L2/L3)
-- Temperatures (6 sensors)
-- Network info (4 sensors)
-- Device info (10+ sensors)
-- Status (10+ sensors)
-
-**Features**:
-
-- Display precision hints
-- Suggested unit conversions (Wh → kWh)
-- Disabled by default (version sensors)
-- Translation keys
-
-### Binary Sensors (3)
-
-- `charging` - Active charging status
-- `charge_permitted` - Charge allowed
-- `charge_pause` - Pause state
-
-### Switch (1)
-
-- `charge_pause` - Pause/resume control
-- 2-second delay after turn_off for state sync
-
-### Number Entities (3)
-
-- `charging_current` - 6-32A (slider)
-- `energy_limit` - 0-100,000 Wh (box)
-- `phase_count` - 1-3 (slider)
-- 2-second delay after changes for state sync
+All entities use value_path arrays for data extraction and include 2-second sync delays after control commands.
 
 ## API Endpoints
 
-### GET /info
+### Read Operations
 
-Device information:
+- **GET /info**: Device metadata (general, connector, grid, network, versions)
+- **GET /control**: Current control parameters
+- **GET /values**: Real-time telemetry
 
-```json
-{
-  "general": {
-    "serial_number": "ABC123",
-    "device_name": "NRGkick",
-    "model_type": "NRGkick Gen2",
-    "rated_current": 32
-  },
-  "connector": { ... },
-  "grid": { ... },
-  "network": { ... },
-  "versions": { ... }
-}
-```
+### Write Operations (GET with params)
 
-### GET /control
+- **GET /control?current=16.0**: Set charging current (6.0-32.0A)
+- **GET /control?pause=1**: Pause (1) or resume (0) charging
+- **GET /control?energy=5000**: Set energy limit (Wh, 0=unlimited)
+- **GET /control?phases=3**: Set phase count (1-3, if supported)
 
-Control parameters:
+## Configuration Storage
 
-```json
-{
-  "current_set": 16.0,
-  "charge_pause": 0,
-  "energy_limit": 0,
-  "phase_count": 3
-}
-```
-
-### GET /values
-
-Real-time telemetry:
-
-```json
-{
-  "general": {
-    "status": 3,
-    "charging_rate": 95,
-    "vehicle_connect_time": 1234,
-    "vehicle_charging_time": 890
-  },
-  "energy": {
-    "total_charged_energy": 150000,
-    "charged_energy": 5000
-  },
-  "powerflow": {
-    "total_active_power": 11000,
-    "charging_voltage": 230,
-    "charging_current": 16.0,
-    "l1": { ... },
-    "l2": { ... },
-    "l3": { ... }
-  },
-  "temperatures": { ... }
-}
-```
-
-### Control Commands
-
-**Set current**: `GET /control?current=16.0`
-**Pause charging**: `GET /control?pause=1`
-**Resume charging**: `GET /control?pause=0`
-**Set energy limit**: `GET /control?energy=10000`
-**Set phases**: `GET /control?phases=3`
-
-## Status Codes
+**`entry.data`** (connection settings):
 
 ```python
+{"host": "192.168.1.100", "username": "admin", "password": "secret"}
+```
+
+**`entry.options`** (user preferences):
+
+```python
+{"scan_interval": 30}
+```
+
+**Retrieval pattern** (with fallbacks):
+
+```python
+entry.options.get(CONF_SCAN_INTERVAL,
+    entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+```
+
+## Constants (`const.py`)
+
+```python
+DOMAIN = "nrgkick"
+PLATFORMS = [Platform.SENSOR, Platform.SWITCH, Platform.NUMBER, Platform.BINARY_SENSOR]
+
+# Scan interval
+DEFAULT_SCAN_INTERVAL = 30  # seconds
+MIN_SCAN_INTERVAL = 10
+MAX_SCAN_INTERVAL = 300
+
+# Status codes
 STATUS_MAP = {
-    0: "Unknown",
-    1: "Standby",
-    2: "Connected",
-    3: "Charging",
-    6: "Error",
-    7: "Wakeup",
+    0: "Unknown", 1: "Standby", 2: "Connected",
+    3: "Charging", 6: "Error", 7: "Wakeup"
 }
 ```
 
-## Configuration
+## Value Path System
 
-### Scan Interval
-
-**Constants** (in `const.py`):
-
-- `CONF_SCAN_INTERVAL = "scan_interval"` - Configuration key
-- `DEFAULT_SCAN_INTERVAL = 30` - Default interval in seconds
-- `MIN_SCAN_INTERVAL = 10` - Minimum allowed interval
-- `MAX_SCAN_INTERVAL = 300` - Maximum allowed interval
-
-**Usage**:
-
-- Configured via options flow in UI
-- Stored in `config_entry.options`
-- Falls back to `config_entry.data`, then default
-- Integration reloads automatically when changed
-
-### manifest.json
-
-```json
-{
-  "domain": "nrgkick",
-  "name": "NRGkick",
-  "version": "0.1.3",
-  "config_flow": true,
-  "documentation": "https://github.com/andijakl/nrgkick-homeassistant",
-  "issue_tracker": "https://github.com/andijakl/nrgkick-homeassistant/issues",
-  "requirements": ["aiohttp>=3.8.0"],
-  "codeowners": ["@andijakl"],
-  "iot_class": "local_polling"
-}
-```
-
-### hacs.json
-
-```json
-{
-  "name": "NRGkick",
-  "render_readme": true,
-  "domains": ["sensor", "binary_sensor", "switch", "number"]
-}
-```
-
-## Development Workflow
-
-### Setup
-
-1. Clone repository
-2. Copy `custom_components/nrgkick` to HA config
-3. Restart Home Assistant
-4. Configure via UI
-
-### Testing
-
-1. Enable debug logging:
-
-   ```yaml
-   logger:
-     default: info
-     logs:
-       custom_components.nrgkick: debug
-   ```
-
-2. Check logs: Settings → System → Logs
-
-3. Monitor coordinator updates (every 30s)
-
-### Debugging
-
-**Common issues**:
-
-- Import errors: Expected in dev environment (no HA core)
-- Connection timeouts: Check device IP, network
-- Authentication errors: Verify BasicAuth settings
-- State sync: Uses 2-second delays after control commands
-
-## Code Patterns
-
-### Entity Initialization
-
-All entities include:
-
-- Translation key for i18n
-- Device info (serial, model, manufacturer)
-- Unique ID: `{serial}_{entity_key}`
-
-### Data Access
-
-Entities access coordinator data via value paths:
+Entities use declarative path arrays to extract data from coordinator:
 
 ```python
-["values", "powerflow", "total_active_power"]  # → data["values"]["powerflow"]["total_active_power"]
+value_path = ["values", "powerflow", "l1", "voltage"]
+# Resolves to: coordinator.data["values"]["powerflow"]["l1"]["voltage"]
 ```
 
-### Control Commands
+Optional transformation via `value_fn`:
 
-Pattern for control entities:
+```python
+value_fn = lambda x: STATUS_MAP.get(x, "Unknown")  # Convert 3 → "Charging"
+```
 
-1. Call API method
-2. Sleep 2 seconds (device state sync)
-3. Request coordinator refresh
+## Control Flow Patterns
 
-## Testing Checklist
+### 2-Second Sync Delay
 
-- [ ] UI configuration with valid IP
-- [ ] UI configuration with invalid IP (error handling)
-- [ ] BasicAuth with credentials
-- [ ] BasicAuth without credentials (should fail if enabled)
-- [ ] All sensors show data
-- [ ] Switch toggle works
-- [ ] Number entities update device
-- [ ] Coordinator polls at configured interval
-- [ ] Scan interval configuration (10-300s range)
-- [ ] Invalid scan interval values are rejected
-- [ ] Scan interval changes trigger coordinator reload
-- [ ] Device disconnection handling
-- [ ] Device reconnection recovery
-- [ ] Multiple device support
+All control entities (switch, number) use this pattern:
 
-## Performance
+```python
+await self.coordinator.api.set_current(value)
+await asyncio.sleep(2)  # Device state sync
+await self.coordinator.async_request_refresh()
+```
 
-**Resource Usage**:
+### Exception Hierarchy
 
-- Memory: ~5MB per device
-- CPU: Negligible (async I/O)
-- Network: 3 HTTP requests per scan interval (default: every 30s, configurable: 10-300s)
+- **`NRGkickApiClientError`**: Base exception
+- **`NRGkickApiClientCommunicationError`**: Network/timeout → entities unavailable
+- **`NRGkickApiClientAuthenticationError`**: 401/403 → triggers reauth flow
 
-**Optimization**:
+## Key Implementation Details
 
-- Single coordinator per device
-- Shared data across entities
-- Async/await throughout
-- Connection pooling (aiohttp session reuse)
-- Configurable scan interval to balance responsiveness vs. load
+- **Session reuse**: Uses `async_get_clientsession(hass)` for connection pooling
+- **Modern patterns**: No explicit `__init__` in `OptionsFlowHandler` (HA 2025.12+)
+- **Modern imports**: `homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo`
+- **First refresh**: `async_config_entry_first_refresh()` validates device before entity creation
+- **Update listener**: `entry.add_update_listener(async_reload_entry)` for option changes
+- **Unique ID**: Device serial number prevents duplicates
+- **Discovery tracking**: `_abort_if_unique_id_configured(updates={CONF_HOST: ...})` updates IP on rediscovery
 
-## Future Enhancements
+## Testing Patterns
 
-- Energy dashboard integration
-- Charging session statistics
-- Cost calculation
-- Advanced scheduling
-- OCPP support (if available)
+Run tests: `./run-tests.sh`
+Run validation: `./validate.sh` (pre-commit + pytest)
 
-## References
+Coverage targets: 89% overall, 97% API client, 90% config flow, 98% coordinator
 
-- [Home Assistant Developer Docs](https://developers.home-assistant.io/)
-- [DataUpdateCoordinator](https://developers.home-assistant.io/docs/integration_fetching_data)
-- [Config Flow](https://developers.home-assistant.io/docs/config_entries_config_flow_handler)
-- [Entity Platform](https://developers.home-assistant.io/docs/core/entity)
+## Performance Characteristics
+
+- **Memory**: ~5MB per device
+- **Network**: 3 HTTP requests per scan interval
+- **CPU**: Negligible (async I/O only)
+- **Entity count**: 87 total (80+ sensors + 3 binary + 1 switch + 3 numbers)
