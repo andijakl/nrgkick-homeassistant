@@ -27,6 +27,13 @@ custom_components/nrgkick/
 - Fetches `/info`, `/control`, `/values`
 - Distributes data to 80+ entities
 - Handles `ConfigEntryAuthFailed` for reauth flow
+- Public methods: `async_set_current()`, `async_set_charge_pause()`, `async_set_energy_limit()`, `async_set_phase_count()`
+
+**`NRGkickEntity`** (`__init__.py`)
+
+- Base class for all entity types
+- Provides common device info setup
+- Type annotation: `coordinator: NRGkickDataUpdateCoordinator`
 
 **`NRGkickAPI`** (`api.py`)
 
@@ -122,14 +129,13 @@ value_fn = lambda x: STATUS_MAP.get(x, "Unknown")  # Convert 3 → "Charging"
 
 ## Control Flow Patterns
 
-### 2-Second Sync Delay
+### Coordinator Control Methods
 
-All control entities (switch, number) use this pattern:
+Entities call coordinator methods for control operations:
 
 ```python
-await self.coordinator.api.set_current(value)
-await asyncio.sleep(2)  # Device state sync
-await self.coordinator.async_request_refresh()
+await self.coordinator.async_set_current(value)
+# Coordinator handles: API call → 2-second delay → refresh
 ```
 
 ### Exception Hierarchy
@@ -151,11 +157,11 @@ await self.coordinator.async_request_refresh()
 Run tests: `./run-tests.sh`
 Run validation: `./validate.sh` (pre-commit + pytest)
 
-**Test suite**: 50 tests with 89% coverage
+**Test suite**: 54 tests with 94% coverage
 
 - API tests: 17 (97% coverage)
 - Config flow tests: 26 (90% coverage)
-- Coordinator tests: 7 (98% coverage)
+- Coordinator tests: 11 (100% coverage)
 
 ## Performance Characteristics
 

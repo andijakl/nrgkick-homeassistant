@@ -480,7 +480,7 @@ async def async_setup_entry(
 
 - **Coordinator Retrieval**: Each platform retrieves the coordinator from `hass.data[DOMAIN][entry.entry_id]`. This is the same coordinator instance created in `async_setup_entry()`.
 
-- **Entity Creation**: Entities are instantiated with a reference to the coordinator. Each entity class inherits from `CoordinatorEntity`, which automatically subscribes to coordinator updates.
+- **Base Class Inheritance**: All entity classes inherit from `NRGkickEntity`, which provides common device info setup and proper type annotation for the coordinator.
 
 - **Entity Registration**: `async_add_entities()` is a callback provided by Home Assistant. It adds entities to the entity registry and starts their lifecycle. Once registered, entities begin receiving updates when the coordinator fetches new data.
 
@@ -607,23 +607,31 @@ graph LR
 
 ### 4. Device Registry Integration
 
-Home Assistant's device registry groups entities by device. All entities provide identical `device_info` to ensure they appear under a single device:
+Home Assistant's device registry groups entities by device. The `NRGkickEntity` base class provides device info for all entity types:
 
 ```python
-self._attr_device_info = {
-    "identifiers": {(DOMAIN, serial_number)},  # Unique device identifier
-    "name": device_name,                        # "NRGkick" from device
-    "manufacturer": "DiniTech",                 # Fixed manufacturer
-    "model": model_type,                        # "NRGkick Gen2" from device
-    "sw_version": sw_version,                   # From /info endpoint
-}
+class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
+    """Base class for NRGkick entities."""
+
+    def __init__(self, coordinator: NRGkickDataUpdateCoordinator) -> None:
+        """Initialize NRGkick entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.data["general"]["serial_number"])},
+            name=coordinator.data["general"]["device_name"],
+            manufacturer="DiniTech",
+            model=coordinator.data["general"]["model_type"],
+            sw_version=coordinator.data["versions"]["smartmodule"],
+        )
 ```
 
 **Device Registry Behavior:**
 
-- **Identifier Matching**: Home Assistant uses the `identifiers` tuple to determine if entities belong to the same device. All entities use `(DOMAIN, serial_number)`, so they automatically group together.
+- **Base Class Pattern**: All entity types (sensor, binary_sensor, switch, number) inherit from `NRGkickEntity`, eliminating duplicate device info setup.
 
-- **Device Info Updates**: When any entity updates its `device_info`, Home Assistant updates the device registry entry. This means firmware version changes appear automatically when the coordinator fetches new `/info` data.
+- **Type Annotation**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference throughout the entity hierarchy.
+
+- **Identifier Matching**: Home Assistant uses the `identifiers` tuple to determine if entities belong to the same device. All entities use `(DOMAIN, serial_number)`, so they automatically group together.
 
 - **Entity Organization**: In the Home Assistant UI, users see one device (e.g., "NRGkick ABC123") with 80+ entities underneath, rather than 80+ separate devices.
 
@@ -1263,29 +1271,24 @@ NRGkickNumber(
 
 **State Sync Delay:**
 
-Control entities implement a delay pattern to avoid race conditions:
+Control entities call coordinator methods to handle state synchronization:
 
 ```python
 async def async_set_native_value(self, value: float) -> None:
     """Set the value of the number entity."""
-    await self.coordinator.api.set_current(value)
-
-    # Sleep 2 seconds to allow device to update state
-    await asyncio.sleep(2)
-
-    # Refresh coordinator data
-    await self.coordinator.async_request_refresh()
+    await self.coordinator.async_set_current(value)
+    # Coordinator handles: API call → 2-second delay → refresh
 ```
 
 **Why This Pattern:**
 
-1. **Command Latency**: The device's REST API returns immediately (HTTP 200) but the device applies changes asynchronously. If we poll immediately, the device might still report the old value.
+1. **Command Latency**: The device's REST API returns immediately (HTTP 200) but the device applies changes asynchronously. A 2-second delay ensures the device has processed the command.
 
-2. **Race Condition**: Without the sleep, the coordinator's next scheduled poll might occur before the device updates, showing stale data. The 2-second delay ensures the device has processed the command.
+2. **Race Condition**: Without the delay, the next scheduled poll might occur before the device updates, showing stale data.
 
-3. **Immediate Feedback**: `async_request_refresh()` triggers an immediate coordinator update after the delay, so the UI reflects the new value without waiting for the next scheduled poll (which could be up to 30 seconds away).
+3. **Immediate Feedback**: The coordinator triggers an immediate update after the delay, so the UI reflects the new value without waiting for the next scheduled poll.
 
-4. **Blocking Behavior**: The `await asyncio.sleep(2)` doesn't block the Home Assistant event loop. Other integrations and entities continue operating normally. However, the entity's `async_set_native_value()` method is blocked from being called again until this completes.
+4. **Centralized Logic**: Control methods are implemented in the coordinator, not duplicated across entity types. This provides a single point of maintenance and consistent behavior.
 
 ### 4. Lovelace Dashboard Integration
 
@@ -1381,7 +1384,7 @@ STATUS_MAP: Final = {
 
 ## Testing Strategy
 
-The integration includes comprehensive test coverage (89%) across all components. Tests use mocks to avoid requiring real hardware, enabling fast and reliable CI/CD pipelines.
+The integration includes comprehensive test coverage (94%) across all components. Tests use mocks to avoid requiring real hardware, enabling fast and reliable CI/CD pipelines.
 
 ### Test Organization
 
@@ -1390,10 +1393,10 @@ tests/
 ├── test_api.py                    # 17 tests - API client, HTTP communication, error handling
 ├── test_config_flow.py            # 18 tests - Core config flow scenarios
 ├── test_config_flow_additional.py # 8 tests - Edge cases and error scenarios
-└── test_init.py                   # 7 tests - Coordinator, setup/teardown
+└── test_init.py                   # 11 tests - Coordinator, setup/teardown, control methods
 ```
 
-**Total: 50 tests, 100% pass rate**
+**Total: 54 tests, 100% pass rate**
 
 ### Config Flow Test Coverage
 
@@ -1480,8 +1483,9 @@ async def test_options_flow_success(hass, mock_nrgkick_api):
    - OptionsFlowHandler with base class property
    - Reauth flow using `async_update_reload_and_abort()`
    - Update listener triggering reloads correctly
+   - Coordinator control methods for proper encapsulation
 
-**See `tests/TEST_COVERAGE_SUMMARY.md` for detailed test analysis.**
+**See `tests/README.md` for detailed test analysis.**
 
 ---
 
@@ -1514,7 +1518,33 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 
 - **Error Propagation**: When polling fails, all entities automatically become unavailable. When polling resumes, all entities become available again. No per-entity error handling needed.
 
-### 2. Value Path Mapping (Declarative Data Extraction)
+- **Control Methods**: The coordinator provides public methods (`async_set_current()`, `async_set_charge_pause()`, etc.) that entities call for control operations. This centralizes the 2-second delay and refresh logic in one place.
+
+### 2. Base Entity Class (Eliminating Duplication)
+
+The `NRGkickEntity` base class provides common functionality for all entity types:
+
+```python
+class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
+    """Base class for NRGkick entities."""
+
+    coordinator: NRGkickDataUpdateCoordinator
+
+    def __init__(self, coordinator: NRGkickDataUpdateCoordinator) -> None:
+        """Initialize NRGkick entity."""
+        super().__init__(coordinator)
+        self._attr_device_info = DeviceInfo(...)
+```
+
+**Why This Pattern:**
+
+- **Single Source of Truth**: Device info setup is defined once instead of duplicated across 4 entity files.
+
+- **Type Safety**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference without type ignores.
+
+- **Maintainability**: Changes to device info logic only need to be made in one place.
+
+### 3. Value Path Mapping (Declarative Data Extraction)
 
 Rather than writing custom property implementations for each of 80+ sensors, the value path system allows defining entities declaratively:
 
@@ -1535,7 +1565,7 @@ value_path = ["values", "powerflow", "l1", "voltage"]
 
 - **Transformation Layer**: The optional `value_fn` parameter allows converting raw API values (like status code 3) into user-friendly strings ("Charging") without cluttering the path definition.
 
-### 3. CoordinatorEntity Pattern (Automatic Updates)
+### 4. CoordinatorEntity Pattern (Automatic Updates)
 
 Home Assistant provides `CoordinatorEntity` as a base class that handles subscription boilerplate:
 
@@ -1562,7 +1592,7 @@ class NRGkickSensor(CoordinatorEntity, SensorEntity):
 
 4. **Context Preservation**: The entity retains its coordinator reference, so `self.coordinator.data` always points to the latest successfully fetched data, even if subsequent polls fail.
 
-### 4. Config Flow Pattern (UI-Based Configuration)
+### 5. Config Flow Pattern (UI-Based Configuration)
 
 Home Assistant integrations use config flows instead of requiring users to edit YAML files. This provides better UX and validation:
 
@@ -1582,7 +1612,7 @@ Home Assistant integrations use config flows instead of requiring users to edit 
 
 - **Persistent Storage**: After `async_create_entry()`, Home Assistant persists the data to `.storage/core.config_entries`. The integration never needs to handle storage I/O directly.
 
-### 5. Platform Forwarding (Entity Organization)
+### 6. Platform Forwarding (Entity Organization)
 
 Platform forwarding splits entity types into separate files rather than implementing all entities in `__init__.py`:
 
@@ -1658,15 +1688,16 @@ async def async_reload_entry(hass, entry):
 The NRGkick integration follows Home Assistant best practices with:
 
 1. **Config Flow**: UI-based setup with validation, discovery, and reauth patterns
-2. **Coordinator Pattern**: Centralized polling (configurable 10-300s)
-3. **Value Path Mapping**: Declarative entity-to-data binding
-4. **Platform Separation**: 4 entity types (sensor, binary_sensor, switch, number)
-5. **Device Registry**: All entities grouped under single device
-6. **Translation Support**: Multi-language entity names (en, de)
-7. **Dynamic Reconfiguration**: Options flow with automatic reload via update listeners
-8. **Error Handling**: Typed exceptions with proper reauth flow using `async_update_reload_and_abort()`
-9. **State Sync**: 2-second delays after control commands for device processing
-10. **Async/Await**: Non-blocking I/O throughout
+2. **Coordinator Pattern**: Centralized polling (configurable 10-300s) with public control methods
+3. **Base Entity Class**: Common device info setup and type annotations
+4. **Value Path Mapping**: Declarative entity-to-data binding
+5. **Platform Separation**: 4 entity types (sensor, binary_sensor, switch, number)
+6. **Device Registry**: All entities grouped under single device
+7. **Translation Support**: Multi-language entity names (en, de)
+8. **Dynamic Reconfiguration**: Options flow with automatic reload via update listeners
+9. **Error Handling**: Typed exceptions with proper reauth flow using `async_update_reload_and_abort()`
+10. **State Sync**: Centralized 2-second delays after control commands
+11. **Async/Await**: Non-blocking I/O throughout
 
 **Key Implementation Patterns:**
 
@@ -1675,6 +1706,8 @@ The NRGkick integration follows Home Assistant best practices with:
 - ✅ Zeroconf discovery via `homeassistant.helpers.service_info.zeroconf`
 - ✅ Update listeners trigger automatic reloads on config changes
 - ✅ Custom exception hierarchy for proper error routing
+- ✅ Coordinator control methods for proper encapsulation
+- ✅ Type-annotated base class eliminates code duplication
 
 **Entity Distribution:**
 
@@ -1700,8 +1733,8 @@ The NRGkick integration follows Home Assistant best practices with:
 
 **Testing:**
 
-- 50 tests with 100% pass rate
-- 89% code coverage
+- 54 tests with 100% pass rate
+- 94% code coverage
 - Comprehensive config flow testing (26 tests covering all flows and error scenarios)
 - No real hardware required (full mock architecture)
 
