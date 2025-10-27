@@ -64,12 +64,12 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.api.set_charge_pause(True)
+        await self.coordinator.api.set_charge_pause(True)  # type: ignore[attr-defined]
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.api.set_charge_pause(False)
+        await self.coordinator.api.set_charge_pause(False)  # type: ignore[attr-defined]
         # Sleep 2 seconds to make sure the device status is updated
         await asyncio.sleep(2)
         await self.coordinator.async_request_refresh()

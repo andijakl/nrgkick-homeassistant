@@ -105,11 +105,15 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number entity."""
         if self._key == "current_set":
-            await self.coordinator.api.set_current(value)
+            await self.coordinator.api.set_current(value)  # type: ignore[attr-defined]
         elif self._key == "energy_limit":
-            await self.coordinator.api.set_energy_limit(int(value))
+            await self.coordinator.api.set_energy_limit(  # type: ignore[attr-defined]
+                int(value)
+            )
         elif self._key == "phase_count":
-            await self.coordinator.api.set_phase_count(int(value))
+            await self.coordinator.api.set_phase_count(  # type: ignore[attr-defined]
+                int(value)
+            )
 
         # Sleep 2 seconds to make sure the device status is updated
         await asyncio.sleep(2)

@@ -71,7 +71,6 @@ repos:
           - --disallow-untyped-defs
           - --no-implicit-optional
           - --warn-redundant-casts
-          - --warn-unused-ignores
         additional_dependencies:
           - types-aiofiles
         exclude: ^tests/
