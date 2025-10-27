@@ -123,25 +123,23 @@ def mock_session():
 | API Tests              | 17     | ✅ PASS        | ✅ PASS      | 100%      |
 | Config Flow Tests      | 18     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Config Flow Additional | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Coordinator Tests      | 7      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| **Total**              | **50** | **17 pass**    | **50 pass**  | **100%**  |
+| Coordinator Tests      | 11     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| **Total**              | **54** | **17 pass**    | **54 pass**  | **100%**  |
 
-**Note**: All 50 tests work in both environments. CI skips 33 integration tests for faster builds (runs in ~2s instead of ~4s).
-
-**Recent Update**: Added 8 additional config flow tests covering edge cases and error scenarios. See [TEST_COVERAGE_SUMMARY.md](TEST_COVERAGE_SUMMARY.md) for details.
+**Note**: All 54 tests work in both environments. CI skips 37 integration tests for faster builds (runs in ~2s instead of ~5s).
 
 ### GitHub Actions (CI)
 
 ```
 ✅ 17 tests pass (non-integration only for speed)
-⏭️ 33 tests skipped (integration tests - work but skipped for fast CI)
+⏭️ 37 tests skipped (integration tests - work but skipped for fast CI)
 ❌ 0 tests fail
 ```
 
 ### Local Development (Full Suite)
 
 ```
-✅ 50 tests pass (all tests including integration)
+✅ 54 tests pass (all tests including integration)
 ❌ 0 tests fail
 ⏭️ 0 tests skipped
 ```
@@ -195,7 +193,7 @@ def mock_session():
 
 #### Config Flow Additional Tests (`test_config_flow_additional.py`) - 8/8 ✅ PASSING
 
-**New tests covering edge cases and error scenarios** (see [TEST_COVERAGE_SUMMARY.md](TEST_COVERAGE_SUMMARY.md) for full analysis)
+Tests covering edge cases and error scenarios:
 
 | Test                                        | CI   | What It Tests                            |
 | ------------------------------------------- | ---- | ---------------------------------------- |
@@ -208,17 +206,21 @@ def mock_session():
 | `test_zeroconf_discovery_unknown_exception` | SKIP | Zeroconf unexpected error handling       |
 | `test_zeroconf_fallback_to_default_name`    | SKIP | Fallback to "NRGkick" when names missing |
 
-#### Integration Tests (`test_init.py`) - 7/7 ✅ PASSING
+#### Integration Tests (`test_init.py`) - 11/11 ✅ PASSING
 
-| Test                                 | CI Status | What It Tests                 |
-| ------------------------------------ | --------- | ----------------------------- |
-| `test_setup_entry`                   | SKIP      | Entry setup                   |
-| `test_setup_entry_failed_connection` | PASS      | Setup with connection failure |
-| `test_unload_entry`                  | SKIP      | Entry unload                  |
-| `test_reload_entry`                  | SKIP      | Entry reload                  |
-| `test_coordinator_update_success`    | SKIP      | Coordinator updates           |
-| `test_coordinator_update_failed`     | PASS      | Coordinator update failure    |
-| `test_coordinator_auth_failed`       | PASS      | Coordinator auth failure      |
+| Test                                      | CI Status | What It Tests                       |
+| ----------------------------------------- | --------- | ----------------------------------- |
+| `test_setup_entry`                        | SKIP      | Entry setup                         |
+| `test_setup_entry_failed_connection`      | PASS      | Setup with connection failure       |
+| `test_unload_entry`                       | SKIP      | Entry unload                        |
+| `test_reload_entry`                       | SKIP      | Entry reload                        |
+| `test_coordinator_update_success`         | SKIP      | Coordinator updates                 |
+| `test_coordinator_update_failed`          | PASS      | Coordinator update failure          |
+| `test_coordinator_auth_failed`            | PASS      | Coordinator auth failure            |
+| `test_coordinator_async_set_current`      | SKIP      | Coordinator set current method      |
+| `test_coordinator_async_set_charge_pause` | SKIP      | Coordinator set charge pause method |
+| `test_coordinator_async_set_energy_limit` | SKIP      | Coordinator set energy limit method |
+| `test_coordinator_async_set_phase_count`  | SKIP      | Coordinator set phase count method  |
 
 ---
 
@@ -350,9 +352,8 @@ tests/
 ├── test_api.py                       # API client tests (17 tests)
 ├── test_config_flow.py               # Config flow tests (18 tests)
 ├── test_config_flow_additional.py    # Config flow edge cases (8 tests)
-├── test_init.py                      # Integration setup tests (7 tests)
-├── README.md                         # This file
-└── TEST_COVERAGE_SUMMARY.md          # Detailed coverage analysis
+├── test_init.py                      # Integration setup tests (11 tests)
+└── README.md                         # This file
 ```
 
 ### Fixtures (`conftest.py`)
@@ -610,23 +611,23 @@ This ensures compatibility with the latest Home Assistant versions that require 
 
 ## Code Coverage Goals
 
-| Component      | Target | Current | Status      |
-| -------------- | ------ | ------- | ----------- |
-| Overall        | 90%+   | 89%     | 🎯 On track |
-| API Client     | 95%+   | 97%     | ✅ Exceeded |
-| Config Flow    | 90%+   | 90%     | ✅ Met      |
-| Coordinator    | 95%+   | 98%     | ✅ Exceeded |
-| Sensors        | 95%+   | 98%     | ✅ Exceeded |
-| Binary Sensors | 95%+   | 97%     | ✅ Exceeded |
-| Switch         | 85%+   | 86%     | ✅ Met      |
-| Number         | 85%+   | 82%     | 📊 Close    |
-| Diagnostics    | 0%     | 0%      | ⏸️ Optional |
+| Component      | Target | Current | Status |
+| -------------- | ------ | ------- | ------ |
+| Overall        | 90%+   | 94%     | ✅ Met |
+| API Client     | 95%+   | 97%     | ✅ Met |
+| Config Flow    | 90%+   | 98%     | ✅ Met |
+| Coordinator    | 95%+   | 100%    | ✅ Met |
+| Sensors        | 95%+   | 97%     | ✅ Met |
+| Binary Sensors | 95%+   | 96%     | ✅ Met |
+| Switch         | 85%+   | 90%     | ✅ Met |
+| Number         | 85%+   | 82%     | Close  |
+| Diagnostics    | 0%     | 0%      | N/A    |
 
 **Notes:**
 
-- **Diagnostics**: 0% coverage is acceptable - this is a utility function for troubleshooting that's rarely executed and difficult to test meaningfully
-- **Number entities**: 82% coverage is acceptable - uncovered lines are defensive error handling paths
-- **Switch**: 86% coverage is acceptable - uncovered lines are control command error paths that require device-specific behavior
+- **Diagnostics**: 0% coverage is expected - utility function for troubleshooting that's rarely executed
+- **Number entities**: 82% coverage - uncovered lines are defensive error handling paths
+- **Switch**: 90% coverage - uncovered lines are control command error paths
 
 ---
 
@@ -688,7 +689,7 @@ This ensures compatibility with the latest Home Assistant versions that require 
 
 Potential enhancements to the testing strategy:
 
-1. **Run All Tests in CI**: Consider removing marker filter for complete CI coverage
+1. **Run All Tests in CI**: Remove marker filter for complete CI coverage
 2. **Parallel Testing**: Use pytest-xdist for faster execution
 3. **E2E Tests**: Add optional end-to-end tests with real device (manual/optional)
 4. **Performance Tests**: Add benchmarks for API response handling
@@ -697,7 +698,7 @@ Potential enhancements to the testing strategy:
 ---
 
 **Last Updated**: October 27, 2025
-**Test Suite Version**: 3.1.0
+**Test Suite Version**: 3.2.0
 **Python Version**: 3.13
 **Maintainer**: @andijakl
-**Status**: ✅ All 50 Tests Passing (89% Coverage)
+**Status**: All 54 Tests Passing (94% Coverage)
