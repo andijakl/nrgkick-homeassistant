@@ -47,8 +47,8 @@ def mock_nrgkick_api():
         )
         api.get_control = AsyncMock(
             return_value={
-                "charging_current": 16.0,
-                "charge_pause": False,
+                "current_set": 16.0,
+                "charge_pause": 0,
                 "energy_limit": 0,
                 "phase_count": 3,
             }
@@ -126,8 +126,8 @@ def mock_info_data():
 def mock_control_data():
     """Mock control data."""
     return {
-        "charging_current": 16.0,
-        "charge_pause": False,
+        "current_set": 16.0,
+        "charge_pause": 0,
         "energy_limit": 0,
         "phase_count": 3,
     }

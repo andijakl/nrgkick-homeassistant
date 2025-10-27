@@ -142,7 +142,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         await self._async_execute_command_with_verification(
             lambda: self.api.set_current(current),
             current,
-            "charging_current",
+            "current_set",
             f"Failed to set charging current to {current}A.",
         )
 
