@@ -132,10 +132,22 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 
         # Verify the state actually changed
         actual_value = self.data.get("control", {}).get(control_key, None)
-        if actual_value != expected_value:
+
+        # Convert both values to float for comparison to handle type differences
+        # (device may return int as float, e.g., 16 vs 16.0)
+        try:
+            actual_float = float(actual_value) if actual_value is not None else None
+            expected_float = (
+                float(expected_value) if expected_value is not None else None
+            )
+            if actual_float != expected_float:
+                raise NRGkickApiClientCommunicationError(
+                    f"{error_message} Device did not accept the command."
+                )
+        except (ValueError, TypeError) as err:
             raise NRGkickApiClientCommunicationError(
                 f"{error_message} Device did not accept the command."
-            )
+            ) from err
 
     async def async_set_current(self, current: float) -> None:
         """Set the charging current."""
