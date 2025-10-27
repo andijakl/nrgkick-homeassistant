@@ -1,7 +1,5 @@
 """Switch platform for NRGkick."""
 
-# pylint: disable=duplicate-code
-
 from __future__ import annotations
 
 import asyncio
@@ -11,9 +9,8 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NRGkickDataUpdateCoordinator
+from . import NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import DOMAIN
 
 
@@ -38,7 +35,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NRGkickSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstract-method
+class NRGkickSwitch(NRGkickEntity, SwitchEntity):
     """Representation of a NRGkick switch."""
 
     def __init__(
@@ -51,34 +48,14 @@ class NRGkickSwitch(CoordinatorEntity, SwitchEntity):  # pylint: disable=abstrac
         value_path: list[str],
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator)
-        self._key = key
-        self._attr_name = f"NRGkick {name}"
+        super().__init__(coordinator, key, name)
         self._attr_icon = icon
         self._value_path = value_path
-
-        # Device info
-        device_info = coordinator.data.get("info", {}).get("general", {})
-        self._attr_unique_id = f"{device_info.get('serial_number', 'unknown')}_{key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_info.get("serial_number", "unknown"))},
-            "name": device_info.get("device_name", "NRGkick"),
-            "manufacturer": "DiniTech",
-            "model": device_info.get("model_type", "NRGkick Gen2"),
-            "sw_version": coordinator.data.get("info", {})
-            .get("versions", {})
-            .get("sw_sm"),
-        }
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key to translate the entity's name and states."""
-        return f"nrgkick_{self._key}"
 
     @property
     def is_on(self) -> bool | None:
         """Return true if the switch is on."""
-        data = self.coordinator.data
+        data: Any = self.coordinator.data
         for key in self._value_path:
             if data is None:
                 return None

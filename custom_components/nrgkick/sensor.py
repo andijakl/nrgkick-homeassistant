@@ -1,4 +1,4 @@
-"""Sensor platform for NRGkick."""
+"""Platform for sensor integration."""
 
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.typing import StateType
 
-from . import NRGkickDataUpdateCoordinator
+from . import NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import DOMAIN, STATUS_MAP
 
 
@@ -662,7 +662,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class NRGkickSensor(CoordinatorEntity, SensorEntity):
+class NRGkickSensor(NRGkickEntity, SensorEntity):
     """Representation of a NRGkick sensor."""
 
     def __init__(
@@ -681,9 +681,7 @@ class NRGkickSensor(CoordinatorEntity, SensorEntity):
         enabled_default: bool = True,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._key = key
-        self._attr_name = f"NRGkick {name}"
+        super().__init__(coordinator, key, name)
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
@@ -696,28 +694,10 @@ class NRGkickSensor(CoordinatorEntity, SensorEntity):
         if suggested_unit is not None:
             self._attr_suggested_unit_of_measurement = suggested_unit
 
-        # Device info
-        device_info = coordinator.data.get("info", {}).get("general", {})
-        self._attr_unique_id = f"{device_info.get('serial_number', 'unknown')}_{key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, device_info.get("serial_number", "unknown"))},
-            "name": device_info.get("device_name", "NRGkick"),
-            "manufacturer": "DiniTech",
-            "model": device_info.get("model_type", "NRGkick Gen2"),
-            "sw_version": coordinator.data.get("info", {})
-            .get("versions", {})
-            .get("sw_sm"),
-        }
-
     @property
-    def translation_key(self) -> str:
-        """Return the translation key to translate the entity's name and states."""
-        return f"nrgkick_{self._key}"
-
-    @property
-    def native_value(self) -> float | int | str | None:
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        data = self.coordinator.data
+        data: Any = self.coordinator.data
         for key in self._value_path:
             if data is None:
                 return None
