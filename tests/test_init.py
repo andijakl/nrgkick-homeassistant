@@ -161,3 +161,79 @@ async def test_coordinator_auth_failed(
         await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
+
+
+@pytest.mark.requires_integration
+async def test_coordinator_async_set_current(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+) -> None:
+    """Test coordinator async_set_current method."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        await coordinator.async_set_current(16.0)
+
+        mock_nrgkick_api.set_current.assert_called_once_with(16.0)
+
+
+@pytest.mark.requires_integration
+async def test_coordinator_async_set_charge_pause(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+) -> None:
+    """Test coordinator async_set_charge_pause method."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        await coordinator.async_set_charge_pause(True)
+
+        mock_nrgkick_api.set_charge_pause.assert_called_once_with(True)
+
+
+@pytest.mark.requires_integration
+async def test_coordinator_async_set_energy_limit(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+) -> None:
+    """Test coordinator async_set_energy_limit method."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        await coordinator.async_set_energy_limit(5000)
+
+        mock_nrgkick_api.set_energy_limit.assert_called_once_with(5000)
+
+
+@pytest.mark.requires_integration
+async def test_coordinator_async_set_phase_count(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+) -> None:
+    """Test coordinator async_set_phase_count method."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        await coordinator.async_set_phase_count(3)
+
+        mock_nrgkick_api.set_phase_count.assert_called_once_with(3)

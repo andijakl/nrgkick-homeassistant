@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberMode
@@ -105,16 +104,8 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number entity."""
         if self._key == "current_set":
-            await self.coordinator.api.set_current(value)  # type: ignore[attr-defined]
+            await self.coordinator.async_set_current(value)
         elif self._key == "energy_limit":
-            await self.coordinator.api.set_energy_limit(  # type: ignore[attr-defined]
-                int(value)
-            )
+            await self.coordinator.async_set_energy_limit(int(value))
         elif self._key == "phase_count":
-            await self.coordinator.api.set_phase_count(  # type: ignore[attr-defined]
-                int(value)
-            )
-
-        # Sleep 2 seconds to make sure the device status is updated
-        await asyncio.sleep(2)
-        await self.coordinator.async_request_refresh()
+            await self.coordinator.async_set_phase_count(int(value))

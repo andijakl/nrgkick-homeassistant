@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import timedelta
 from typing import Any
@@ -109,9 +110,35 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         except NRGkickApiClientCommunicationError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
+    async def async_set_current(self, current: float) -> None:
+        """Set the charging current."""
+        await self.api.set_current(current)
+        await asyncio.sleep(2)
+        await self.async_request_refresh()
+
+    async def async_set_charge_pause(self, pause: bool) -> None:
+        """Set the charge pause state."""
+        await self.api.set_charge_pause(pause)
+        await asyncio.sleep(2)
+        await self.async_request_refresh()
+
+    async def async_set_energy_limit(self, energy_limit: int) -> None:
+        """Set the energy limit."""
+        await self.api.set_energy_limit(energy_limit)
+        await asyncio.sleep(2)
+        await self.async_request_refresh()
+
+    async def async_set_phase_count(self, phase_count: int) -> None:
+        """Set the phase count."""
+        await self.api.set_phase_count(phase_count)
+        await asyncio.sleep(2)
+        await self.async_request_refresh()
+
 
 class NRGkickEntity(CoordinatorEntity):
     """Base class for NRGkick entities with common device info setup."""
+
+    coordinator: NRGkickDataUpdateCoordinator
 
     def __init__(
         self, coordinator: NRGkickDataUpdateCoordinator, key: str, name: str
