@@ -37,10 +37,10 @@ custom_components/nrgkick/
 
 **`ConfigFlow`** (`config_flow.py`)
 
-- Modern import: `homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo`
-- Discovery via `_nrgkick._tcp.local.`
-- Options flow with no explicit `__init__` (HA 2025.12+ pattern)
+- Discovery via mDNS `_nrgkick._tcp.local.`
+- Unique ID from device serial number
 - Full reconfiguration support (host, credentials, scan_interval)
+- Reauth flow using `async_update_reload_and_abort()`
 
 ## Entity Distribution
 
@@ -141,19 +141,21 @@ await self.coordinator.async_request_refresh()
 ## Key Implementation Details
 
 - **Session reuse**: Uses `async_get_clientsession(hass)` for connection pooling
-- **Modern patterns**: No explicit `__init__` in `OptionsFlowHandler` (HA 2025.12+)
-- **Modern imports**: `homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo`
 - **First refresh**: `async_config_entry_first_refresh()` validates device before entity creation
-- **Update listener**: `entry.add_update_listener(async_reload_entry)` for option changes
+- **Update listener**: `entry.add_update_listener(async_reload_entry)` triggers reload on config changes
 - **Unique ID**: Device serial number prevents duplicates
 - **Discovery tracking**: `_abort_if_unique_id_configured(updates={CONF_HOST: ...})` updates IP on rediscovery
 
-## Testing Patterns
+## Testing
 
 Run tests: `./run-tests.sh`
 Run validation: `./validate.sh` (pre-commit + pytest)
 
-Coverage targets: 89% overall, 97% API client, 90% config flow, 98% coordinator
+**Test suite**: 50 tests with 89% coverage
+
+- API tests: 17 (97% coverage)
+- Config flow tests: 26 (90% coverage)
+- Coordinator tests: 7 (98% coverage)
 
 ## Performance Characteristics
 

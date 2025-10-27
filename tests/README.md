@@ -118,28 +118,30 @@ def mock_session():
 
 ### Current Status Summary
 
-| Test Suite        | Count  | CI Status      | Local Status | Pass Rate |
-| ----------------- | ------ | -------------- | ------------ | --------- |
-| API Tests         | 17     | ✅ PASS        | ✅ PASS      | 100%      |
-| Config Flow Tests | 15     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Coordinator Tests | 7      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Setup Tests       | 3      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| **Total**         | **42** | **21 pass**    | **42 pass**  | **100%**  |
+| Test Suite             | Count  | CI Status      | Local Status | Pass Rate |
+| ---------------------- | ------ | -------------- | ------------ | --------- |
+| API Tests              | 17     | ✅ PASS        | ✅ PASS      | 100%      |
+| Config Flow Tests      | 18     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| Config Flow Additional | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| Coordinator Tests      | 7      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| **Total**              | **50** | **17 pass**    | **50 pass**  | **100%**  |
 
-**Note**: All 42 tests work in both environments. CI skips 21 integration tests for faster builds (runs in ~2s instead of ~3s).
+**Note**: All 50 tests work in both environments. CI skips 33 integration tests for faster builds (runs in ~2s instead of ~4s).
+
+**Recent Update**: Added 8 additional config flow tests covering edge cases and error scenarios. See [TEST_COVERAGE_SUMMARY.md](TEST_COVERAGE_SUMMARY.md) for details.
 
 ### GitHub Actions (CI)
 
 ```
-✅ 21 tests pass (non-integration only for speed)
-⏭️ 21 tests skipped (integration tests - work but skipped for fast CI)
+✅ 17 tests pass (non-integration only for speed)
+⏭️ 33 tests skipped (integration tests - work but skipped for fast CI)
 ❌ 0 tests fail
 ```
 
 ### Local Development (Full Suite)
 
 ```
-✅ 42 tests pass (all tests including integration)
+✅ 50 tests pass (all tests including integration)
 ❌ 0 tests fail
 ⏭️ 0 tests skipped
 ```
@@ -168,7 +170,7 @@ def mock_session():
 | `test_api_client_error`         | ✅     | Client error handling             |
 | `test_api_auth_error`           | ✅     | Authentication error handling     |
 
-#### Config Flow Tests (`test_config_flow.py`) - 15/15 ✅ PASSING
+#### Config Flow Tests (`test_config_flow.py`) - 18/18 ✅ PASSING
 
 | Test                                    | CI   | What It Tests                  |
 | --------------------------------------- | ---- | ------------------------------ |
@@ -190,6 +192,21 @@ def mock_session():
 | `test_zeroconf_no_serial_number`        | SKIP | Device missing serial          |
 | `test_zeroconf_cannot_connect`          | SKIP | Zeroconf connection errors     |
 | `test_zeroconf_fallback_to_model_type`  | SKIP | Fallback naming logic          |
+
+#### Config Flow Additional Tests (`test_config_flow_additional.py`) - 8/8 ✅ PASSING
+
+**New tests covering edge cases and error scenarios** (see [TEST_COVERAGE_SUMMARY.md](TEST_COVERAGE_SUMMARY.md) for full analysis)
+
+| Test                                        | CI   | What It Tests                            |
+| ------------------------------------------- | ---- | ---------------------------------------- |
+| `test_reauth_flow_invalid_auth`             | SKIP | Reauth with wrong credentials            |
+| `test_reauth_flow_unknown_exception`        | SKIP | Reauth unexpected error handling         |
+| `test_options_flow_unknown_exception`       | SKIP | Options flow unexpected error handling   |
+| `test_options_flow_scan_interval_only`      | SKIP | Update only scan_interval                |
+| `test_options_flow_with_empty_credentials`  | SKIP | Remove credentials (set to empty)        |
+| `test_zeroconf_discovery_invalid_auth`      | SKIP | Zeroconf auth error during confirmation  |
+| `test_zeroconf_discovery_unknown_exception` | SKIP | Zeroconf unexpected error handling       |
+| `test_zeroconf_fallback_to_default_name`    | SKIP | Fallback to "NRGkick" when names missing |
 
 #### Integration Tests (`test_init.py`) - 7/7 ✅ PASSING
 
@@ -327,13 +344,15 @@ pytest tests/ -v -m "not requires_integration" \
 
 ```
 tests/
-├── __init__.py              # Test package initialization
-├── conftest.py              # Shared pytest fixtures
-├── pytest.ini               # pytest configuration (in root)
-├── test_api.py              # API client tests (16 tests)
-├── test_config_flow.py      # Config flow tests (13 tests)
-├── test_init.py             # Integration setup tests (7 tests)
-└── README.md                # This file
+├── __init__.py                       # Test package initialization
+├── conftest.py                       # Shared pytest fixtures
+├── pytest.ini                        # pytest configuration (in root)
+├── test_api.py                       # API client tests (17 tests)
+├── test_config_flow.py               # Config flow tests (18 tests)
+├── test_config_flow_additional.py    # Config flow edge cases (8 tests)
+├── test_init.py                      # Integration setup tests (7 tests)
+├── README.md                         # This file
+└── TEST_COVERAGE_SUMMARY.md          # Detailed coverage analysis
 ```
 
 ### Fixtures (`conftest.py`)
@@ -677,8 +696,8 @@ Potential enhancements to the testing strategy:
 
 ---
 
-**Last Updated**: October 23, 2025
-**Test Suite Version**: 3.0.0
+**Last Updated**: October 27, 2025
+**Test Suite Version**: 3.1.0
 **Python Version**: 3.13
 **Maintainer**: @andijakl
-**Status**: ✅ All 42 Tests Passing (89% Coverage)
+**Status**: ✅ All 50 Tests Passing (89% Coverage)

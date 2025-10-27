@@ -207,9 +207,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                 _LOGGER.exception("Unexpected exception during reauthentication")
                 errors["base"] = "unknown"
             else:
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_reload(entry.entry_id)
-                return self.async_abort(reason="reauth_successful")
+                return self.async_update_reload_and_abort(
+                    entry, data=data, reason="reauth_successful"
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",
@@ -240,17 +240,14 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Create a temporary API client to test the new settings
-            session = async_get_clientsession(self.hass)
-            api = NRGkickAPI(
-                host=user_input[CONF_HOST],
-                username=user_input.get(CONF_USERNAME),
-                password=user_input.get(CONF_PASSWORD),
-                session=session,
-            )
+            data = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
 
             try:
-                await api.test_connection()
+                await validate_input(self.hass, data)
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
             except NRGkickApiClientAuthenticationError:
@@ -264,13 +261,11 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
                     self.config_entry,
                     data={
                         **self.config_entry.data,
-                        CONF_HOST: user_input[CONF_HOST],
-                        CONF_USERNAME: user_input.get(CONF_USERNAME),
-                        CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+                        CONF_HOST: data[CONF_HOST],
+                        CONF_USERNAME: data.get(CONF_USERNAME),
+                        CONF_PASSWORD: data.get(CONF_PASSWORD),
                     },
                 )
-                # Reload the integration to apply the new settings
-                await self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 # Return with options (data becomes the options in options flow)
                 return self.async_create_entry(
                     title="",
@@ -304,7 +299,3 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="init", data_schema=data_schema, errors=errors
         )
-
-
-class CannotConnect(Exception):
-    """Error to indicate we cannot connect."""

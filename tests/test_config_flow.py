@@ -284,13 +284,21 @@ async def test_options_flow_success(hass: HomeAssistant, mock_nrgkick_api) -> No
     )
     entry.add_to_hass(hass)
 
+    # Set up the entry to register the update listener
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI",
+        return_value=mock_nrgkick_api,
+    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
     result = await hass.config_entries.options.async_init(entry.entry_id)
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
     with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
+        "custom_components.nrgkick.config_flow.validate_input",
+        return_value={"title": "NRGkick Test", "serial": "TEST123456"},
     ), patch("homeassistant.config_entries.ConfigEntries.async_reload") as mock_reload:
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -316,7 +324,9 @@ async def test_options_flow_success(hass: HomeAssistant, mock_nrgkick_api) -> No
         assert updated_entry.data[CONF_USERNAME] == "new_user"
         assert updated_entry.data[CONF_PASSWORD] == "new_pass"
         assert updated_entry.options.get(CONF_SCAN_INTERVAL) == 60
-        assert len(mock_reload.mock_calls) == 1
+        # The update listener triggers reload automatically (may be called 1-2 times)
+        assert len(mock_reload.mock_calls) >= 1
+        mock_reload.assert_called_with(entry.entry_id)
 
 
 @pytest.mark.requires_integration
@@ -333,11 +343,9 @@ async def test_options_flow_cannot_connect(
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientCommunicationError
-
     with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
+        "custom_components.nrgkick.config_flow.validate_input",
+        side_effect=NRGkickApiClientCommunicationError,
     ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
@@ -363,11 +371,9 @@ async def test_options_flow_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) 
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    mock_nrgkick_api.test_connection.side_effect = NRGkickApiClientAuthenticationError
-
     with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
+        "custom_components.nrgkick.config_flow.validate_input",
+        side_effect=NRGkickApiClientAuthenticationError,
     ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],

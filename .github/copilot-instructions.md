@@ -29,7 +29,6 @@ nrgkick-homeassistant/
 │   ├── number.py                 # Number platform (3 control entities)
 │   ├── sensor.py                 # Sensor platform (80+ monitoring entities)
 │   ├── switch.py                 # Switch platform (1 pause toggle)
-│   ├── strings.json              # English strings (not translated)
 │   └── translations/             # Translated strings
 │       ├── de.json               # German translation
 │       └── en.json               # English translation
@@ -139,11 +138,15 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
 ### Python Style
 
 - **Formatter**: Black (line length 88)
-- **Import Sorting**: isort with Black profile
+- **Import Sorting**: isort with Black profile (multi-line=3, trailing-comma)
 - **Linter**: flake8 + pylint (disabled: C0111, C0103, W0212, R0913, R0902, R0914, R0801)
 - **Type Checking**: mypy with strict settings
 - **Docstrings**: Required for public methods (Google style preferred)
 - **Async/Await**: All I/O operations must be async
+- **Line Endings**: LF (Unix-style) only, no CRLF
+- **File Endings**: All files must end with a single newline
+- **Whitespace**: No trailing whitespace on any line
+- **JSON/YAML/Markdown**: Formatted with Prettier (except translations and examples)
 
 ### Naming Conventions
 
@@ -299,17 +302,27 @@ async def test_setup_entry(hass, mock_config_entry):
 
 ## Pre-Commit Hooks
 
-The repository uses pre-commit hooks to enforce code quality:
+The repository uses pre-commit hooks to enforce code quality. **All code must pass these checks before committing.**
 
-- **trailing-whitespace**: Remove trailing whitespace
-- **end-of-file-fixer**: Ensure files end with newline
-- **check-yaml/json**: Validate YAML/JSON files
-- **black**: Auto-format Python code
-- **isort**: Sort imports
-- **flake8**: Lint for common issues
-- **mypy**: Type checking
-- **pylint**: Advanced linting
-- **prettier**: Format JSON/YAML/Markdown
+**Automatically applied fixes:**
+
+- **trailing-whitespace**: Remove trailing whitespace from all lines
+- **end-of-file-fixer**: Ensure files end with a single newline character
+- **mixed-line-ending**: Enforce LF (Unix) line endings
+- **black**: Auto-format Python code (line length 88)
+- **isort**: Sort and format imports (Black profile, multi-line=3, trailing-comma)
+- **prettier**: Format JSON/YAML/Markdown (except translations/ and examples/)
+
+**Validation checks:**
+
+- **check-yaml/json**: Validate YAML/JSON syntax
+- **check-added-large-files**: Prevent files >1MB
+- **check-case-conflict**: Prevent case-sensitive filename conflicts
+- **check-merge-conflict**: Detect unresolved merge conflicts
+- **detect-private-key**: Prevent committing private keys
+- **flake8**: Python linting (max-line-length=88, ignore E203,E266,E501,W503)
+- **mypy**: Type checking (strict mode, ignore missing imports)
+- **pylint**: Advanced linting (disabled: C0111,C0103,W0212,R0913,R0902,R0914,R0801)
 
 **Installation**:
 
@@ -323,6 +336,8 @@ pre-commit install
 ```bash
 pre-commit run --all-files
 ```
+
+**Important**: If pre-commit modifies files (formatting, whitespace, newlines), you must stage the changes and commit again.
 
 ## Configuration Storage
 

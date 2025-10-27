@@ -40,17 +40,17 @@
                 }
             }
         },
+        "error": {
+            "cannot_connect": "Failed to connect to the device. Please check the IP address and ensure the device is reachable.",
+            "invalid_auth": "Invalid username or password. Please check your credentials.",
+            "unknown": "An unexpected error occurred. Please check the logs for more information."
+        },
         "abort": {
             "already_configured": "This device is already configured.",
             "reauth_successful": "Reauthentication was successful.",
             "reauth_failed": "Reauthentication failed. Please remove and re-add the integration.",
             "json_api_disabled": "The JSON API is not enabled on this NRGkick device. Please enable it in the NRGkick app.",
             "no_serial_number": "Could not determine the serial number of the discovered device."
-        },
-        "error": {
-            "cannot_connect": "Failed to connect to the device. Please check the IP address and ensure the device is reachable.",
-            "invalid_auth": "Invalid username or password. Please check your credentials.",
-            "unknown": "An unexpected error occurred. Please check the logs for more information."
         }
     },
     "options": {
