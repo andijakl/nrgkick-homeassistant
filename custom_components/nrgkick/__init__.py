@@ -160,6 +160,9 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
                 self.data["control"] = {}
             self.data["control"][control_key] = actual_value
 
+            # Notify all entities that coordinator data has been updated
+            self.async_set_updated_data(self.data)
+
         else:
             # Response doesn't contain expected key - refresh to get current state
             await asyncio.sleep(2)

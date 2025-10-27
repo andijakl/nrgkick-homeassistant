@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, Mock
 
 import aiohttp
 import pytest
@@ -226,3 +226,41 @@ async def test_api_auth_error(mock_session) -> None:
 
     with pytest.raises(NRGkickApiClientAuthenticationError):
         await api.get_info()
+
+
+async def test_api_http_error_with_json_response(mock_session) -> None:
+    """Test API returns error status with JSON error message."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    # Mock a 405 error with JSON body containing error message
+    response_mock = mock_session.get.return_value.__aenter__.return_value
+    response_mock.status = 405
+    response_mock.json = AsyncMock(
+        return_value={"Response": "Charging pause is blocked by solar-charging"}
+    )
+
+    # Should return the JSON response even with 405 status
+    result = await api.set_charge_pause(True)
+    assert result == {"Response": "Charging pause is blocked by solar-charging"}
+
+
+async def test_api_http_error_without_json_response(mock_session) -> None:
+    """Test API returns error status without valid JSON (should raise)."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    # Mock a 500 error with invalid JSON
+    response_mock = mock_session.get.return_value.__aenter__.return_value
+    response_mock.status = 500
+    response_mock.json = AsyncMock(side_effect=Exception("Invalid JSON"))
+    response_mock.raise_for_status = Mock(
+        side_effect=aiohttp.ClientResponseError(
+            request_info=Mock(),
+            history=(),
+            status=500,
+            message="Internal Server Error",
+        )
+    )
+
+    # Should raise communication error since JSON parsing failed
+    with pytest.raises(NRGkickApiClientCommunicationError):
+        await api.get_control()

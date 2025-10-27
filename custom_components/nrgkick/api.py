@@ -68,8 +68,24 @@ class NRGkickAPI:
                             "Authentication failed. Check username and password "
                             "in NRGkick app settings."
                         )
-                    response.raise_for_status()
-                    data = await response.json()
+
+                    # Always read JSON response first (even on errors)
+                    # Device returns error messages in JSON body
+                    try:
+                        data = await response.json()
+                    except Exception:  # pylint: disable=broad-exception-caught
+                        # If JSON parsing fails, fall back to raising HTTP error
+                        response.raise_for_status()
+                        return {}
+
+                    # Check HTTP status after reading JSON
+                    # This allows us to access error messages in the response
+                    if response.status >= 400:
+                        # If response has error message, it will be handled by caller
+                        # Otherwise raise HTTP error
+                        if "Response" not in data:
+                            response.raise_for_status()
+
                     if data is None:
                         return {}
                     return data
