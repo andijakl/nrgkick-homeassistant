@@ -2,16 +2,21 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NRGkickDataUpdateCoordinator, NRGkickEntity
+from .api import NRGkickApiClientError
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -103,9 +108,14 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number entity."""
-        if self._key == "current_set":
-            await self.coordinator.async_set_current(value)
-        elif self._key == "energy_limit":
-            await self.coordinator.async_set_energy_limit(int(value))
-        elif self._key == "phase_count":
-            await self.coordinator.async_set_phase_count(int(value))
+        try:
+            if self._key == "current_set":
+                await self.coordinator.async_set_current(value)
+            elif self._key == "energy_limit":
+                await self.coordinator.async_set_energy_limit(int(value))
+            elif self._key == "phase_count":
+                await self.coordinator.async_set_phase_count(int(value))
+        except NRGkickApiClientError as err:
+            raise HomeAssistantError(
+                f"Unable to update {self._attr_name}: {err}"
+            ) from err

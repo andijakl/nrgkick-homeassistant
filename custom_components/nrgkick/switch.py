@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NRGkickDataUpdateCoordinator, NRGkickEntity
+from .api import NRGkickApiClientError
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -63,8 +68,14 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.async_set_charge_pause(True)
+        try:
+            await self.coordinator.async_set_charge_pause(True)
+        except NRGkickApiClientError as err:
+            raise HomeAssistantError(f"Unable to pause charging: {err}") from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.async_set_charge_pause(False)
+        try:
+            await self.coordinator.async_set_charge_pause(False)
+        except NRGkickApiClientError as err:
+            raise HomeAssistantError(f"Unable to resume charging: {err}") from err

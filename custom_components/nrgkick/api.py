@@ -65,16 +65,29 @@ class NRGkickAPI:
                 ) as response:
                     if response.status in (401, 403):
                         raise NRGkickApiClientAuthenticationError(
-                            "Invalid username or password"
+                            "Authentication failed. Check username and password "
+                            "in NRGkick app settings."
                         )
                     response.raise_for_status()
                     data = await response.json()
                     if data is None:
                         return {}
                     return data
-        except (asyncio.TimeoutError, ClientError) as exc:
+        except asyncio.TimeoutError as exc:
             raise NRGkickApiClientCommunicationError(
-                f"Failed to connect to NRGkick: {exc}"
+                "Connection timeout. Check if device is powered on "
+                "and network is reachable."
+            ) from exc
+        except aiohttp.ClientResponseError as exc:
+            raise NRGkickApiClientCommunicationError(
+                f"Device returned error {exc.status} ({exc.message}). "
+                f"This may indicate the device is in a state that "
+                f"prevents this action."
+            ) from exc
+        except ClientError as exc:
+            raise NRGkickApiClientCommunicationError(
+                f"Connection failed: {exc}. "
+                f"Check device IP address and network connection."
             ) from exc
 
     async def get_info(self, sections: list[str] | None = None) -> dict[str, Any]:
