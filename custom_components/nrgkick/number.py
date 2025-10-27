@@ -47,7 +47,7 @@ async def async_setup_entry(
         NRGkickNumber(
             coordinator,
             key="energy_limit",
-            name="Energy Limit",
+            name="Energy Limit (0 = No Limit)",
             unit="Wh",
             min_value=0,
             max_value=100000,
