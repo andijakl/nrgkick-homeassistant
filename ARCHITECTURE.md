@@ -113,12 +113,22 @@ sequenceDiagram
 
     Note over Entity,Device: User Control Action
     HA->>Entity: User sets value
-    Entity->>API: set_current() / set_charge_pause() / etc.
+    Entity->>Coord: async_set_current() / async_set_charge_pause() / etc.
+    Coord->>API: set_current() / set_charge_pause() / etc.
     API->>Device: GET /control?param=value
-    Device-->>API: OK
-    Entity->>Entity: Sleep 2 seconds (device sync delay)
-    Entity->>Coord: async_request_refresh()
-    Coord->>API: Fetch updated state
+    Device-->>API: HTTP 200
+    Coord->>Coord: Sleep 2 seconds (device processing time)
+    Coord->>API: async_request_refresh()
+    API->>Device: GET /info, /control, /values
+    Device-->>API: Updated state
+    Coord->>Coord: Verify actual_value == expected_value
+    alt Verification Success
+        Coord-->>Entity: Success
+        Entity->>HA: State Update
+    else Verification Failed
+        Coord-->>Entity: Raise Exception
+        Entity->>HA: Show Error, Revert State
+    end
 ```
 
 ---
@@ -1269,26 +1279,55 @@ NRGkickNumber(
 )
 ```
 
-**State Sync Delay:**
+**Command Execution with State Verification:**
 
-Control entities call coordinator methods to handle state synchronization:
+Control entities delegate to coordinator methods that handle both execution and verification:
 
 ```python
 async def async_set_native_value(self, value: float) -> None:
     """Set the value of the number entity."""
     await self.coordinator.async_set_current(value)
-    # Coordinator handles: API call → 2-second delay → refresh
+    # Coordinator handles: API call → 2s delay → refresh → verification
 ```
+
+**Coordinator Command Pattern:**
+
+The coordinator implements a helper method that eliminates code duplication across all four control commands:
+
+```python
+async def _async_execute_command_with_verification(
+    self,
+    command_func: Callable[[], Awaitable[dict[str, Any]]],
+    expected_value: Any,
+    control_key: str,
+    error_message: str,
+) -> None:
+    """Execute command, wait for device sync, refresh, then verify state."""
+    await command_func()                    # Execute API call
+    await asyncio.sleep(2)                  # Device processing time
+    await self.async_request_refresh()      # Fetch updated state
+
+    # Verify device accepted the command
+    actual_value = self.data.get("control", {}).get(control_key)
+    if actual_value != expected_value:
+        raise NRGkickApiClientCommunicationError(
+            f"{error_message} Device did not accept the command."
+        )
+```
+
+All four control methods (`async_set_current`, `async_set_charge_pause`, `async_set_energy_limit`, `async_set_phase_count`) use this helper with lambda functions to wrap their API calls.
 
 **Why This Pattern:**
 
-1. **Command Latency**: The device's REST API returns immediately (HTTP 200) but the device applies changes asynchronously. A 2-second delay ensures the device has processed the command.
+1. **Command Latency**: The device's REST API returns HTTP 200 immediately but processes changes asynchronously. The 2-second delay ensures the device has completed processing before verification.
 
-2. **Race Condition**: Without the delay, the next scheduled poll might occur before the device updates, showing stale data.
+2. **State Verification**: After refresh, the coordinator verifies the device's actual state matches the expected value. If the device rejected the command (e.g., due to charging state restrictions), an exception is raised and the UI state reverts.
 
-3. **Immediate Feedback**: The coordinator triggers an immediate update after the delay, so the UI reflects the new value without waiting for the next scheduled poll.
+3. **Error Prevention**: Without verification, the UI could show the new value optimistically even if the device rejected the command. Verification ensures UI consistency with actual device state.
 
-4. **Centralized Logic**: Control methods are implemented in the coordinator, not duplicated across entity types. This provides a single point of maintenance and consistent behavior.
+4. **Code Reuse**: The helper method eliminates duplication across all four control methods. Changes to verification logic only need to be made in one place.
+
+5. **User Feedback**: If verification fails, entities catch the exception and display an error notification. The UI state automatically reverts to the actual device value from the refresh.
 
 ### 4. Lovelace Dashboard Integration
 
@@ -1518,7 +1557,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 
 - **Error Propagation**: When polling fails, all entities automatically become unavailable. When polling resumes, all entities become available again. No per-entity error handling needed.
 
-- **Control Methods**: The coordinator provides public methods (`async_set_current()`, `async_set_charge_pause()`, etc.) that entities call for control operations. This centralizes the 2-second delay and refresh logic in one place.
+- **Control Methods with Verification**: The coordinator provides public methods (`async_set_current()`, `async_set_charge_pause()`, etc.) that entities call for control operations. A helper method (`_async_execute_command_with_verification()`) centralizes the execution-delay-refresh-verify pattern, ensuring UI state consistency with device state and eliminating code duplication across all four control commands.
 
 ### 2. Base Entity Class (Eliminating Duplication)
 
@@ -1688,7 +1727,7 @@ async def async_reload_entry(hass, entry):
 The NRGkick integration follows Home Assistant best practices with:
 
 1. **Config Flow**: UI-based setup with validation, discovery, and reauth patterns
-2. **Coordinator Pattern**: Centralized polling (configurable 10-300s) with public control methods
+2. **Coordinator Pattern**: Centralized polling (configurable 10-300s) with verified control methods
 3. **Base Entity Class**: Common device info setup and type annotations
 4. **Value Path Mapping**: Declarative entity-to-data binding
 5. **Platform Separation**: 4 entity types (sensor, binary_sensor, switch, number)
@@ -1696,7 +1735,7 @@ The NRGkick integration follows Home Assistant best practices with:
 7. **Translation Support**: Multi-language entity names (en, de)
 8. **Dynamic Reconfiguration**: Options flow with automatic reload via update listeners
 9. **Error Handling**: Typed exceptions with proper reauth flow using `async_update_reload_and_abort()`
-10. **State Sync**: Centralized 2-second delays after control commands
+10. **Command Verification**: State verification after control commands prevents UI inconsistency
 11. **Async/Await**: Non-blocking I/O throughout
 
 **Key Implementation Patterns:**
@@ -1706,7 +1745,7 @@ The NRGkick integration follows Home Assistant best practices with:
 - ✅ Zeroconf discovery via `homeassistant.helpers.service_info.zeroconf`
 - ✅ Update listeners trigger automatic reloads on config changes
 - ✅ Custom exception hierarchy for proper error routing
-- ✅ Coordinator control methods for proper encapsulation
+- ✅ Command verification helper eliminates control method duplication
 - ✅ Type-annotated base class eliminates code duplication
 
 **Entity Distribution:**

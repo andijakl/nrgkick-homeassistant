@@ -196,6 +196,16 @@ async def test_coordinator_async_set_charge_pause(
         await hass.async_block_till_done()
 
         coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+
+        # Update mock to return paused state after command
+        # The get_control response should have charge_pause as integer (1 for paused)
+        mock_nrgkick_api.get_control.return_value = {
+            "charging_current": 16.0,
+            "charge_pause": 1,
+            "energy_limit": 0,
+            "phase_count": 3,
+        }
+
         await coordinator.async_set_charge_pause(True)
 
         mock_nrgkick_api.set_charge_pause.assert_called_once_with(True)
@@ -207,6 +217,14 @@ async def test_coordinator_async_set_energy_limit(
 ) -> None:
     """Test coordinator async_set_energy_limit method."""
     mock_config_entry.add_to_hass(hass)
+
+    # Update mock to return the expected energy_limit after the command
+    mock_nrgkick_api.get_control.return_value = {
+        "charging_current": 16.0,
+        "charge_pause": 0,
+        "energy_limit": 5000,
+        "phase_count": 3,
+    }
 
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api

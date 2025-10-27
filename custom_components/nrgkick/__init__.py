@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from collections.abc import Awaitable, Callable
 from datetime import timedelta
 from typing import Any
 
@@ -110,29 +111,68 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         except NRGkickApiClientCommunicationError as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
-    async def async_set_current(self, current: float) -> None:
-        """Set the charging current."""
-        await self.api.set_current(current)
+    async def _async_execute_command_with_verification(
+        self,
+        command_func: Callable[[], Awaitable[dict[str, Any]]],
+        expected_value: Any,
+        control_key: str,
+        error_message: str,
+    ) -> None:
+        """Execute a command and verify the state changed.
+
+        Args:
+            command_func: Async function to execute the command
+            expected_value: Expected value after command execution
+            control_key: Key in control data to verify (e.g., "charge_pause")
+            error_message: Error message to show if verification fails
+        """
+        await command_func()
         await asyncio.sleep(2)
         await self.async_request_refresh()
+
+        # Verify the state actually changed
+        actual_value = self.data.get("control", {}).get(control_key, None)
+        if actual_value != expected_value:
+            raise NRGkickApiClientCommunicationError(
+                f"{error_message} Device did not accept the command."
+            )
+
+    async def async_set_current(self, current: float) -> None:
+        """Set the charging current."""
+        await self._async_execute_command_with_verification(
+            lambda: self.api.set_current(current),
+            current,
+            "charging_current",
+            f"Failed to set charging current to {current}A.",
+        )
 
     async def async_set_charge_pause(self, pause: bool) -> None:
         """Set the charge pause state."""
-        await self.api.set_charge_pause(pause)
-        await asyncio.sleep(2)
-        await self.async_request_refresh()
+        expected_state = 1 if pause else 0
+        await self._async_execute_command_with_verification(
+            lambda: self.api.set_charge_pause(pause),
+            expected_state,
+            "charge_pause",
+            f"Failed to {'pause' if pause else 'resume'} charging.",
+        )
 
     async def async_set_energy_limit(self, energy_limit: int) -> None:
         """Set the energy limit."""
-        await self.api.set_energy_limit(energy_limit)
-        await asyncio.sleep(2)
-        await self.async_request_refresh()
+        await self._async_execute_command_with_verification(
+            lambda: self.api.set_energy_limit(energy_limit),
+            energy_limit,
+            "energy_limit",
+            f"Failed to set energy limit to {energy_limit}Wh.",
+        )
 
     async def async_set_phase_count(self, phase_count: int) -> None:
         """Set the phase count."""
-        await self.api.set_phase_count(phase_count)
-        await asyncio.sleep(2)
-        await self.async_request_refresh()
+        await self._async_execute_command_with_verification(
+            lambda: self.api.set_phase_count(phase_count),
+            phase_count,
+            "phase_count",
+            f"Failed to set phase count to {phase_count}.",
+        )
 
 
 class NRGkickEntity(CoordinatorEntity):
