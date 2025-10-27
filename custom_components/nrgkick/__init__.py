@@ -126,28 +126,44 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
             control_key: Key in control data to verify (e.g., "charge_pause")
             error_message: Error message to show if verification fails
         """
-        await command_func()
-        await asyncio.sleep(2)
-        await self.async_request_refresh()
+        # Execute command and get response
+        response = await command_func()
 
-        # Verify the state actually changed
-        actual_value = self.data.get("control", {}).get(control_key, None)
-
-        # Convert both values to float for comparison to handle type differences
-        # (device may return int as float, e.g., 16 vs 16.0)
-        try:
-            actual_float = float(actual_value) if actual_value is not None else None
-            expected_float = (
-                float(expected_value) if expected_value is not None else None
-            )
-            if actual_float != expected_float:
-                raise NRGkickApiClientCommunicationError(
-                    f"{error_message} Device did not accept the command."
-                )
-        except (ValueError, TypeError) as err:
+        # Check if response contains an error message
+        if "Response" in response:
             raise NRGkickApiClientCommunicationError(
-                f"{error_message} Device did not accept the command."
-            ) from err
+                f"{error_message} {response['Response']}"
+            )
+
+        # Check if response contains the expected key with the new value
+        if control_key in response:
+            actual_value = response[control_key]
+
+            # Convert both values to float for comparison to handle type differences
+            try:
+                actual_float = float(actual_value) if actual_value is not None else None
+                expected_float = (
+                    float(expected_value) if expected_value is not None else None
+                )
+                if actual_float != expected_float:
+                    raise NRGkickApiClientCommunicationError(
+                        f"{error_message} Device returned unexpected value: "
+                        f"{actual_value} (expected {expected_value})."
+                    )
+            except (ValueError, TypeError) as err:
+                raise NRGkickApiClientCommunicationError(
+                    f"{error_message} Device returned invalid value."
+                ) from err
+
+            # Update coordinator data immediately with the new value
+            if "control" not in self.data:
+                self.data["control"] = {}
+            self.data["control"][control_key] = actual_value
+
+        else:
+            # Response doesn't contain expected key - refresh to get current state
+            await asyncio.sleep(2)
+            await self.async_request_refresh()
 
     async def async_set_current(self, current: float) -> None:
         """Set the charging current."""

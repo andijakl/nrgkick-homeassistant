@@ -64,10 +64,11 @@ def mock_nrgkick_api():
                 "status": {"charging_status": 3},
             }
         )
-        api.set_current = AsyncMock(return_value={})
-        api.set_charge_pause = AsyncMock(return_value={})
-        api.set_energy_limit = AsyncMock(return_value={})
-        api.set_phase_count = AsyncMock(return_value={})
+        # Mock set methods to return actual API responses (with the new value)
+        api.set_current = AsyncMock(return_value={"current_set": 16.0})
+        api.set_charge_pause = AsyncMock(return_value={"charge_pause": 0})
+        api.set_energy_limit = AsyncMock(return_value={"energy_limit": 0})
+        api.set_phase_count = AsyncMock(return_value={"phase_count": 3})
         yield api
 
 

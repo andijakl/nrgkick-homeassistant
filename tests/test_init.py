@@ -170,6 +170,9 @@ async def test_coordinator_async_set_current(
     """Test coordinator async_set_current method."""
     mock_config_entry.add_to_hass(hass)
 
+    # Mock API to return the new current value in the response
+    mock_nrgkick_api.set_current.return_value = {"current_set": 6.7}
+
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
     ), patch("custom_components.nrgkick.async_get_clientsession"):
@@ -177,9 +180,11 @@ async def test_coordinator_async_set_current(
         await hass.async_block_till_done()
 
         coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-        await coordinator.async_set_current(16.0)
+        await coordinator.async_set_current(6.7)
 
-        mock_nrgkick_api.set_current.assert_called_once_with(16.0)
+        mock_nrgkick_api.set_current.assert_called_once_with(6.7)
+        # Verify coordinator data was updated
+        assert coordinator.data["control"]["current_set"] == 6.7
 
 
 @pytest.mark.requires_integration
@@ -189,6 +194,9 @@ async def test_coordinator_async_set_charge_pause(
     """Test coordinator async_set_charge_pause method."""
     mock_config_entry.add_to_hass(hass)
 
+    # Mock API to return the new pause state in the response
+    mock_nrgkick_api.set_charge_pause.return_value = {"charge_pause": 1}
+
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
     ), patch("custom_components.nrgkick.async_get_clientsession"):
@@ -196,19 +204,11 @@ async def test_coordinator_async_set_charge_pause(
         await hass.async_block_till_done()
 
         coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-
-        # Update mock to return paused state after command
-        # The get_control response should have charge_pause as integer (1 for paused)
-        mock_nrgkick_api.get_control.return_value = {
-            "charging_current": 16.0,
-            "charge_pause": 1,
-            "energy_limit": 0,
-            "phase_count": 3,
-        }
-
         await coordinator.async_set_charge_pause(True)
 
         mock_nrgkick_api.set_charge_pause.assert_called_once_with(True)
+        # Verify coordinator data was updated
+        assert coordinator.data["control"]["charge_pause"] == 1
 
 
 @pytest.mark.requires_integration
@@ -218,13 +218,8 @@ async def test_coordinator_async_set_energy_limit(
     """Test coordinator async_set_energy_limit method."""
     mock_config_entry.add_to_hass(hass)
 
-    # Update mock to return the expected energy_limit after the command
-    mock_nrgkick_api.get_control.return_value = {
-        "charging_current": 16.0,
-        "charge_pause": 0,
-        "energy_limit": 5000,
-        "phase_count": 3,
-    }
+    # Mock API to return the new energy limit in the response
+    mock_nrgkick_api.set_energy_limit.return_value = {"energy_limit": 50000}
 
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
@@ -233,9 +228,11 @@ async def test_coordinator_async_set_energy_limit(
         await hass.async_block_till_done()
 
         coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-        await coordinator.async_set_energy_limit(5000)
+        await coordinator.async_set_energy_limit(50000)
 
-        mock_nrgkick_api.set_energy_limit.assert_called_once_with(5000)
+        mock_nrgkick_api.set_energy_limit.assert_called_once_with(50000)
+        # Verify coordinator data was updated
+        assert coordinator.data["control"]["energy_limit"] == 50000
 
 
 @pytest.mark.requires_integration
@@ -245,6 +242,9 @@ async def test_coordinator_async_set_phase_count(
     """Test coordinator async_set_phase_count method."""
     mock_config_entry.add_to_hass(hass)
 
+    # Mock API to return the new phase count in the response
+    mock_nrgkick_api.set_phase_count.return_value = {"phase_count": 1}
+
     with patch(
         "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
     ), patch("custom_components.nrgkick.async_get_clientsession"):
@@ -252,6 +252,60 @@ async def test_coordinator_async_set_phase_count(
         await hass.async_block_till_done()
 
         coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
-        await coordinator.async_set_phase_count(3)
+        await coordinator.async_set_phase_count(1)
 
-        mock_nrgkick_api.set_phase_count.assert_called_once_with(3)
+        mock_nrgkick_api.set_phase_count.assert_called_once_with(1)
+        # Verify coordinator data was updated
+        assert coordinator.data["control"]["phase_count"] == 1
+
+
+@pytest.mark.requires_integration
+async def test_coordinator_command_blocked_by_solar(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+) -> None:
+    """Test coordinator command blocked by solar charging."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock API to return error response
+    mock_nrgkick_api.set_charge_pause.return_value = {
+        "Response": "Charging pause is blocked by solar-charging"
+    }
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+
+        # Should raise communication error with the device's message
+        with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
+            await coordinator.async_set_charge_pause(True)
+
+        assert "blocked by solar-charging" in str(exc_info.value)
+
+
+@pytest.mark.requires_integration
+async def test_coordinator_command_unexpected_value(
+    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+) -> None:
+    """Test coordinator command returns unexpected value."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Mock API to return different value than requested
+    mock_nrgkick_api.set_current.return_value = {"current_set": 10.0}
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+
+        # Should raise communication error when value doesn't match
+        with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
+            await coordinator.async_set_current(6.7)
+
+        assert "unexpected value" in str(exc_info.value).lower()

@@ -1279,7 +1279,7 @@ NRGkickNumber(
 )
 ```
 
-**Command Execution with State Verification:**
+**Command Execution with Response Verification:**
 
 Control entities delegate to coordinator methods that handle both execution and verification:
 
@@ -1287,7 +1287,7 @@ Control entities delegate to coordinator methods that handle both execution and 
 async def async_set_native_value(self, value: float) -> None:
     """Set the value of the number entity."""
     await self.coordinator.async_set_current(value)
-    # Coordinator handles: API call → 2s delay → refresh → verification
+    # Coordinator handles: API call → parse response → verify → update state
 ```
 
 **Coordinator Command Pattern:**
@@ -1302,32 +1302,52 @@ async def _async_execute_command_with_verification(
     control_key: str,
     error_message: str,
 ) -> None:
-    """Execute command, wait for device sync, refresh, then verify state."""
-    await command_func()                    # Execute API call
-    await asyncio.sleep(2)                  # Device processing time
-    await self.async_request_refresh()      # Fetch updated state
+    """Execute command and verify response."""
+    # Execute API call and get response
+    response = await command_func()
 
-    # Verify device accepted the command
-    actual_value = self.data.get("control", {}).get(control_key)
-    if actual_value != expected_value:
+    # Check if response contains error message
+    if "Response" in response:
         raise NRGkickApiClientCommunicationError(
-            f"{error_message} Device did not accept the command."
+            f"{error_message} {response['Response']}"
         )
+
+    # Verify device returned the expected value
+    if control_key in response:
+        actual_value = response[control_key]
+        if float(actual_value) != float(expected_value):
+            raise NRGkickApiClientCommunicationError(
+                f"{error_message} Device returned unexpected value: "
+                f"{actual_value} (expected {expected_value})."
+            )
+
+        # Update coordinator data immediately
+        self.data["control"][control_key] = actual_value
+    else:
+        # Fallback: refresh to get current state
+        await asyncio.sleep(2)
+        await self.async_request_refresh()
 ```
 
 All four control methods (`async_set_current`, `async_set_charge_pause`, `async_set_energy_limit`, `async_set_phase_count`) use this helper with lambda functions to wrap their API calls.
 
 **Why This Pattern:**
 
-1. **Command Latency**: The device's REST API returns HTTP 200 immediately but processes changes asynchronously. The 2-second delay ensures the device has completed processing before verification.
+1. **API Response Format**: The device's control API returns different responses:
+   - **Success**: `{"current_set": 6.7}` - Returns the new value directly
+   - **Error**: `{"Response": "Charging pause is blocked by solar-charging"}` - Returns error message
 
-2. **State Verification**: After refresh, the coordinator verifies the device's actual state matches the expected value. If the device rejected the command (e.g., due to charging state restrictions), an exception is raised and the UI state reverts.
+2. **Immediate Verification**: The response contains the actual applied value, so no delay/refresh is needed in the success case. This makes the UI update instantly.
 
-3. **Error Prevention**: Without verification, the UI could show the new value optimistically even if the device rejected the command. Verification ensures UI consistency with actual device state.
+3. **Error Detection**: By checking for the `"Response"` key, we can detect and report device-side errors (like solar charging blocking commands) with the actual error message from the device.
 
-4. **Code Reuse**: The helper method eliminates duplication across all four control methods. Changes to verification logic only need to be made in one place.
+4. **State Consistency**: The coordinator immediately updates its data with the response value, ensuring the UI shows the correct state without waiting for the next polling cycle.
 
-5. **User Feedback**: If verification fails, entities catch the exception and display an error notification. The UI state automatically reverts to the actual device value from the refresh.
+5. **Code Reuse**: The helper method eliminates duplication across all four control methods. Changes to verification logic only need to be made in one place.
+
+6. **Fallback Support**: If the response doesn't contain the expected key (unexpected API behavior), the system falls back to the old refresh-based verification.
+
+7. **User Feedback**: If verification fails, entities catch the exception and display an error notification with the device's actual error message (e.g., "blocked by solar-charging").
 
 ### 4. Lovelace Dashboard Integration
 
