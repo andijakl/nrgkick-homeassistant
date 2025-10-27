@@ -56,7 +56,7 @@ custom_components/nrgkick/
 - **Switch**: 1 (charge_pause toggle)
 - **Numbers**: 3 (charging_current 6-32A, energy_limit 0-100kWh, phase_count 1-3)
 
-All entities use value_path arrays for data extraction and include 2-second sync delays after control commands.
+All entities use value_path arrays for data extraction. Control commands verify responses immediately.
 
 ## API Endpoints
 
@@ -68,10 +68,15 @@ All entities use value_path arrays for data extraction and include 2-second sync
 
 ### Write Operations (GET with params)
 
-- **GET /control?current=16.0**: Set charging current (6.0-32.0A)
-- **GET /control?pause=1**: Pause (1) or resume (0) charging
-- **GET /control?energy=5000**: Set energy limit (Wh, 0=unlimited)
-- **GET /control?phases=3**: Set phase count (1-3, if supported)
+- **GET /control?current_set=16.0**: Set charging current (6.0-32.0A)
+- **GET /control?charge_pause=1**: Pause (1) or resume (0) charging
+- **GET /control?energy_limit=5000**: Set energy limit (Wh, 0=unlimited)
+- **GET /control?phase_count=3**: Set phase count (1-3, if supported)
+
+Responses:
+
+- **Success**: Returns confirmed value (e.g., `{"current_set": 16.0}`)
+- **Error**: Returns error message (e.g., `{"Response": "blocked by solar-charging"}`)
 
 ## Configuration Storage
 
@@ -135,8 +140,13 @@ Entities call coordinator methods for control operations:
 
 ```python
 await self.coordinator.async_set_current(value)
-# Coordinator handles: API call → 2-second delay → refresh
+# Coordinator handles: API call → parse response → verify → update state
 ```
+
+Control responses from device:
+
+- **Success**: `{"current_set": 6.7}` - Contains confirmed value
+- **Error**: `{"Response": "Charging pause is blocked by solar-charging"}` - Contains error message
 
 ### Exception Hierarchy
 

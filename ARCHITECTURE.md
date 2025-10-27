@@ -116,18 +116,24 @@ sequenceDiagram
     Entity->>Coord: async_set_current() / async_set_charge_pause() / etc.
     Coord->>API: set_current() / set_charge_pause() / etc.
     API->>Device: GET /control?param=value
-    Device-->>API: HTTP 200
-    Coord->>Coord: Sleep 2 seconds (device processing time)
-    Coord->>API: async_request_refresh()
-    API->>Device: GET /info, /control, /values
-    Device-->>API: Updated state
-    Coord->>Coord: Verify actual_value == expected_value
-    alt Verification Success
+    Device-->>API: HTTP 200 + {"param": confirmed_value}
+    API-->>Coord: Response data
+    Coord->>Coord: Parse response, check for error key
+    alt Response contains error
+        Coord-->>Entity: Raise HomeAssistantError
+        Entity->>HA: Show Error, Revert State
+    else Response contains confirmed value
+        Coord->>Coord: Verify confirmed_value == expected_value
+        Coord->>Coord: Update coordinator.data
+        Coord->>Coord: async_set_updated_data()
+        Coord-->>Entity: Success
+        Entity->>HA: State Update (immediate)
+    else Response format unexpected
+        Coord->>API: async_request_refresh()
+        API->>Device: GET /info, /control, /values
+        Device-->>API: Updated state
         Coord-->>Entity: Success
         Entity->>HA: State Update
-    else Verification Failed
-        Coord-->>Entity: Raise Exception
-        Entity->>HA: Show Error, Revert State
     end
 ```
 
@@ -372,8 +378,20 @@ class NRGkickAPI:
                         raise NRGkickApiClientAuthenticationError(
                             "Authentication failed"
                         )
-                    response.raise_for_status()
-                    return await response.json()
+
+                    # Read JSON response first (even on HTTP errors)
+                    # Device returns error details in JSON body
+                    data = await response.json()
+
+                    # Check HTTP status after reading JSON
+                    # This allows access to error messages in the response
+                    if response.status >= 400:
+                        # If response has "Response" key, return it for caller to handle
+                        # Otherwise raise HTTP error
+                        if "Response" not in data:
+                            response.raise_for_status()
+
+                    return data
         except (asyncio.TimeoutError, aiohttp.ClientError) as err:
             raise NRGkickApiClientCommunicationError(
                 f"Error communicating with API: {err}"
@@ -393,7 +411,7 @@ class NRGkickAPI:
 
 - **Timeout Handling**: The 10-second timeout prevents hung connections from blocking the coordinator indefinitely. If the timeout expires, `asyncio.timeout` raises `TimeoutError`, which is caught and converted to `NRGkickApiClientCommunicationError`.
 
-- **Authentication Error Detection**: The API explicitly checks for 401/403 status codes before calling `raise_for_status()`, converting them to `NRGkickApiClientAuthenticationError` for proper re-authentication flow handling.
+- **Response-First Error Handling**: The API reads JSON response before checking HTTP status. This allows extraction of device error messages from HTTP error responses (e.g., 405 with `{"Response": "blocked by solar-charging"}`). If the response contains a `"Response"` key, it's returned for the caller to handle. If JSON parsing fails, the system falls back to HTTP status checking.
 
 - **Query Parameters**: Both read operations (filtering sections) and write operations (control commands) use GET requests with query parameters. While this isn't RESTful best practice, it matches the device's API design.
 
@@ -1577,7 +1595,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 
 - **Error Propagation**: When polling fails, all entities automatically become unavailable. When polling resumes, all entities become available again. No per-entity error handling needed.
 
-- **Control Methods with Verification**: The coordinator provides public methods (`async_set_current()`, `async_set_charge_pause()`, etc.) that entities call for control operations. A helper method (`_async_execute_command_with_verification()`) centralizes the execution-delay-refresh-verify pattern, ensuring UI state consistency with device state and eliminating code duplication across all four control commands.
+- **Control Methods with Verification**: The coordinator provides public methods (`async_set_current()`, `async_set_charge_pause()`, etc.) that entities call for control operations. A helper method (`_async_execute_command_with_verification()`) centralizes the response-parse-verify-update pattern, ensuring immediate UI state consistency with device state and eliminating code duplication across all four control commands.
 
 ### 2. Base Entity Class (Eliminating Duplication)
 
