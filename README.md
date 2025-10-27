@@ -255,6 +255,11 @@ Want to contribute? Check out [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 The project includes comprehensive tests and automated quality checks to ensure code quality.
 
+### Technical Documentation
+
+- **[INFO.md](INFO.md)**: Quick technical reference with entity overview, API endpoints, and configuration patterns.
+- **[ARCHITECTURE.md](ARCHITECTURE.md)**: Detailed technical architecture covering data flow, coordinator design, and implementation patterns.
+
 ## License
 
 This project is licensed under the MIT License - see [LICENSE](LICENSE) file for details.
