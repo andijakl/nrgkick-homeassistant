@@ -99,21 +99,21 @@ class NRGkickAPI:
 
     async def set_current(self, current: float) -> dict[str, Any]:
         """Set charging current."""
-        return await self._request("/control", {"current": current})
+        return await self._request("/control", {"current_set": current})
 
     async def set_charge_pause(self, pause: bool) -> dict[str, Any]:
         """Set charge pause state."""
-        return await self._request("/control", {"pause": "1" if pause else "0"})
+        return await self._request("/control", {"charge_pause": "1" if pause else "0"})
 
     async def set_energy_limit(self, limit: int) -> dict[str, Any]:
         """Set energy limit in Wh (0 = no limit)."""
-        return await self._request("/control", {"energy": limit})
+        return await self._request("/control", {"energy_limit": limit})
 
     async def set_phase_count(self, phases: int) -> dict[str, Any]:
         """Set phase count (1-3)."""
         if phases not in [1, 2, 3]:
             raise ValueError("Phase count must be 1, 2, or 3")
-        return await self._request("/control", {"phases": phases})
+        return await self._request("/control", {"phase_count": phases})
 
     async def test_connection(self) -> bool:
         """Test if we can connect to the device."""

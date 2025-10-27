@@ -122,7 +122,7 @@ async def test_set_current(mock_session):
 
     call_args = mock_session.get.call_args
     assert call_args[0][0] == "http://192.168.1.100/control"
-    assert call_args[1]["params"] == {"current": 16.0}
+    assert call_args[1]["params"] == {"current_set": 16.0}
 
 
 async def test_set_charge_pause(mock_session):
@@ -132,12 +132,12 @@ async def test_set_charge_pause(mock_session):
     # Test pause
     await api.set_charge_pause(True)
     call_args = mock_session.get.call_args
-    assert call_args[1]["params"] == {"pause": "1"}
+    assert call_args[1]["params"] == {"charge_pause": "1"}
 
     # Test resume
     await api.set_charge_pause(False)
     call_args = mock_session.get.call_args
-    assert call_args[1]["params"] == {"pause": "0"}
+    assert call_args[1]["params"] == {"charge_pause": "0"}
 
 
 async def test_set_energy_limit(mock_session):
@@ -147,7 +147,7 @@ async def test_set_energy_limit(mock_session):
     await api.set_energy_limit(5000)
 
     call_args = mock_session.get.call_args
-    assert call_args[1]["params"] == {"energy": 5000}
+    assert call_args[1]["params"] == {"energy_limit": 5000}
 
 
 async def test_set_phase_count(mock_session):
@@ -157,7 +157,7 @@ async def test_set_phase_count(mock_session):
     await api.set_phase_count(3)
 
     call_args = mock_session.get.call_args
-    assert call_args[1]["params"] == {"phases": 3}
+    assert call_args[1]["params"] == {"phase_count": 3}
 
 
 async def test_set_phase_count_invalid():

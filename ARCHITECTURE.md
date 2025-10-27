@@ -395,10 +395,10 @@ class NRGkickAPI:
 
 **Write Operations (Control Commands):**
 
-- `set_current(16.0)` → `GET /control?current=16.0`
-- `set_charge_pause(True)` → `GET /control?pause=1`
-- `set_energy_limit(5000)` → `GET /control?energy=5000`
-- `set_phase_count(3)` → `GET /control?phases=3`
+- `set_current(16.0)` → `GET /control?current_set=16.0`
+- `set_charge_pause(True)` → `GET /control?charge_pause=1`
+- `set_energy_limit(5000)` → `GET /control?energy_limit=5000`
+- `set_phase_count(3)` → `GET /control?phase_count=3`
 
 ### 3. Polling Cycle Timing
 
