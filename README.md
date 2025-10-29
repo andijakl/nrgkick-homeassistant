@@ -101,9 +101,9 @@ config/
 
 Enable JSON API on your NRGkick device:
 
-1. Open NRGkick mobile app → **Settings** → **API Settings**
-2. Enable **JSON API**
-3. (Optional) Enable **BasicAuth** and set credentials
+1. Open NRGkick mobile app → **Extended** → **Local API**
+2. Enable **JSON API** under **API Variants**
+3. (Optional & recommended) Enable **Authentication (JSON)** and set credentials
 
 ### Setup
 
@@ -207,8 +207,8 @@ entities:
 Uses NRGkick Gen2 Local REST JSON API (`http://{device_ip}`):
 
 - `GET /info` - Device information
-- `GET /control` - Control parameters
 - `GET /values` - Real-time telemetry
+- `GET /control` - Control parameters
 - `GET /control?param=value` - Set parameters
 
 ### Update Mechanism
