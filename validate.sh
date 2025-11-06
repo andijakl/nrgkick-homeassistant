@@ -16,9 +16,30 @@ if [ ! -f "custom_components/nrgkick/manifest.json" ]; then
     exit 1
 fi
 
-# Check Python version
+# Create virtual environment if it doesn't exist
+if [ ! -d "venv" ]; then
+    echo ""
+    echo "🔧 Creating virtual environment..."
+    python3 -m venv venv
+fi
+
+# Activate virtual environment
+echo ""
+echo "🔧 Activating virtual environment..."
+source venv/bin/activate || { echo "❌ Failed to activate virtual environment"; exit 1; }
+
+# Verify virtual environment is activated
+if [ -z "$VIRTUAL_ENV" ]; then
+    echo "❌ Error: Virtual environment not activated"
+    echo "   Please run: source venv/bin/activate"
+    exit 1
+fi
+echo "   ✓ Virtual environment activated: $VIRTUAL_ENV"
+
+# Check Python version (from venv)
+echo ""
 echo "📋 Checking Python version..."
-python_version=$(python3 --version 2>&1 | awk '{print $2}')
+python_version=$(python --version 2>&1 | awk '{print $2}')
 python_major=$(echo $python_version | cut -d. -f1)
 python_minor=$(echo $python_version | cut -d. -f2)
 echo "   Python version: $python_version"
@@ -34,18 +55,6 @@ if [ "$python_major" -lt 3 ] || ([ "$python_major" -eq 3 ] && [ "$python_minor" 
         exit 1
     fi
 fi
-
-# Create virtual environment if it doesn't exist
-if [ ! -d "venv" ]; then
-    echo ""
-    echo "🔧 Creating virtual environment..."
-    python3 -m venv venv
-fi
-
-# Activate virtual environment
-echo ""
-echo "🔧 Activating virtual environment..."
-source venv/bin/activate
 
 # Install dependencies
 echo ""
