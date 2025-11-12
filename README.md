@@ -1,8 +1,12 @@
 # NRGkick Home Assistant Integration
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs)
+[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/docs/default_repositories)
 [![GitHub Release](https://img.shields.io/github/release/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/releases)
-[![License](https://img.shields.io/github/license/andijakl/nrgkick-homeassistant.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/blob/main/LICENSE)
+[![GitHub Issues](https://img.shields.io/github/issues/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/issues)
+[![Validate](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/validate.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/validate.yml)
+[![Test](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml)
+[![HACS Validation](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml)
 
 Home Assistant integration for the NRGkick Gen2 EV charging controller using the local REST JSON API.
 
@@ -44,21 +48,9 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 
 ## Installation
 
-### Via HACS Custom Repository (Before Official Release)
+### Via HACS (Recommended)
 
-1. Open **HACS** → **Integrations**
-2. Click **⋮** (three dots) → **Custom repositories**
-3. Add repository:
-   - **URL**: `https://github.com/andijakl/nrgkick-homeassistant`
-   - **Category**: Integration
-4. Click **Add**
-5. Search for **NRGkick** and click **Download**
-6. Restart Home Assistant
-7. Add integration via UI
-
-### Via HACS (not yet available)
-
-Once this integration is available in HACS:
+This integration is available in the default HACS repository:
 
 1. Open **HACS** in Home Assistant
 2. Go to **Integrations**
