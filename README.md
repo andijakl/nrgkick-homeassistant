@@ -8,7 +8,7 @@
 [![Test](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml)
 [![HACS Validation](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml)
 
-Home Assistant integration for the NRGkick Gen2 EV charging controller using the local REST JSON API.
+Home Assistant integration for the [NRGkick Gen2 EV](https://www.nrgkick.com/en/) mobile wallbox by [DiniTech GmbH](https://www.dinitech.at/en/) using the official local REST JSON API.
 
 ## Features
 
@@ -44,7 +44,7 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 - Home Assistant 2025.10 or newer
 - NRGkick Gen2 device with firmware >= SmartModule 4.0.0.0
 - Local network access to your NRGkick device
-- JSON API enabled in the NRGkick App (Settings → API Settings)
+- JSON API enabled in the NRGkick App (Extended → Local API)
 
 ## Installation
 
@@ -66,26 +66,6 @@ This integration is available in the default HACS repository:
 2. Extract and copy the `custom_components/nrgkick` folder to your Home Assistant `config/custom_components/` directory
 3. Restart Home Assistant
 4. Add integration via UI
-
-**Directory structure after installation:**
-
-```
-config/
-└── custom_components/
-    └── nrgkick/
-        ├── __init__.py
-        ├── api.py
-        ├── binary_sensor.py
-        ├── config_flow.py
-        ├── const.py
-        ├── manifest.json
-        ├── number.py
-        ├── sensor.py
-        ├── switch.py
-        └── translations/
-            ├── en.json           # English translations
-            └── de.json           # German translations
-```
 
 ## Configuration
 
@@ -196,7 +176,7 @@ entities:
 
 ### API
 
-Uses NRGkick Gen2 Local REST JSON API (`http://{device_ip}`):
+Uses the official [NRGkick Gen2 Local REST JSON API](https://www.nrgkick.com/wp-content/uploads/2024/12/local_api_docu_simulate-1.html) (`http://{device_ip}`):
 
 - `GET /info` - Device information
 - `GET /values` - Real-time telemetry
