@@ -8,7 +8,7 @@
 [![Test](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml)
 [![HACS Validation](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml)
 
-Home Assistant integration for the [NRGkick Gen2 EV](https://www.nrgkick.com/en/) mobile wallbox by [DiniTech GmbH](https://www.dinitech.at/en/) using the official local REST JSON API.
+Home Assistant integration for the [NRGkick Gen2 EV mobile wallbox](https://www.nrgkick.com/en/) by [DiniTech GmbH](https://www.dinitech.at/en/) using the official local REST JSON API.
 
 ## Features
 
@@ -185,7 +185,7 @@ Uses the official [NRGkick Gen2 Local REST JSON API](https://www.nrgkick.com/wp-
 
 ### Update Mechanism
 
-Polls device every 30 seconds (configurable 10-300s). Uses Home Assistant's `DataUpdateCoordinator` for efficient data fetching and automatic retry on failures.
+Polls device every 30 seconds (configurable 10-300s). Uses Home Assistant's `DataUpdateCoordinator` for efficient data fetching with automatic error recovery. The integration automatically retries failed connections up to 3 times with exponential backoff, ensuring reliable operation even with temporary network issues.
 
 ## Development
 

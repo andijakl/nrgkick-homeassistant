@@ -39,6 +39,9 @@ custom_components/nrgkick/
 
 - aiohttp client with 10s timeout
 - Optional BasicAuth
+- Automatic retry with exponential backoff (3 attempts, 1.5s base)
+- Retries: Timeouts, HTTP 500-504, connection errors
+- No retry: Authentication errors (401/403), client errors (4xx)
 - Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError`, `NRGkickApiClientError`
 - Methods: `get_info()`, `get_control()`, `get_values()`, `set_current()`, `set_charge_pause()`, `set_energy_limit()`, `set_phase_count()`, `test_connection()`
 
@@ -167,11 +170,11 @@ Control responses from device:
 Run tests: `./run-tests.sh`
 Run validation: `./validate.sh` (pre-commit + pytest)
 
-**Test suite**: 54 tests with 94% coverage
+**Test suite**: 65 tests with 91% coverage
 
-- API tests: 17 (97% coverage)
+- API tests: 26 (93% coverage, includes 7 retry behavior tests)
 - Config flow tests: 26 (90% coverage)
-- Coordinator tests: 11 (100% coverage)
+- Coordinator tests: 13 (98% coverage)
 
 ## Performance Characteristics
 

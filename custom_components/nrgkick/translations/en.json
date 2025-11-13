@@ -41,9 +41,9 @@
             }
         },
         "error": {
-            "cannot_connect": "Failed to connect to the device. Please check the IP address and ensure the device is reachable.",
-            "invalid_auth": "Invalid username or password. Please check your credentials.",
-            "unknown": "An unexpected error occurred. Please check the logs for more information."
+            "cannot_connect": "Cannot connect to the NRGkick device. Verify: (1) The device is powered on and the LED is active, (2) The IP address is correct (you can ping it from a computer), (3) Home Assistant and the NRGkick are on the same network/VLAN, (4) The JSON API is enabled in the NRGkick app (Extended → Local API → JSON API), (5) No firewall is blocking port 80. Check Home Assistant logs for detailed error messages.",
+            "invalid_auth": "Authentication failed. Verify that: (1) BasicAuth is enabled in the NRGkick app (Extended → Local API → Authentication), (2) The username and password match exactly what is configured in the app (case-sensitive), (3) You can access http://{device_ip}/info with these credentials in a browser. If the problem persists, try disabling and re-enabling BasicAuth in the NRGkick app.",
+            "unknown": "An unexpected error occurred during setup. Check the Home Assistant logs (Settings → System → Logs) for detailed error information. Common causes: network issues, device firmware incompatibility, or temporary device unavailability. Try: (1) Restarting the NRGkick device, (2) Verifying network connectivity, (3) Checking the device firmware is up to date."
         },
         "abort": {
             "already_configured": "This device is already configured.",
@@ -73,9 +73,10 @@
             }
         },
         "error": {
-            "cannot_connect": "Failed to connect to the device with the new settings. Please verify the connection details.",
-            "invalid_scan_interval": "Scan interval must be between 10 and 300 seconds.",
-            "unknown": "An unexpected error occurred. Please check the logs for more information."
+            "cannot_connect": "Cannot connect to the NRGkick device with the new settings. Please verify: (1) The IP address/hostname is correct and reachable, (2) The JSON API is still enabled on the device, (3) If you changed authentication settings, the credentials match the device configuration. Test the connection using a browser: http://{device_ip}/info",
+            "invalid_auth": "Authentication failed with the new credentials. Ensure that: (1) BasicAuth is enabled in the NRGkick app if you're providing credentials, (2) The username and password match exactly (case-sensitive), (3) You haven't changed the credentials in the app without updating them here. Try accessing http://{device_ip}/info in a browser with these credentials to verify.",
+            "invalid_scan_interval": "Scan interval must be between 10 and 300 seconds. Lower values provide more frequent updates but increase network traffic and device load. The recommended range is 20-60 seconds for most use cases.",
+            "unknown": "An unexpected error occurred while saving the new settings. Check the logs (Settings → System → Logs) for details. The integration was not changed - your previous settings are still active. Common issues: temporary network problems, device busy/rebooting, or firmware issues."
         }
     }
 }

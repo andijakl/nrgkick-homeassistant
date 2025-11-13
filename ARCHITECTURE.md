@@ -367,45 +367,73 @@ class NRGkickAPI:
         self._base_url = f"http://{host}"
 
     async def _request(self, endpoint: str, params: dict | None = None) -> dict:
-        """Make a request with optional BasicAuth."""
+        """Make a request with automatic retry and optional BasicAuth."""
         url = f"{self._base_url}{endpoint}"
         auth = aiohttp.BasicAuth(self.username, self.password) if self.username else None
 
-        try:
-            async with asyncio.timeout(10):  # 10-second timeout
-                async with self._session.get(url, auth=auth, params=params) as response:
-                    if response.status in (401, 403):
-                        raise NRGkickApiClientAuthenticationError(
-                            "Authentication failed"
-                        )
+        # Retry loop for transient errors (max 3 attempts)
+        for attempt in range(3):
+            try:
+                async with asyncio.timeout(10):  # 10-second timeout per attempt
+                    async with self._session.get(url, auth=auth, params=params) as response:
+                        if response.status in (401, 403):
+                            # Auth errors: don't retry, raise immediately
+                            raise NRGkickApiClientAuthenticationError(
+                                "Authentication failed"
+                            )
 
-                    # Read JSON response first (even on HTTP errors)
-                    # Device returns error details in JSON body
-                    data = await response.json()
+                        # Transient HTTP errors (500-504): retry with backoff
+                        if response.status in {500, 502, 503, 504} and attempt < 2:
+                            await asyncio.sleep(1.5 ** attempt)  # Exponential backoff
+                            continue
 
-                    # Check HTTP status after reading JSON
-                    # This allows access to error messages in the response
-                    if response.status >= 400:
-                        # If response has "Response" key, return it for caller to handle
-                        # Otherwise raise HTTP error
-                        if "Response" not in data:
+                        # Read JSON response first (even on HTTP errors)
+                        # Device returns error details in JSON body
+                        data = await response.json()
+
+                        # Check HTTP status after reading JSON
+                        if response.status >= 400 and "Response" not in data:
                             response.raise_for_status()
 
-                    return data
-        except (asyncio.TimeoutError, aiohttp.ClientError) as err:
-            raise NRGkickApiClientCommunicationError(
-                f"Error communicating with API: {err}"
-            ) from err
+                        return data
+
+            except asyncio.TimeoutError:
+                if attempt < 2:
+                    await asyncio.sleep(1.5 ** attempt)  # Retry on timeout
+                    continue
+                raise NRGkickApiClientCommunicationError("Connection timeout after 3 attempts")
+
+            except (aiohttp.ClientConnectorError, aiohttp.ClientOSError):
+                if attempt < 2:
+                    await asyncio.sleep(1.5 ** attempt)  # Retry on connection error
+                    continue
+                raise NRGkickApiClientCommunicationError("Connection failed after 3 attempts")
 ```
 
 **Design Considerations:**
 
+- **Automatic Retry Logic**: The API client implements intelligent retry behavior for transient errors:
+  - **Retries up to 3 times** with exponential backoff (base 1.5s: delays of 0s → 1.5s → 2.25s)
+  - **Retries on**: Timeouts, HTTP 500-504 (server errors), connection errors (`ClientConnectorError`, `ClientOSError`)
+  - **No retry on**: Authentication errors (401/403), client errors (4xx), successful responses
+  - **Smart detection**: Distinguishes between transient issues (network glitches) and permanent failures (bad credentials)
+
+- **Exponential Backoff**: Wait time increases exponentially (1.5^attempt) to avoid overwhelming a struggling device while still recovering quickly from brief network hiccups. This prevents rapid-fire retry attempts that could worsen network congestion.
+
+- **Refactored Architecture**: The retry logic is split into helper methods for maintainability:
+  - `_make_request_attempt()` - Handles single HTTP request, detects transient HTTP errors (500-504)
+  - `_handle_retry_exception()` - Centralizes retry decision logic for timeouts, connection errors, etc.
+  - `_request()` - Main orchestration with clean retry loop, minimal complexity
+  - Error handlers (`_handle_auth_error()`, `_handle_timeout_error()`, etc.) - Provide detailed troubleshooting messages
+
+  This separation reduces method complexity, improves testability (each component can be tested independently), and makes the retry behavior easier to understand and modify.
+
 - **Custom Exception Hierarchy**: Three exception types provide clear error semantics:
   - `NRGkickApiClientError` (base) - Catch-all for API errors
-  - `NRGkickApiClientCommunicationError` - Network issues, timeouts, connection failures
-  - `NRGkickApiClientAuthenticationError` - Invalid credentials (401/403 responses)
+  - `NRGkickApiClientCommunicationError` - Network issues, timeouts, connection failures (triggers retry and entity unavailability)
+  - `NRGkickApiClientAuthenticationError` - Invalid credentials (401/403 responses, triggers re-auth flow)
 
-  This typed approach allows the coordinator to handle authentication errors differently (trigger re-auth) versus communication errors (retry).
+  This typed approach allows the coordinator to handle authentication errors differently (trigger re-auth) versus communication errors (retry and mark entities unavailable).
 
 - **Session Management**: The session is passed in from Home Assistant rather than created internally. This allows the integration to leverage Home Assistant's connection pooling and SSL context.
 
