@@ -8,6 +8,6 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/andijakl/nrgkick-homeassistant/issues",
   "requirements": [],
-  "version": "1.2.3",
+  "version": "2.0.0",
   "zeroconf": ["_nrgkick._tcp.local."]
 }
