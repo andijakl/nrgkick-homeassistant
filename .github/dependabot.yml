@@ -1,0 +1,55 @@
+# Dependabot configuration for NRGkick Home Assistant Integration
+# Automatically checks for dependency updates weekly
+
+version: 2
+updates:
+  # Python dependencies (requirements_dev.txt)
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Vienna"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "andijakl"
+    labels:
+      - "dependencies"
+      - "python"
+    commit-message:
+      prefix: "chore(deps)"
+      include: "scope"
+    # Group Home Assistant core updates together
+    groups:
+      homeassistant:
+        patterns:
+          - "homeassistant*"
+      pytest:
+        patterns:
+          - "pytest*"
+      linting:
+        patterns:
+          - "black"
+          - "flake8*"
+          - "pylint"
+          - "mypy"
+          - "isort"
+
+  # GitHub Actions workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "06:00"
+      timezone: "Europe/Vienna"
+    open-pull-requests-limit: 3
+    reviewers:
+      - "andijakl"
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
