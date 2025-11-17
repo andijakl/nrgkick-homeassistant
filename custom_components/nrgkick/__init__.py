@@ -38,8 +38,6 @@ PLATFORMS: list[Platform] = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NRGkick from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-
     api = NRGkickAPI(
         host=entry.data["host"],
         username=entry.data.get("username"),
@@ -50,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = NRGkickDataUpdateCoordinator(hass, api, entry)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Set up platforms
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -68,10 +66,7 @@ async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
@@ -210,6 +205,7 @@ class NRGkickEntity(CoordinatorEntity):
     """Base class for NRGkick entities with common device info setup."""
 
     coordinator: NRGkickDataUpdateCoordinator
+    _attr_has_entity_name = True
 
     def __init__(
         self, coordinator: NRGkickDataUpdateCoordinator, key: str, name: str
@@ -217,8 +213,8 @@ class NRGkickEntity(CoordinatorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_name = f"NRGkick {name}"
-        self._attr_translation_key = f"nrgkick_{key}"
+        self._attr_name = name
+        self._attr_translation_key = key
         self._setup_device_info()
 
     def _setup_device_info(self) -> None:

@@ -13,16 +13,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NRGkickDataUpdateCoordinator, NRGkickEntity
-from .const import DOMAIN, STATUS_CHARGING
+from .const import STATUS_CHARGING
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # pylint: disable=unused-argument
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NRGkick binary sensors based on a config entry."""
-    coordinator: NRGkickDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
     entities: list[NRGkickBinarySensor] = [
         NRGkickBinarySensor(

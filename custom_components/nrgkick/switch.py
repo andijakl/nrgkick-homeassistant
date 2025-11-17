@@ -13,18 +13,17 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NRGkickDataUpdateCoordinator, NRGkickEntity
 from .api import NRGkickApiClientError
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
+    hass: HomeAssistant,  # pylint: disable=unused-argument
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NRGkick switches based on a config entry."""
-    coordinator: NRGkickDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
     entities: list[NRGkickSwitch] = [
         NRGkickSwitch(
