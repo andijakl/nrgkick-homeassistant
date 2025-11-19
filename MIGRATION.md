@@ -59,40 +59,48 @@ These improvements provide:
 
 ### 2. Upgrade the Integration
 
-**Via HACS:**
+**Method A: Clean Installation (Recommended)**
 
-1. Open HACS → Integrations
-2. Find NRGkick
-3. Click "Update"
-4. Restart Home Assistant
+This method ensures you get clean entity IDs (e.g., `sensor.nrgkick_total_active_power`) without `_2` suffixes.
 
-**Manual Installation:**
+1. **Remove the existing integration**:
+   - Go to **Settings** → **Devices & Services**.
+   - Click the three dots (⋮) on the **NRGkick** integration entry.
+   - Select **Delete**.
+   - _Note: This removes the old entities but preserves your configuration in YAML files._
+2. **Upgrade the files**:
+   - **HACS**: Go to HACS, update NRGkick to v2.0.0.
+   - **Manual**: Replace the `custom_components/nrgkick` folder with the new version.
+3. **Restart Home Assistant**.
+4. **Add the integration**:
+   - Go to **Settings** → **Devices & Services** → **Add Integration**.
+   - Search for **NRGkick** and follow the setup steps.
 
-1. Download v2.0.0 from [GitHub Releases](https://github.com/andijakl/nrgkick-homeassistant/releases)
-2. Replace the `custom_components/nrgkick` folder
-3. Restart Home Assistant
+**Method B: In-Place Upgrade**
 
-### 3. Find New Entity IDs
+If you upgrade without removing the integration first, you may end up with duplicate entities or `_2` suffixes (e.g., `sensor.nrgkick_total_active_power_2`) because the old entities still occupy the IDs.
 
-After restart:
+1. Upgrade via HACS or Manual replacement.
+2. Restart Home Assistant.
+3. If you see `_2` entities:
+   - Go to **Settings** → **Devices & Services** → **Entities**.
+   - Filter by `nrgkick`.
+   - Delete the old "Unavailable" entities.
+   - Rename the new `_2` entities to remove the suffix (click Entity → Settings → Entity ID).
 
-1. Go to **Settings** → **Devices & Services** → **NRGkick**
-2. Click on your NRGkick device
-3. You'll see all entities with their new IDs
-4. Old entities will show as "Unavailable" (with old IDs)
+### 3. Verify Entity IDs
 
-**Common pattern:** New IDs typically have a suffix like `_2`, `_3`, etc.
+After re-adding the integration (Method A) or fixing suffixes (Method B):
 
-Example mapping:
+1. Go to **Settings** → **Devices & Services** → **NRGkick**.
+2. Click on your device.
+3. Verify the entity IDs match your expectations.
 
-```
-sensor.nrgkick_total_active_power → sensor.nrgkick_total_active_power_2
-sensor.nrgkick_charging_current → sensor.nrgkick_charging_current_2
-sensor.nrgkick_current_session_energy → sensor.nrgkick_current_session_energy_2
-switch.nrgkick_charge_pause → switch.nrgkick_charge_pause_2
-number.nrgkick_charging_current → number.nrgkick_charging_current_2
-binary_sensor.nrgkick_charging → binary_sensor.nrgkick_charging_2
-```
+**Expected Pattern:**
+
+- `sensor.nrgkick_total_active_power`
+- `switch.nrgkick_charge_pause`
+- `number.nrgkick_charging_current`
 
 ### 4. Update Your Configuration
 
