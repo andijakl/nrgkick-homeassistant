@@ -51,8 +51,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     await api.test_connection()
 
     info = await api.get_info(["general"])
+    device_name = info.get("general", {}).get("device_name")
+    if not device_name:
+        device_name = "NRGkick"
+
     return {
-        "title": info.get("general", {}).get("device_name", "NRGkick"),
+        "title": device_name,
         "serial": info.get("general", {}).get("serial_number", "Unknown"),
     }
 

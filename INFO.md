@@ -33,12 +33,16 @@ custom_components/nrgkick/
 
 - Base class for all entity types
 - Provides common device info setup
+- Sets `_attr_has_entity_name = True` for modern naming
 - Type annotation: `coordinator: NRGkickDataUpdateCoordinator`
 
 **`NRGkickAPI`** (`api.py`)
 
 - aiohttp client with 10s timeout
 - Optional BasicAuth
+- Automatic retry with exponential backoff (3 attempts, 1.5s base)
+- Retries: Timeouts, HTTP 500-504, connection errors
+- No retry: Authentication errors (401/403), client errors (4xx)
 - Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError`, `NRGkickApiClientError`
 - Methods: `get_info()`, `get_control()`, `get_values()`, `set_current()`, `set_charge_pause()`, `set_energy_limit()`, `set_phase_count()`, `test_connection()`
 
@@ -167,11 +171,13 @@ Control responses from device:
 Run tests: `./run-tests.sh`
 Run validation: `./validate.sh` (pre-commit + pytest)
 
-**Test suite**: 54 tests with 94% coverage
+**Test suite**: 75 tests with 97% coverage
 
-- API tests: 17 (97% coverage)
-- Config flow tests: 26 (90% coverage)
-- Coordinator tests: 11 (100% coverage)
+- API tests: 26 (97% coverage)
+- Config flow tests: 26 (98% coverage)
+- Coordinator tests: 13 (100% coverage)
+- Platform tests: 8 (100% coverage)
+- Naming tests: 2 (100% coverage)
 
 ## Performance Characteristics
 

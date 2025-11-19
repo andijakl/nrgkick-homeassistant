@@ -264,3 +264,213 @@ async def test_api_http_error_without_json_response(mock_session) -> None:
     # Should raise communication error since JSON parsing failed
     with pytest.raises(NRGkickApiClientCommunicationError):
         await api.get_control()
+
+
+async def test_api_retry_on_timeout(mock_session) -> None:
+    """Test API retries on timeout and eventually succeeds."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    # First 2 attempts timeout, 3rd succeeds
+    attempt_count = 0
+
+    def mock_get_with_retry(*args, **kwargs):
+        nonlocal attempt_count
+        attempt_count += 1
+
+        if attempt_count <= 2:
+            raise asyncio.TimeoutError
+
+        # Third attempt succeeds
+        response = AsyncMock()
+        response.status = 200
+        response.json = AsyncMock(return_value={"general": {"serial_number": "123"}})
+        mock_ctx = MagicMock()
+        mock_ctx.__aenter__ = AsyncMock(return_value=response)
+        mock_ctx.__aexit__ = AsyncMock(return_value=None)
+        return mock_ctx
+
+    mock_session.get = MagicMock(side_effect=mock_get_with_retry)
+
+    # Should succeed after retries
+    result = await api.get_info()
+    assert result == {"general": {"serial_number": "123"}}
+    assert attempt_count == 3  # Verify it tried 3 times
+
+
+async def test_api_retry_on_transient_http_error(mock_session) -> None:
+    """Test API retries on 503 Service Unavailable."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    attempt_count = 0
+
+    def mock_get_with_503_then_success(*args, **kwargs):
+        nonlocal attempt_count
+        attempt_count += 1
+
+        response = AsyncMock()
+        if attempt_count <= 2:
+            # First 2 attempts return 503
+            response.status = 503
+        else:
+            # Third attempt succeeds
+            response.status = 200
+
+        response.json = AsyncMock(return_value={"control": {"current_set": 16}})
+
+        mock_ctx = MagicMock()
+        mock_ctx.__aenter__ = AsyncMock(return_value=response)
+        mock_ctx.__aexit__ = AsyncMock(return_value=None)
+        return mock_ctx
+
+    mock_session.get = MagicMock(side_effect=mock_get_with_503_then_success)
+
+    # Should succeed after retries
+    result = await api.get_control()
+    assert result == {"control": {"current_set": 16}}
+    assert attempt_count == 3  # Verify it retried
+
+
+async def test_api_retry_exhausted_on_timeout(mock_session) -> None:
+    """Test API fails after exhausting all retries on timeout."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    # All attempts timeout
+    mock_session.get.side_effect = asyncio.TimeoutError
+
+    # Should raise after 3 attempts
+    with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
+        await api.get_info()
+
+    assert "timeout after 3 attempts" in str(exc_info.value).lower()
+
+
+async def test_api_retry_on_connection_error(mock_session) -> None:
+    """Test API retries on connection errors."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    attempt_count = 0
+
+    def mock_get_with_connection_error(*args, **kwargs):
+        nonlocal attempt_count
+        attempt_count += 1
+
+        if attempt_count <= 2:
+            # First 2 attempts have connection errors
+            raise aiohttp.ClientConnectorError(
+                connection_key=Mock(), os_error=OSError("Connection refused")
+            )
+
+        # Third attempt succeeds
+        response = AsyncMock()
+        response.status = 200
+        response.json = AsyncMock(return_value={"values": {"status": {"charging": 1}}})
+        mock_ctx = MagicMock()
+        mock_ctx.__aenter__ = AsyncMock(return_value=response)
+        mock_ctx.__aexit__ = AsyncMock(return_value=None)
+        return mock_ctx
+
+    mock_session.get = MagicMock(side_effect=mock_get_with_connection_error)
+
+    # Should succeed after retries
+    result = await api.get_values()
+    assert result == {"values": {"status": {"charging": 1}}}
+    assert attempt_count == 3
+
+
+async def test_api_no_retry_on_auth_error(mock_session) -> None:
+    """Test API does NOT retry on authentication errors."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    attempt_count = 0
+
+    def mock_get_with_auth_error(*args, **kwargs):
+        nonlocal attempt_count
+        attempt_count += 1
+
+        response = AsyncMock()
+        response.status = 401
+        response.json = AsyncMock(return_value={})
+
+        mock_ctx = MagicMock()
+        mock_ctx.__aenter__ = AsyncMock(return_value=response)
+        mock_ctx.__aexit__ = AsyncMock(return_value=None)
+        return mock_ctx
+
+    mock_session.get = MagicMock(side_effect=mock_get_with_auth_error)
+
+    # Should fail immediately without retries
+    with pytest.raises(NRGkickApiClientAuthenticationError):
+        await api.get_info()
+
+    assert attempt_count == 1  # Should only try once
+
+
+async def test_api_no_retry_on_client_error_4xx(mock_session) -> None:
+    """Test API does NOT retry on 4xx client errors (except 401/403)."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    # Mock a 404 error
+    response_mock = AsyncMock()
+    response_mock.status = 404
+    response_mock.json = AsyncMock(side_effect=Exception("Not found"))
+    response_mock.raise_for_status = Mock(
+        side_effect=aiohttp.ClientResponseError(
+            request_info=Mock(),
+            history=(),
+            status=404,
+            message="Not Found",
+        )
+    )
+
+    mock_ctx = MagicMock()
+    mock_ctx.__aenter__ = AsyncMock(return_value=response_mock)
+    mock_ctx.__aexit__ = AsyncMock(return_value=None)
+    mock_session.get.return_value = mock_ctx
+
+    # Should fail immediately without retries
+    with pytest.raises(NRGkickApiClientCommunicationError):
+        await api.get_info()
+
+
+async def test_api_retry_backoff_timing(mock_session) -> None:
+    """Test that retry backoff timing works as expected."""
+    api = NRGkickAPI("192.168.1.100", session=mock_session)
+
+    attempt_count = 0
+    attempt_times = []
+
+    def mock_get_with_timing(*args, **kwargs):
+        nonlocal attempt_count
+        import time
+
+        attempt_count += 1
+        attempt_times.append(time.time())
+
+        if attempt_count <= 2:
+            raise asyncio.TimeoutError
+
+        # Third attempt succeeds
+        response = AsyncMock()
+        response.status = 200
+        response.json = AsyncMock(return_value={"test": "success"})
+        mock_ctx = MagicMock()
+        mock_ctx.__aenter__ = AsyncMock(return_value=response)
+        mock_ctx.__aexit__ = AsyncMock(return_value=None)
+        return mock_ctx
+
+    mock_session.get = MagicMock(side_effect=mock_get_with_timing)
+
+    # Should succeed after retries
+    result = await api.get_info()
+    assert result == {"test": "success"}
+    assert attempt_count == 3
+
+    # Check backoff timing (approximately)
+    # First retry should wait ~1.5s (1.5^0), second ~1.5s (1.5^1)
+    if len(attempt_times) >= 2:
+        first_gap = attempt_times[1] - attempt_times[0]
+        assert 1.0 < first_gap < 3.0  # Allow some variance
+
+    if len(attempt_times) >= 3:
+        second_gap = attempt_times[2] - attempt_times[1]
+        assert 1.0 < second_gap < 3.0  # Allow some variance

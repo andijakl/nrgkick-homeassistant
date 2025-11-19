@@ -8,14 +8,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from . import NRGkickDataUpdateCoordinator
-from .const import DOMAIN
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: ConfigEntry  # pylint: disable=unused-argument
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator: NRGkickDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
     diagnostics_data = {
         "entry": {

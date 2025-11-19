@@ -14,7 +14,6 @@ from custom_components.nrgkick.api import (
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
 )
-from custom_components.nrgkick.const import DOMAIN
 
 from . import async_setup_entry_with_return, create_mock_config_entry
 
@@ -33,8 +32,8 @@ async def test_setup_entry(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert DOMAIN in hass.data
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_config_entry.runtime_data is not None
 
 
 async def test_setup_entry_failed_connection(
@@ -71,7 +70,7 @@ async def test_unload_entry(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.entry_id not in hass.data[DOMAIN]
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.requires_integration
@@ -119,7 +118,7 @@ async def test_coordinator_update_success(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        coordinator = mock_config_entry.runtime_data
         assert coordinator.data == {
             "info": mock_info_data,
             "control": mock_control_data,
@@ -179,7 +178,7 @@ async def test_coordinator_async_set_current(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        coordinator = mock_config_entry.runtime_data
         await coordinator.async_set_current(6.7)
 
         mock_nrgkick_api.set_current.assert_called_once_with(6.7)
@@ -203,7 +202,7 @@ async def test_coordinator_async_set_charge_pause(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        coordinator = mock_config_entry.runtime_data
         await coordinator.async_set_charge_pause(True)
 
         mock_nrgkick_api.set_charge_pause.assert_called_once_with(True)
@@ -227,7 +226,7 @@ async def test_coordinator_async_set_energy_limit(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        coordinator = mock_config_entry.runtime_data
         await coordinator.async_set_energy_limit(50000)
 
         mock_nrgkick_api.set_energy_limit.assert_called_once_with(50000)
@@ -251,7 +250,7 @@ async def test_coordinator_async_set_phase_count(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        coordinator = mock_config_entry.runtime_data
         await coordinator.async_set_phase_count(1)
 
         mock_nrgkick_api.set_phase_count.assert_called_once_with(1)
@@ -277,7 +276,7 @@ async def test_coordinator_command_blocked_by_solar(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        coordinator = mock_config_entry.runtime_data
 
         # Should raise communication error with the device's message
         with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
@@ -302,7 +301,7 @@ async def test_coordinator_command_unexpected_value(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        coordinator = hass.data[DOMAIN][mock_config_entry.entry_id]
+        coordinator = mock_config_entry.runtime_data
 
         # Should raise communication error when value doesn't match
         with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
