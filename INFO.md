@@ -33,6 +33,7 @@ custom_components/nrgkick/
 
 - Base class for all entity types
 - Provides common device info setup
+- Sets `_attr_has_entity_name = True` for modern naming
 - Type annotation: `coordinator: NRGkickDataUpdateCoordinator`
 
 **`NRGkickAPI`** (`api.py`)
@@ -170,12 +171,13 @@ Control responses from device:
 Run tests: `./run-tests.sh`
 Run validation: `./validate.sh` (pre-commit + pytest)
 
-**Test suite**: 62 tests with 97% coverage
+**Test suite**: 75 tests with 97% coverage
 
-- API tests: 17 (97% coverage)
+- API tests: 26 (97% coverage)
 - Config flow tests: 26 (98% coverage)
-- Coordinator tests: 11 (100% coverage)
+- Coordinator tests: 13 (100% coverage)
 - Platform tests: 8 (100% coverage)
+- Naming tests: 2 (100% coverage)
 
 ## Performance Characteristics
 

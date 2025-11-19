@@ -674,9 +674,16 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     def __init__(self, coordinator: NRGkickDataUpdateCoordinator) -> None:
         """Initialize NRGkick entity."""
         super().__init__(coordinator)
+        self._attr_has_entity_name = True
+
+        # Get device name with fallback to "NRGkick"
+        device_name = coordinator.data["general"]["device_name"]
+        if not device_name:
+            device_name = "NRGkick"
+
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.data["general"]["serial_number"])},
-            name=coordinator.data["general"]["device_name"],
+            name=device_name,
             manufacturer="DiniTech",
             model=coordinator.data["general"]["model_type"],
             sw_version=coordinator.data["versions"]["smartmodule"],
@@ -1497,13 +1504,15 @@ The integration includes comprehensive test coverage (94%) across all components
 
 ```
 tests/
-├── test_api.py                    # 17 tests - API client, HTTP communication, error handling
+├── test_api.py                    # 26 tests - API client, HTTP communication, error handling
 ├── test_config_flow.py            # 18 tests - Core config flow scenarios
 ├── test_config_flow_additional.py # 8 tests - Edge cases and error scenarios
-└── test_init.py                   # 11 tests - Coordinator, setup/teardown, control methods
+├── test_init.py                   # 13 tests - Coordinator, setup/teardown, control methods
+├── test_naming.py                 # 2 tests - Device naming & fallback logic
+└── ...                            # Platform tests
 ```
 
-**Total: 54 tests, 100% pass rate**
+**Total: 75 tests, 100% pass rate**
 
 ### Config Flow Test Coverage
 
@@ -1840,7 +1849,7 @@ The NRGkick integration follows Home Assistant best practices with:
 
 **Testing:**
 
-- 54 tests with 100% pass rate
+- 75 tests with 100% pass rate
 - 94% code coverage
 - Comprehensive config flow testing (26 tests covering all flows and error scenarios)
 - No real hardware required (full mock architecture)
