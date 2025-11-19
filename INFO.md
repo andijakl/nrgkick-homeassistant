@@ -170,11 +170,12 @@ Control responses from device:
 Run tests: `./run-tests.sh`
 Run validation: `./validate.sh` (pre-commit + pytest)
 
-**Test suite**: 65 tests with 91% coverage
+**Test suite**: 62 tests with 97% coverage
 
-- API tests: 26 (93% coverage, includes 7 retry behavior tests)
-- Config flow tests: 26 (90% coverage)
-- Coordinator tests: 13 (98% coverage)
+- API tests: 17 (97% coverage)
+- Config flow tests: 26 (98% coverage)
+- Coordinator tests: 11 (100% coverage)
+- Platform tests: 8 (100% coverage)
 
 ## Performance Characteristics
 

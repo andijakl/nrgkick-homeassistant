@@ -534,6 +534,8 @@ async def async_setup_entry(
 
 **Platform Integration:**
 
+- **Parallel Updates**: `PARALLEL_UPDATES` is set to 0 in all platforms. Since the `DataUpdateCoordinator` handles all data fetching centrally, individual entities do not need to poll the device. This setting disables Home Assistant's default parallel update logic, ensuring efficient resource usage.
+
 - **Coordinator Retrieval**: Each platform retrieves the coordinator from `hass.data[DOMAIN][entry.entry_id]`. This is the same coordinator instance created in `async_setup_entry()`.
 
 - **Base Class Inheritance**: All entity classes inherit from `NRGkickEntity`, which provides common device info setup and proper type annotation for the coordinator.

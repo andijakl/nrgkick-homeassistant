@@ -48,13 +48,13 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 
 ## ⚠️ Upgrading from v1.x to v2.0.0
 
-**Version 2.0.0 contains breaking changes.** Entity IDs will change due to Home Assistant Bronze quality tier compliance requirements. See [MIGRATION.md](MIGRATION.md) for detailed upgrade instructions.
+**Version 2.0.0 contains breaking changes.** Entity IDs will change due to Home Assistant Silver quality tier compliance requirements. See [MIGRATION.md](MIGRATION.md) for detailed upgrade instructions.
 
 **Note**: The exact new entity IDs depend on your Home Assistant configuration. Always verify the actual IDs in your system.
 
 ### Why This Change?
 
-This update implements Home Assistant's Bronze quality tier requirements:
+This update implements Home Assistant's Silver quality tier requirements:
 
 - ✅ Uses modern `has_entity_name` pattern for better device/entity organization
 - ✅ Uses `ConfigEntry.runtime_data` for improved performance and memory management
