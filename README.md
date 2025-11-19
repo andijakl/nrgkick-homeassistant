@@ -89,6 +89,12 @@ This integration is available in the default HACS repository:
 3. Restart Home Assistant
 4. Add integration via UI
 
+## Removal
+
+1. Go to **Settings** → **Devices & Services**
+2. Select the **NRGkick** integration
+3. Click the three dots menu (⋮) on the integration entry and select **Delete**
+
 ## Configuration
 
 ### Prerequisites
