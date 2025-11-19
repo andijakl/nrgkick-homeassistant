@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Mit NRGkick verbinden",
-        "description": "Verbindungsdetails für dein NRGkick-Gerät eingeben.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).\n\nFür eine Einrichtungsanleitung siehe: https://github.com/andijakl/nrgkick-homeassistant#configuration",
+        "description": "Verbindungsdetails für dein NRGkick-Gerät eingeben.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Erweitert → Lokale API → Authentifizierung (JSON)).\n\nFür eine Einrichtungsanleitung siehe: https://github.com/andijakl/nrgkick-homeassistant#configuration",
         "data": {
           "host": "IP-Adresse oder Hostname",
           "username": "Benutzername (optional)",
@@ -17,7 +17,7 @@
       },
       "zeroconf_confirm": {
         "title": "NRGkick gefunden: {name}",
-        "description": "Ein NRGkick-Gerät wurde in deinem Netzwerk gefunden.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth). Leer lassen, wenn BasicAuth nicht aktiviert ist.\n\nFür weitere Informationen siehe: https://github.com/andijakl/nrgkick-homeassistant#configuration",
+        "description": "Ein NRGkick-Gerät wurde in deinem Netzwerk gefunden.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Erweitert → Lokale API → Authentifizierung (JSON)). Leer lassen, wenn BasicAuth nicht aktiviert ist.\n\nFür weitere Informationen siehe: https://github.com/andijakl/nrgkick-homeassistant#configuration",
         "data": {
           "username": "Benutzername (optional)",
           "password": "Passwort (optional)"
@@ -29,7 +29,7 @@
       },
       "reauth_confirm": {
         "title": "NRGkick erneut authentifizieren",
-        "description": "Die Authentifizierung ist fehlgeschlagen. Bitte deine Anmeldedaten überprüfen.\n\nDie Anmeldedaten werden in der NRGkick Mobile App konfiguriert: Einstellungen → API-Einstellungen → BasicAuth.\n\nZur Fehlerbehebung siehe: https://github.com/andijakl/nrgkick-homeassistant#troubleshooting",
+        "description": "Die Authentifizierung ist fehlgeschlagen. Bitte deine Anmeldedaten überprüfen.\n\nDie Anmeldedaten werden in der NRGkick Mobile App konfiguriert: Erweitert → Lokale API → Authentifizierung (JSON).\n\nZur Fehlerbehebung siehe: https://github.com/andijakl/nrgkick-homeassistant#troubleshooting",
         "data": {
           "username": "Benutzername",
           "password": "Passwort"
@@ -42,7 +42,7 @@
     },
     "error": {
       "cannot_connect": "Verbindung zum NRGkick-Gerät nicht möglich. Überprüfe: (1) Das Gerät ist eingeschaltet und die LED ist aktiv, (2) Die IP-Adresse ist korrekt (kannst du das Gerät von einem Computer aus anpingen?), (3) Home Assistant und der NRGkick befinden sich im selben Netzwerk/VLAN, (4) Die JSON-API ist in der NRGkick-App aktiviert (Erweitert → Lokale API → JSON-API), (5) Keine Firewall blockiert Port 80. Prüfe die Home Assistant Logs für detaillierte Fehlermeldungen.",
-      "invalid_auth": "Authentifizierung fehlgeschlagen. Überprüfe, dass: (1) BasicAuth in der NRGkick-App aktiviert ist (Erweitert → Lokale API → Authentifizierung), (2) Benutzername und Passwort exakt mit der App-Konfiguration übereinstimmen (Groß-/Kleinschreibung beachten), (3) Du mit diesen Zugangsdaten im Browser auf http://{device_ip}/info zugreifen kannst. Falls das Problem weiterhin besteht, versuche BasicAuth in der NRGkick-App zu deaktivieren und wieder zu aktivieren.",
+      "invalid_auth": "Authentifizierung fehlgeschlagen. Überprüfe, dass: (1) BasicAuth in der NRGkick-App aktiviert ist (Erweitert → Lokale API → Authentifizierung (JSON)), (2) Benutzername und Passwort exakt mit der App-Konfiguration übereinstimmen (Groß-/Kleinschreibung beachten), (3) Du mit diesen Zugangsdaten im Browser auf http://{device_ip}/info zugreifen kannst. Falls das Problem weiterhin besteht, versuche BasicAuth in der NRGkick-App zu deaktivieren und wieder zu aktivieren.",
       "unknown": "Ein unerwarteter Fehler ist während der Einrichtung aufgetreten. Prüfe die Home Assistant Logs (Einstellungen → System → Protokolle) für detaillierte Fehlerinformationen. Häufige Ursachen: Netzwerkprobleme, Firmware-Inkompatibilität oder temporäre Geräteunerreichbarkeit. Versuche: (1) Das NRGkick-Gerät neu zu starten, (2) Die Netzwerkverbindung zu überprüfen, (3) Die Geräte-Firmware zu aktualisieren."
     },
     "abort": {
@@ -57,7 +57,7 @@
     "step": {
       "init": {
         "title": "NRGkick-Verbindung neu konfigurieren",
-        "description": "Verbindungsdetails für dein NRGkick-Gerät aktualisieren. Die Integration wird nach dem Speichern neu gestartet.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Einstellungen → API-Einstellungen → BasicAuth).",
+        "description": "Verbindungsdetails für dein NRGkick-Gerät aktualisieren. Die Integration wird nach dem Speichern neu gestartet.\n\nBenutzername und Passwort sind nur erforderlich, wenn BasicAuth in der NRGkick Mobile App aktiviert ist (Erweitert → Lokale API → Authentifizierung (JSON)).",
         "data": {
           "host": "IP-Adresse oder Hostname",
           "username": "Benutzername (optional)",

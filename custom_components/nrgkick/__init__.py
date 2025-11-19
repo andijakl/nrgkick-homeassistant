@@ -213,6 +213,7 @@ class NRGkickEntity(CoordinatorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._key = key
+        self._attr_has_entity_name = True
         self._attr_name = name
         self._attr_translation_key = key
         self._setup_device_info()
@@ -222,10 +223,14 @@ class NRGkickEntity(CoordinatorEntity):
         device_info = self.coordinator.data.get("info", {}).get("general", {})
         serial = device_info.get("serial_number", "unknown")
 
+        device_name = device_info.get("device_name")
+        if not device_name:
+            device_name = "NRGkick"
+
         self._attr_unique_id = f"{serial}_{self._key}"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, serial)},
-            "name": device_info.get("device_name", "NRGkick"),
+            "name": device_name,
             "manufacturer": "DiniTech",
             "model": device_info.get("model_type", "NRGkick Gen2"),
             "sw_version": self.coordinator.data.get("info", {})

@@ -51,7 +51,7 @@ class NRGkickAPI:
         error_msg = (
             f"Authentication failed (HTTP {response_status}). "
             "Verify that BasicAuth is enabled in the NRGkick app "
-            "(Extended → Local API → Authentication) and that "
+            "(Extended → Local API → Authentication (JSON)) and that "
             "the username and password are correct (case-sensitive). "
             f"Attempted to access: {url}"
         )
