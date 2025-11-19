@@ -1,0 +1,92 @@
+"""Tests for NRGkick device naming and fallback logic."""
+
+from unittest.mock import patch
+
+import pytest
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import entity_registry as er
+
+from custom_components.nrgkick.const import DOMAIN
+
+
+@pytest.mark.requires_integration
+async def test_device_name_fallback(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_nrgkick_api,
+    mock_info_data,
+    mock_control_data,
+    mock_values_data,
+) -> None:
+    """Test that device name falls back to 'NRGkick' when API returns empty name."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Set empty device name in API response
+    mock_info_data["general"]["device_name"] = ""
+    mock_nrgkick_api.get_info.return_value = mock_info_data
+    mock_nrgkick_api.get_control.return_value = mock_control_data
+    mock_nrgkick_api.get_values.return_value = mock_values_data
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify device registry
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_info_data["general"]["serial_number"])}
+    )
+    assert device
+    assert device.name == "NRGkick"
+
+    # Verify entity ID generation (should use default name)
+    # With has_entity_name=True, if device name is "NRGkick",
+    # entity ID should be sensor.nrgkick_total_active_power
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.nrgkick_total_active_power")
+    assert entry
+    assert entry.original_name == "Total Active Power"
+
+
+@pytest.mark.requires_integration
+async def test_device_name_custom(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_nrgkick_api,
+    mock_info_data,
+    mock_control_data,
+    mock_values_data,
+) -> None:
+    """Test that custom device name is used when provided by API."""
+    mock_config_entry.add_to_hass(hass)
+
+    # Set custom device name in API response
+    mock_info_data["general"]["device_name"] = "Garage Charger"
+    mock_nrgkick_api.get_info.return_value = mock_info_data
+    mock_nrgkick_api.get_control.return_value = mock_control_data
+    mock_nrgkick_api.get_values.return_value = mock_values_data
+
+    with patch(
+        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
+    ), patch("custom_components.nrgkick.async_get_clientsession"):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify device registry
+    device_registry = dr.async_get(hass)
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_info_data["general"]["serial_number"])}
+    )
+    assert device
+    assert device.name == "Garage Charger"
+
+    # Verify entity ID generation
+    # With has_entity_name=True, if device name is "Garage Charger",
+    # entity ID should be sensor.garage_charger_total_active_power
+    entity_registry = er.async_get(hass)
+    entry = entity_registry.async_get("sensor.garage_charger_total_active_power")
+    assert entry
+    assert entry.original_name == "Total Active Power"

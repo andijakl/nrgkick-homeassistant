@@ -124,10 +124,11 @@ def mock_session():
 | Config Flow Tests      | 18     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Config Flow Additional | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Coordinator Tests      | 11     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| Naming Tests           | 2      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Platform Tests         | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| **Total**              | **62** | **17 pass**    | **62 pass**  | **100%**  |
+| **Total**              | **64** | **17 pass**    | **64 pass**  | **100%**  |
 
-**Note**: All 62 tests work in both environments. CI skips 45 integration tests for faster builds (runs in ~2s instead of ~5s).
+**Note**: All 64 tests work in both environments. CI skips 47 integration tests for faster builds (runs in ~2s instead of ~5s).
 
 ### GitHub Actions (CI)
 
@@ -222,6 +223,13 @@ Tests covering edge cases and error scenarios:
 | `test_coordinator_async_set_charge_pause` | SKIP      | Coordinator set charge pause method |
 | `test_coordinator_async_set_energy_limit` | SKIP      | Coordinator set energy limit method |
 | `test_coordinator_async_set_phase_count`  | SKIP      | Coordinator set phase count method  |
+
+#### Naming Tests (`test_naming.py`) - 2/2 ✅ PASSING
+
+| Test                        | CI Status | What It Tests                                |
+| --------------------------- | --------- | -------------------------------------------- |
+| `test_device_name_fallback` | SKIP      | Fallback to "NRGkick" when API name is empty |
+| `test_device_name_custom`   | SKIP      | Custom device name usage                     |
 
 #### Platform Tests (Various Files) - 8/8 ✅ PASSING
 
@@ -369,6 +377,7 @@ tests/
 ├── test_config_flow_additional.py    # Config flow edge cases (8 tests)
 ├── test_diagnostics.py               # Diagnostics tests
 ├── test_init.py                      # Integration setup tests (11 tests)
+├── test_naming.py                    # Device naming & fallback tests (2 tests)
 ├── test_number.py                    # Number platform tests
 ├── test_sensor.py                    # Sensor platform tests
 ├── test_switch.py                    # Switch platform tests
