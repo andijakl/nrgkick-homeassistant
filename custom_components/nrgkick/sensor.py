@@ -30,6 +30,8 @@ from homeassistant.helpers.typing import StateType
 from . import NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import STATUS_MAP
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,  # pylint: disable=unused-argument
