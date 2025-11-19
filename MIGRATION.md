@@ -24,7 +24,8 @@ Name: "NRGkick Total Active Power"
 **After v2.0.0:**
 
 ```yaml
-Entity ID: sensor.nrgkick_total_active_power_2 # Note: suffix may vary
+Entity ID: sensor.nrgkick_total_active_power # (If device is named "NRGkick")
+Entity ID: sensor.garage_total_active_power  # (If device is named "Garage")
 Name: "NRGkick Total Active Power"
 ```
 
@@ -104,76 +105,44 @@ After re-adding the integration (Method A) or fixing suffixes (Method B):
 
 ### 4. Update Your Configuration
 
+If you followed **Method A (Clean Installation)** and kept the default device name "NRGkick", your entity IDs should remain unchanged (e.g., `sensor.nrgkick_total_active_power`), and **no configuration changes are required**.
+
+However, you will need to update your configuration if:
+
+1.  You used **Method B** (IDs will have `_2` suffixes).
+2.  You named your device something else (e.g., "Garage" → `sensor.garage_total_active_power`).
+3.  You had manually renamed entities in v1.x (customizations are lost during removal).
+
+**Check the following areas if your IDs have changed:**
+
 #### Dashboards/Lovelace Cards
 
-Edit your dashboard cards to use the new entity IDs:
-
-**Before:**
+Update entity references in your cards:
 
 ```yaml
 type: entities
 entities:
-  - sensor.nrgkick_total_active_power
+  - sensor.nrgkick_total_active_power # Ensure this matches your new ID
   - switch.nrgkick_charge_pause
 ```
 
-**After:**
+#### Automations & Scripts
 
-```yaml
-type: entities
-entities:
-  - sensor.nrgkick_total_active_power_2
-  - switch.nrgkick_charge_pause_2
-```
-
-#### Automations
-
-Update entity references in your automations:
-
-**Before:**
+Update triggers and actions:
 
 ```yaml
 trigger:
   - platform: state
-    entity_id: binary_sensor.nrgkick_charging
+    entity_id: binary_sensor.nrgkick_charging # Update if needed
     to: "on"
-action:
-  - service: switch.turn_on
-    target:
-      entity_id: switch.nrgkick_charge_pause
 ```
-
-**After:**
-
-```yaml
-trigger:
-  - platform: state
-    entity_id: binary_sensor.nrgkick_charging_2
-    to: "on"
-action:
-  - service: switch.turn_on
-    target:
-      entity_id: switch.nrgkick_charge_pause_2
-```
-
-#### Scripts
-
-Update entity references in scripts similarly to automations.
 
 #### Templates
 
-Update any templates that reference entity IDs:
-
-**Before:**
+Update `states()` calls:
 
 ```yaml
 { { states('sensor.nrgkick_total_active_power') } }
-```
-
-**After:**
-
-```yaml
-{ { states('sensor.nrgkick_total_active_power_2') } }
 ```
 
 ### 5. Test Your Configuration
