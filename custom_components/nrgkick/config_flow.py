@@ -237,12 +237,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
     ) -> ConfigFlowResult:
         """Handle reconfiguration confirmation."""
         errors: dict[str, str] = {}
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+
+        if entry is None:
+            return self.async_abort(reason="reconfigure_failed")
 
         if user_input is not None:
-            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-            if entry is None:
-                return self.async_abort(reason="reconfigure_failed")
-
             data = {
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
@@ -263,7 +263,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                     entry, data=data, reason="reconfigure_successful"
                 )
 
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
         host = entry.data.get(CONF_HOST, "")
         username = entry.data.get(CONF_USERNAME, "")
         password = entry.data.get(CONF_PASSWORD, "")
