@@ -226,6 +226,60 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_reconfigure_confirm()
+
+    async def async_step_reconfigure_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration confirmation."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+            if entry is None:
+                return self.async_abort(reason="reconfigure_failed")
+
+            data = {
+                CONF_HOST: user_input[CONF_HOST],
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
+
+            try:
+                await validate_input(self.hass, data)
+            except NRGkickApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except NRGkickApiClientCommunicationError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # pylint: disable=broad-except
+                _LOGGER.exception("Unexpected exception during reconfiguration")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    entry, data=data, reason="reconfigure_successful"
+                )
+
+        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        host = entry.data.get(CONF_HOST, "")
+        username = entry.data.get(CONF_USERNAME, "")
+        password = entry.data.get(CONF_PASSWORD, "")
+
+        return self.async_show_form(
+            step_id="reconfigure_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=host): str,
+                    vol.Optional(CONF_USERNAME, default=username): str,
+                    vol.Optional(CONF_PASSWORD, default=password): str,
+                }
+            ),
+            errors=errors,
+        )
+
     @staticmethod
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
@@ -241,65 +295,27 @@ class OptionsFlowHandler(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage the options."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
-            data = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-            }
+            return self.async_create_entry(
+                title="",
+                data={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
+            )
 
-            try:
-                await validate_input(self.hass, data)
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception during options flow")
-                errors["base"] = "unknown"
-            else:
-                # Settings are valid, update the config entry data
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={
-                        **self.config_entry.data,
-                        CONF_HOST: data[CONF_HOST],
-                        CONF_USERNAME: data.get(CONF_USERNAME),
-                        CONF_PASSWORD: data.get(CONF_PASSWORD),
-                    },
-                )
-                # Return with options (data becomes the options in options flow)
-                return self.async_create_entry(
-                    title="",
-                    data={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
-                )
-
-        # Get current values for the form
-        host = self.config_entry.data.get(CONF_HOST, "")
-        username = self.config_entry.data.get(CONF_USERNAME, "")
-        password = self.config_entry.data.get(CONF_PASSWORD, "")
         scan_interval = self.config_entry.options.get(
             CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
         )
 
-        # Show form with current settings as defaults
-        data_schema = vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=host): str,
-                vol.Optional(CONF_USERNAME, default=username): str,
-                vol.Optional(CONF_PASSWORD, default=password): str,
-                vol.Optional(
-                    CONF_SCAN_INTERVAL,
-                    default=scan_interval,
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
-                ),
-            }
-        )
-
         return self.async_show_form(
-            step_id="init", data_schema=data_schema, errors=errors
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=scan_interval,
+                    ): vol.All(
+                        vol.Coerce(int),
+                        vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
+                    ),
+                }
+            ),
         )

@@ -820,126 +820,70 @@ async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> Conf
 - `model_type`: "NRGkick Gen2"
 - `json_api_enabled`: "0" or "1"
 
-### 3. Options Flow (Reconfiguration)
+### 3. Options Flow (Preferences)
 
-The `OptionsFlowHandler` class allows users to modify settings after initial setup. The base class provides `config_entry` as a property:
+The `OptionsFlowHandler` class allows users to modify runtime preferences (scan interval) without affecting connection settings.
 
 ```python
-from homeassistant import config_entries
-
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for NRGkick."""
 
-    # No __init__ method - base class provides self.config_entry property
-
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
-        errors = {}
-
         if user_input is not None:
-            # Build connection data for validation
-            data = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-            }
+            return self.async_create_entry(title="", data=user_input)
 
-            try:
-                # Validate connection with new settings
-                await validate_input(self.hass, data)
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                errors["base"] = "unknown"
-            else:
-                # Validation successful - update both data and options
-
-                # Update connection settings in entry.data
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={
-                        **self.config_entry.data,
-                        CONF_HOST: data[CONF_HOST],
-                        CONF_USERNAME: data.get(CONF_USERNAME),
-                        CONF_PASSWORD: data.get(CONF_PASSWORD),
-                    },
-                )
-
-                # Return options via data parameter
-                # This triggers the update listener automatically
-                return self.async_create_entry(
-                    title="",
-                    data={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
-                )
-
-        # Pre-fill form with current values
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
                 vol.Required(
-                    CONF_HOST,
-                    default=self.config_entry.data.get(CONF_HOST, "")
-                ): str,
-                vol.Optional(
-                    CONF_USERNAME,
-                    default=self.config_entry.data.get(CONF_USERNAME, "")
-                ): str,
-                vol.Optional(
-                    CONF_PASSWORD,
-                    default=self.config_entry.data.get(CONF_PASSWORD, "")
-                ): str,
-                vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL,
-                        DEFAULT_SCAN_INTERVAL
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
-                ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL)),
             }),
-            errors=errors,
         )
-
-
-@staticmethod
-def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
-    """Get the options flow for this handler."""
-    return OptionsFlowHandler()  # No parameters - base class injects config_entry
 ```
 
 **Options Flow Pattern:**
 
-1. **Base Class Property**: The base `OptionsFlow` class provides `self.config_entry` as a property. The framework sets it before calling `async_step_init()` - no manual initialization needed.
+1.  **Preference Management**: Handles settings that don't affect API connectivity, like `scan_interval`.
+2.  **Automatic Reload**: Returning `async_create_entry()` triggers the update listener, which reloads the integration to apply the new scan interval.
 
-2. **Options Flow Factory**: The `async_get_options_flow()` static method returns a new handler instance without parameters. The framework injects the `config_entry` property after instantiation but before any step methods are called.
+### 4. Reconfiguration Flow
 
-3. **Full Reconfiguration Support**: This options flow allows changing ALL settings (host, credentials, scan interval), not just preferences. This provides users with a single UI to update any aspect of the integration without needing separate reauth flows for credentials-only changes.
+The integration supports Home Assistant's native reconfiguration flow for updating connection details (host, username, password) if the device IP changes or credentials are updated.
 
-4. **Two-Stage Update Pattern**:
-   - **Stage 1**: Call `async_update_entry()` to update connection settings in `entry.data`
-   - **Stage 2**: Return `async_create_entry()` to update preferences in `entry.options`
+```python
+async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    """Handle reconfiguration."""
+    # 1. Pre-fill form with current values
+    return self.async_show_form(
+        step_id="reconfigure_confirm",
+        data_schema=vol.Schema({
+            vol.Required(CONF_HOST, default=self._reconfigure_entry.data[CONF_HOST]): str,
+            # ... auth fields
+        }),
+    )
 
-   Both updates trigger the same reload mechanism via the update listener.
+async def async_step_reconfigure_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    """Handle reconfiguration confirmation."""
+    # 2. Validate new connection details
+    # 3. Update entry and reload
+    return self.async_update_reload_and_abort(
+        self._reconfigure_entry,
+        data={...},
+        reason="reconfigure_successful",
+    )
+```
 
-5. **Data vs Options Storage**:
-   - `entry.data`: Connection settings (host, username, password) - critical for establishing API communication
-   - `entry.options`: User preferences (scan_interval) - tunable parameters that don't affect connectivity
+**Reconfiguration vs. Options:**
 
-   This separation allows the integration to handle both types of configuration changes through a unified interface while maintaining proper storage semantics.
+- **Reconfigure Flow**: Updates `entry.data` (connection settings). Critical for connectivity.
+- **Options Flow**: Updates `entry.options` (preferences). Tunable parameters.
 
-6. **Automatic Reload Trigger**: When `async_create_entry()` completes, Home Assistant detects the entry was modified (either `entry.data` or `entry.options` changed) and calls the update listener registered in `async_setup_entry()`. The listener triggers `async_reload_entry()`, which:
-   - Unloads all entity platforms
-   - Destroys the old coordinator (stops polling loop)
-   - Creates a new coordinator with updated settings
-   - Recreates all entities with the new coordinator
-
-   This happens automatically - the options flow doesn't need to explicitly call reload.
-
-### 4. Configuration Storage
+### 5. Configuration Storage
 
 Home Assistant stores configuration in two locations:
 
@@ -1539,12 +1483,15 @@ The config flow tests cover all four flow types with comprehensive error handlin
 - Connection errors during reauth
 - Unknown exceptions during reauth
 
-**Options Flow (Settings Reconfiguration):**
+**Options Flow (Settings):**
 
-- Full reconfiguration (host + credentials + scan_interval)
-- Scan interval-only updates
-- Credential removal (empty credentials for non-auth devices)
-- All three error types (connection, authentication, unknown)
+- Scan interval updates
+
+**Reconfiguration Flow:**
+
+- Host/IP address updates
+- Credential updates
+- Connection validation
 
 ### Test Design Patterns
 

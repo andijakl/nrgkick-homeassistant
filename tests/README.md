@@ -121,27 +121,27 @@ def mock_session():
 | Test Suite             | Count  | CI Status      | Local Status | Pass Rate |
 | ---------------------- | ------ | -------------- | ------------ | --------- |
 | API Tests              | 26     | ✅ PASS        | ✅ PASS      | 100%      |
-| Config Flow Tests      | 18     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| Config Flow Tests      | 21     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Config Flow Additional | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Coordinator Tests      | 13     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Naming Tests           | 2      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Platform Tests         | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| **Total**              | **75** | **26 pass**    | **75 pass**  | **100%**  |
+| **Total**              | **78** | **26 pass**    | **78 pass**  | **100%**  |
 
-**Note**: All 75 tests work in both environments. CI skips 49 integration tests for faster builds (runs in ~2s instead of ~5s).
+**Note**: All 78 tests work in both environments. CI skips 52 integration tests for faster builds (runs in ~2s instead of ~5s).
 
 ### GitHub Actions (CI)
 
 ```
 ✅ 26 tests pass (non-integration only for speed)
-⏭️ 49 tests skipped (integration tests - work but skipped for fast CI)
+⏭️ 52 tests skipped (integration tests - work but skipped for fast CI)
 ❌ 0 tests fail
 ```
 
 ### Local Development (Full Suite)
 
 ```
-✅ 75 tests pass (all tests including integration)
+✅ 78 tests pass (all tests including integration)
 ❌ 0 tests fail
 ⏭️ 0 tests skipped
 ```
@@ -179,7 +179,7 @@ def mock_session():
 | `test_api_no_retry_client`      | ✅     | No retry for 4xx errors           |
 | `test_api_retry_backoff`        | ✅     | Exponential backoff timing        |
 
-#### Config Flow Tests (`test_config_flow.py`) - 18/18 ✅ PASSING
+#### Config Flow Tests (`test_config_flow.py`) - 21/21 ✅ PASSING
 
 | Test                                    | CI   | What It Tests                  |
 | --------------------------------------- | ---- | ------------------------------ |
@@ -201,6 +201,9 @@ def mock_session():
 | `test_zeroconf_no_serial_number`        | SKIP | Device missing serial          |
 | `test_zeroconf_cannot_connect`          | SKIP | Zeroconf connection errors     |
 | `test_zeroconf_fallback_to_model_type`  | SKIP | Fallback naming logic          |
+| `test_reconfigure_flow`                 | SKIP | Reconfiguration flow           |
+| `test_reconfigure_flow_cannot_connect`  | SKIP | Reconfigure connection errors  |
+| `test_reconfigure_flow_invalid_auth`    | SKIP | Reconfigure auth errors        |
 
 #### Config Flow Additional Tests (`test_config_flow_additional.py`) - 8/8 ✅ PASSING
 
@@ -735,8 +738,8 @@ Potential enhancements to the testing strategy:
 
 ---
 
-**Last Updated**: November 19, 2025
-**Test Suite Version**: 3.3.0
+**Last Updated**: November 24, 2025
+**Test Suite Version**: 3.4.0
 **Python Version**: 3.13
 **Maintainer**: @andijakl
-**Status**: All 75 Tests Passing (96% Coverage)
+**Status**: All 78 Tests Passing (96% Coverage)

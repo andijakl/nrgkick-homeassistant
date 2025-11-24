@@ -32,8 +32,6 @@ async def async_setup_entry(
         NRGkickSwitch(
             coordinator,
             key="charge_pause",
-            name="Charge Pause",
-            icon="mdi:pause",
             value_path=["control", "charge_pause"],
         ),
     ]
@@ -49,13 +47,10 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
         coordinator: NRGkickDataUpdateCoordinator,
         *,
         key: str,
-        name: str,
-        icon: str,
         value_path: list[str],
     ) -> None:
         """Initialize the switch."""
-        super().__init__(coordinator, key, name)
-        self._attr_icon = icon
+        super().__init__(coordinator, key)
         self._value_path = value_path
 
     @property

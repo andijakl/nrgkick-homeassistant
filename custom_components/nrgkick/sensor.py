@@ -13,6 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -46,7 +47,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="rated_current",
-            name="Rated Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -57,7 +57,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="connector_phase_count",
-            name="Connector Phase Count",
             unit=None,
             device_class=None,
             state_class=None,
@@ -66,7 +65,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="connector_max_current",
-            name="Connector Max Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -76,26 +74,25 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="connector_type",
-            name="Connector Type",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["info", "connector", "type"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="connector_serial",
-            name="Connector Serial",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["info", "connector", "serial"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         # INFO - Grid
         NRGkickSensor(
             coordinator,
             key="grid_voltage",
-            name="Grid Voltage",
             unit=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -105,7 +102,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="grid_frequency",
-            name="Grid Frequency",
             unit=UnitOfFrequency.HERTZ,
             device_class=SensorDeviceClass.FREQUENCY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -115,7 +111,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="grid_phases",
-            name="Grid Phases",
             unit=None,
             device_class=None,
             state_class=None,
@@ -125,65 +120,64 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="network_ip_address",
-            name="IP Address",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["info", "network", "ip_address"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="network_mac_address",
-            name="MAC Address",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["info", "network", "mac_address"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="network_ssid",
-            name="WiFi SSID",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["info", "network", "ssid"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="network_rssi",
-            name="WiFi Signal Strength",
             unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
             device_class=SensorDeviceClass.SIGNAL_STRENGTH,
             state_class=SensorStateClass.MEASUREMENT,
             value_path=["info", "network", "rssi"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         # INFO - Versions
         NRGkickSensor(
             coordinator,
             key="versions_sw_sm",
-            name="Software Version SM",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["info", "versions", "sw_sm"],
             enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="versions_hw_sm",
-            name="Hardware Version SM",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["info", "versions", "hw_sm"],
             enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         # Control
         NRGkickSensor(
             coordinator,
             key="current_set",
-            name="Set Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -193,7 +187,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="charge_pause",
-            name="Charge Pause",
             unit=None,
             device_class=None,
             state_class=None,
@@ -202,7 +195,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="energy_limit",
-            name="Energy Limit",
             unit=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL,
@@ -213,7 +205,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="phase_count",
-            name="Phase Count",
             unit=None,
             device_class=None,
             state_class=None,
@@ -223,7 +214,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="total_charged_energy",
-            name="Total Charged Energy",
             unit=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -234,7 +224,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="charged_energy",
-            name="Current Session Energy",
             unit=UnitOfEnergy.WATT_HOUR,
             device_class=SensorDeviceClass.ENERGY,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -246,7 +235,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="charging_voltage",
-            name="Charging Voltage",
             unit=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -256,7 +244,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="charging_current",
-            name="Charging Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -266,7 +253,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="powerflow_grid_frequency",
-            name="Powerflow Grid Frequency",
             unit=UnitOfFrequency.HERTZ,
             device_class=SensorDeviceClass.FREQUENCY,
             state_class=SensorStateClass.MEASUREMENT,
@@ -276,7 +262,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="peak_power",
-            name="Peak Power",
             unit=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -286,7 +271,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="total_active_power",
-            name="Total Active Power",
             unit=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -296,7 +280,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="total_reactive_power",
-            name="Total Reactive Power",
             unit=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -305,7 +288,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="total_apparent_power",
-            name="Total Apparent Power",
             unit=UnitOfApparentPower.VOLT_AMPERE,
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -314,7 +296,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="total_power_factor",
-            name="Total Power Factor",
             unit=PERCENTAGE,
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
@@ -324,7 +305,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l1_voltage",
-            name="L1 Voltage",
             unit=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -334,7 +314,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l1_current",
-            name="L1 Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -344,7 +323,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l1_active_power",
-            name="L1 Active Power",
             unit=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -354,7 +332,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l1_reactive_power",
-            name="L1 Reactive Power",
             unit=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -363,7 +340,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l1_apparent_power",
-            name="L1 Apparent Power",
             unit=UnitOfApparentPower.VOLT_AMPERE,
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -372,7 +348,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l1_power_factor",
-            name="L1 Power Factor",
             unit=PERCENTAGE,
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
@@ -382,7 +357,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l2_voltage",
-            name="L2 Voltage",
             unit=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -392,7 +366,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l2_current",
-            name="L2 Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -402,7 +375,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l2_active_power",
-            name="L2 Active Power",
             unit=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -412,7 +384,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l2_reactive_power",
-            name="L2 Reactive Power",
             unit=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -421,7 +392,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l2_apparent_power",
-            name="L2 Apparent Power",
             unit=UnitOfApparentPower.VOLT_AMPERE,
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -430,7 +400,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l2_power_factor",
-            name="L2 Power Factor",
             unit=PERCENTAGE,
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
@@ -440,7 +409,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l3_voltage",
-            name="L3 Voltage",
             unit=UnitOfElectricPotential.VOLT,
             device_class=SensorDeviceClass.VOLTAGE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -450,7 +418,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l3_current",
-            name="L3 Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -460,7 +427,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l3_active_power",
-            name="L3 Active Power",
             unit=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -470,7 +436,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l3_reactive_power",
-            name="L3 Reactive Power",
             unit=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
             device_class=SensorDeviceClass.REACTIVE_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -479,7 +444,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l3_apparent_power",
-            name="L3 Apparent Power",
             unit=UnitOfApparentPower.VOLT_AMPERE,
             device_class=SensorDeviceClass.APPARENT_POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -488,7 +452,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="l3_power_factor",
-            name="L3 Power Factor",
             unit=PERCENTAGE,
             device_class=SensorDeviceClass.POWER_FACTOR,
             state_class=SensorStateClass.MEASUREMENT,
@@ -498,7 +461,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="n_current",
-            name="Neutral Current",
             unit=UnitOfElectricCurrent.AMPERE,
             device_class=SensorDeviceClass.CURRENT,
             state_class=SensorStateClass.MEASUREMENT,
@@ -509,7 +471,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="charging_rate",
-            name="Charging Rate",
             unit=None,
             device_class=None,
             state_class=SensorStateClass.MEASUREMENT,
@@ -518,7 +479,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="vehicle_connect_time",
-            name="Vehicle Connect Time",
             unit=UnitOfTime.SECONDS,
             device_class=SensorDeviceClass.DURATION,
             state_class=SensorStateClass.MEASUREMENT,
@@ -527,7 +487,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="vehicle_charging_time",
-            name="Vehicle Charging Time",
             unit=UnitOfTime.SECONDS,
             device_class=SensorDeviceClass.DURATION,
             state_class=SensorStateClass.MEASUREMENT,
@@ -536,7 +495,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="status",
-            name="Charging Status",
             unit=None,
             device_class=None,
             state_class=None,
@@ -549,11 +507,11 @@ async def async_setup_entry(
                 if isinstance(x, int)
                 else x
             ),
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="charge_permitted",
-            name="Charge Permitted",
             unit=None,
             device_class=None,
             state_class=None,
@@ -562,16 +520,15 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="relay_state",
-            name="Relay State",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["values", "general", "relay_state"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="charge_count",
-            name="Charge Count",
             unit=None,
             device_class=None,
             state_class=SensorStateClass.TOTAL_INCREASING,
@@ -580,35 +537,34 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="rcd_trigger",
-            name="RCD Trigger",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["values", "general", "rcd_trigger"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="warning_code",
-            name="Warning Code",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["values", "general", "warning_code"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
             coordinator,
             key="error_code",
-            name="Error Code",
             unit=None,
             device_class=None,
             state_class=None,
             value_path=["values", "general", "error_code"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
         # VALUES - Temperatures
         NRGkickSensor(
             coordinator,
             key="housing_temperature",
-            name="Housing Temperature",
             unit=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -617,7 +573,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="connector_l1_temperature",
-            name="Connector L1 Temperature",
             unit=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -626,7 +581,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="connector_l2_temperature",
-            name="Connector L2 Temperature",
             unit=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -635,7 +589,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="connector_l3_temperature",
-            name="Connector L3 Temperature",
             unit=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -644,7 +597,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="domestic_plug_1_temperature",
-            name="Domestic Plug 1 Temperature",
             unit=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -653,7 +605,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="domestic_plug_2_temperature",
-            name="Domestic Plug 2 Temperature",
             unit=UnitOfTemperature.CELSIUS,
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
@@ -672,22 +623,23 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
         coordinator: NRGkickDataUpdateCoordinator,
         *,
         key: str,
-        name: str,
         unit: str | None,
         device_class: SensorDeviceClass | None,
         state_class: SensorStateClass | None,
         value_path: list[str],
+        entity_category: EntityCategory | None = None,
         value_fn: Any = None,
         precision: int | None = None,
         suggested_unit: str | None = None,
         enabled_default: bool = True,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, key, name)
+        super().__init__(coordinator, key)
         self._attr_native_unit_of_measurement = unit
         self._attr_device_class = device_class
         self._attr_state_class = state_class
         self._value_path = value_path
+        self._attr_entity_category = entity_category
         self._value_fn = value_fn
         self._attr_entity_registry_enabled_default = enabled_default
 

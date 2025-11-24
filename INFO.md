@@ -9,7 +9,7 @@ custom_components/nrgkick/
 ├── __init__.py           # Coordinator, setup/teardown
 ├── api.py                # REST client, custom exceptions
 ├── binary_sensor.py      # 3 binary sensors
-├── config_flow.py        # UI flows (user, zeroconf, reauth, options)
+├── config_flow.py        # UI flows (user, zeroconf, reauth, reconfigure, options)
 ├── const.py              # Constants, STATUS_MAP, entity definitions
 ├── diagnostics.py        # Diagnostics provider
 ├── manifest.json         # Integration metadata

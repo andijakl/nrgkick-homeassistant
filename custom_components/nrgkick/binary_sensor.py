@@ -9,6 +9,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -30,7 +31,6 @@ async def async_setup_entry(
         NRGkickBinarySensor(
             coordinator,
             key="charging",
-            name="Charging",
             device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
             value_path=["values", "general", "status"],
             value_fn=lambda x: (
@@ -40,16 +40,15 @@ async def async_setup_entry(
         NRGkickBinarySensor(
             coordinator,
             key="charge_permitted",
-            name="Charge Permitted",
             device_class=BinarySensorDeviceClass.POWER,
             value_path=["values", "general", "charge_permitted"],
         ),
         NRGkickBinarySensor(
             coordinator,
             key="charge_pause",
-            name="Charge Pause",
             device_class=None,
             value_path=["control", "charge_pause"],
+            entity_category=EntityCategory.DIAGNOSTIC,
         ),
     ]
 
@@ -64,15 +63,16 @@ class NRGkickBinarySensor(NRGkickEntity, BinarySensorEntity):
         coordinator: NRGkickDataUpdateCoordinator,
         *,
         key: str,
-        name: str,
         device_class: BinarySensorDeviceClass | None,
         value_path: list[str],
+        entity_category: EntityCategory | None = None,
         value_fn: Any = None,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(coordinator, key, name)
+        super().__init__(coordinator, key)
         self._attr_device_class = device_class
         self._value_path = value_path
+        self._attr_entity_category = entity_category
         self._value_fn = value_fn
 
     @property

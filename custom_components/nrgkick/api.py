@@ -8,6 +8,9 @@ from typing import Any, cast
 
 import aiohttp
 from aiohttp import ClientError
+from homeassistant.exceptions import HomeAssistantError
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,16 +20,25 @@ RETRY_BACKOFF_BASE = 1.5  # seconds
 RETRY_STATUSES = {500, 502, 503, 504}  # Transient HTTP errors to retry
 
 
-class NRGkickApiClientError(Exception):
+class NRGkickApiClientError(HomeAssistantError):
     """Base exception for NRGkick API client errors."""
+
+    translation_domain = DOMAIN
+    translation_key = "unknown_error"
 
 
 class NRGkickApiClientCommunicationError(NRGkickApiClientError):
     """Exception for NRGkick API client communication errors."""
 
+    translation_domain = DOMAIN
+    translation_key = "communication_error"
+
 
 class NRGkickApiClientAuthenticationError(NRGkickApiClientError):
     """Exception for NRGkick API client authentication errors."""
+
+    translation_domain = DOMAIN
+    translation_key = "authentication_error"
 
 
 class NRGkickAPI:

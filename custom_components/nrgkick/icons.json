@@ -1,0 +1,38 @@
+{
+  "entity": {
+    "sensor": {
+      "versions_sw_sm": {
+        "default": "mdi:package-up"
+      },
+      "warning_code": {
+        "default": "mdi:alert"
+      },
+      "connector_type": {
+        "default": "mdi:ev-plug-type2"
+      },
+      "connector_serial": {
+        "default": "mdi:barcode"
+      },
+      "network_ssid": {
+        "default": "mdi:wifi"
+      },
+      "status": {
+        "default": "mdi:ev-station"
+      },
+      "relay_state": {
+        "default": "mdi:toggle-switch"
+      },
+      "rcd_trigger": {
+        "default": "mdi:flash-alert"
+      },
+      "error_code": {
+        "default": "mdi:alert-circle"
+      }
+    },
+    "switch": {
+      "charge_pause": {
+        "default": "mdi:pause"
+      }
+    }
+  }
+}

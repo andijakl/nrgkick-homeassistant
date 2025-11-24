@@ -46,6 +46,20 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 - Local network access to your NRGkick device
 - JSON API enabled in the NRGkick App (Extended → Local API)
 
+## Supported Devices
+
+- **NRGkick Gen2** (Smart Cable)
+- **Firmware Requirement**: SmartModule firmware 4.0.0.0 or newer
+
+_Note: NRGkick Gen1 (Bluetooth only) is not supported._
+
+## Known Limitations
+
+- **Polling Interval**: The minimum polling interval is 10 seconds to protect the device's internal flash memory and CPU.
+- **Phase-Specific Sensors**: Sensors for Phase 2 and Phase 3 (voltage, current, power) only report data when a 3-phase source is connected and active.
+- **Temperature Sensors**: Availability of specific temperature sensors (e.g., connector pins) depends on the attached connector attachment.
+- **Cloud Independence**: This integration works entirely locally. It does not access the NRGkick Cloud and cannot control cloud-specific features (like cloud-based charging reports).
+
 ## ⚠️ Upgrading from v1.x to v2.0.0
 
 **Version 2.0.0 contains breaking changes.** Entity IDs will change due to Home Assistant Silver quality tier compliance requirements. See [MIGRATION.md](MIGRATION.md) for detailed upgrade instructions.
