@@ -227,8 +227,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 4. Perform first data fetch (raises exception if device unavailable)
     await coordinator.async_config_entry_first_refresh()
 
-    # 5. Store coordinator for entity platforms to access
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    # 5. Store coordinator in entry runtime_data
+    entry.runtime_data = coordinator
 
     # 6. Forward setup to entity platforms (sensor, switch, number, binary_sensor)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -241,7 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 **Integration with Home Assistant:**
 
-1. **Storage in `hass.data`**: Home Assistant provides `hass.data` as a dictionary for integrations to store runtime data. We use `hass.data[DOMAIN][entry.entry_id]` to store the coordinator, making it accessible to all entity platforms. The `entry_id` key allows multiple NRGkick devices to coexist in the same Home Assistant instance.
+1. **Storage in `entry.runtime_data`**: Modern Home Assistant integrations use `entry.runtime_data` instead of `hass.data` for storing integration runtime data. This provides automatic cleanup when the entry is removed and cleaner memory management. The coordinator is stored directly on the config entry object, making it accessible to all entity platforms.
 
 2. **Session Reuse**: `async_get_clientsession(hass)` returns Home Assistant's global aiohttp ClientSession, which maintains a connection pool and reduces overhead compared to creating a new session per integration.
 
@@ -512,8 +512,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NRGkick sensors based on a config entry."""
-    # 1. Get coordinator from hass.data registry
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    # 1. Get coordinator from entry runtime_data
+    coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
     # 2. Create entity instances with value_path configuration
     entities = [
@@ -538,7 +538,7 @@ async def async_setup_entry(
 
 - **Parallel Updates**: `PARALLEL_UPDATES` is set to 0 in all platforms. Since the `DataUpdateCoordinator` handles all data fetching centrally, individual entities do not need to poll the device. This setting disables Home Assistant's default parallel update logic, ensuring efficient resource usage.
 
-- **Coordinator Retrieval**: Each platform retrieves the coordinator from `hass.data[DOMAIN][entry.entry_id]`. This is the same coordinator instance created in `async_setup_entry()`.
+- **Coordinator Retrieval**: Each platform retrieves the coordinator from `entry.runtime_data`. This is the same coordinator instance created in `async_setup_entry()`.
 
 - **Base Class Inheritance**: All entity classes inherit from `NRGkickEntity`, which provides common device info setup and proper type annotation for the coordinator.
 
@@ -673,30 +673,48 @@ Home Assistant's device registry groups entities by device. The `NRGkickEntity` 
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities."""
 
-    def __init__(self, coordinator: NRGkickDataUpdateCoordinator) -> None:
+    coordinator: NRGkickDataUpdateCoordinator
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
         """Initialize NRGkick entity."""
         super().__init__(coordinator)
+        self._key = key
         self._attr_has_entity_name = True
+        self._attr_translation_key = key
+        self._setup_device_info()
+
+    def _setup_device_info(self) -> None:
+        """Set up device info and unique ID."""
+        device_info = self.coordinator.data.get("info", {}).get("general", {})
+        serial = device_info.get("serial_number", "unknown")
 
         # Get device name with fallback to "NRGkick"
-        device_name = coordinator.data["general"]["device_name"]
+        device_name = device_info.get("device_name")
         if not device_name:
             device_name = "NRGkick"
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data["general"]["serial_number"])},
-            name=device_name,
-            manufacturer="DiniTech",
-            model=coordinator.data["general"]["model_type"],
-            sw_version=coordinator.data["versions"]["smartmodule"],
-        )
+        self._attr_unique_id = f"{serial}_{self._key}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, serial)},
+            "name": device_name,
+            "manufacturer": "DiniTech",
+            "model": device_info.get("model_type", "NRGkick Gen2"),
+            "sw_version": self.coordinator.data.get("info", {})
+            .get("versions", {})
+            .get("sw_sm"),
+        }
 ```
 
 **Device Registry Behavior:**
 
 - **Base Class Pattern**: All entity types (sensor, binary_sensor, switch, number) inherit from `NRGkickEntity`, eliminating duplicate device info setup.
 
+- **Modern Entity Naming (`has_entity_name = True`)**: Modern Home Assistant integrations use `has_entity_name = True`, which enables automatic device-based entity naming. Entity IDs are formed as `{device_name}_{entity_key}` (e.g., `sensor.garage_total_active_power` if device is named "Garage"). The `translation_key` provides localized entity names via the `translations/` directory.
+
 - **Type Annotation**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference throughout the entity hierarchy.
+
+- **Device Name Fallback**: If the device API returns an empty device name, the integration defaults to "NRGkick" to ensure entity IDs are always generated consistently (e.g., `sensor.nrgkick_total_active_power`).
 
 - **Identifier Matching**: Home Assistant uses the `identifiers` tuple to determine if entities belong to the same device. All entities use `(DOMAIN, serial_number)`, so they automatically group together.
 
@@ -1049,19 +1067,14 @@ Home Assistant calls this function when the user removes the integration:
 ```python
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # 1. Unload all platform entities
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # 2. Remove coordinator from storage
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok  # True if successful
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 ```
 
 **Cleanup Process:**
 
 1. **Platform Unloading**: `async_unload_platforms()` calls each platform's cleanup code. For entities inheriting from `CoordinatorEntity`, this automatically unsubscribes them from coordinator updates.
 
-2. **Coordinator Destruction**: Removing the coordinator from `hass.data` drops the last reference. Python's garbage collector then destroys the coordinator, which cancels its background polling task.
+2. **Coordinator Destruction**: With the `runtime_data` pattern, Home Assistant automatically clears the coordinator reference when the entry is unloaded. Python's garbage collector then destroys the coordinator, which cancels its background polling task. This eliminates the need for manual cleanup that was required with older `hass.data` storage patterns.
 
 3. **Session Management**: The aiohttp session is owned by Home Assistant (passed via `async_get_clientsession()`), so we don't close it. Home Assistant manages the session lifecycle globally.
 
@@ -1766,6 +1779,8 @@ The NRGkick integration follows Home Assistant best practices with:
 
 **Key Implementation Patterns:**
 
+- ✅ Modern pattern: `entry.runtime_data` for coordinator storage (automatic cleanup)
+- ✅ Modern pattern: `has_entity_name = True` for automatic device-based entity naming
 - ✅ OptionsFlowHandler with base class `config_entry` property
 - ✅ Reauth flow uses `async_update_reload_and_abort()` helper method
 - ✅ Zeroconf discovery via `homeassistant.helpers.service_info.zeroconf`
@@ -1798,8 +1813,8 @@ The NRGkick integration follows Home Assistant best practices with:
 
 **Testing:**
 
-- 75 tests with 100% pass rate
-- 94% code coverage
+- 73 tests with 100% pass rate
+- 96% code coverage
 - Comprehensive config flow testing (26 tests covering all flows and error scenarios)
 - No real hardware required (full mock architecture)
 
