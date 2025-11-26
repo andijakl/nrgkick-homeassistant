@@ -1,5 +1,28 @@
 # NRGkick Home Assistant Integration
 
+## ⚠️ CRITICAL: Pre-Commit Failure Prevention
+
+**Read this FIRST before writing ANY code. Most AI-generated code fails pre-commit checks.**
+
+### Three Most Common Failures:
+
+1. **Line Length**: Maximum 88 characters (flake8/pylint)
+   - Break long lines using parentheses: `function(arg1, arg2)` → `function(\n    arg1, arg2\n)`
+   - Split long strings: `"long text"` → `("part one " "part two")`
+   - Never exceed 88 characters on any line
+
+2. **File Endings**: Exactly ONE newline at end of EVERY file
+   - No missing newlines at EOF
+   - No multiple blank lines at EOF
+   - Applies to .py, .json, .yaml, .md, .sh files
+
+3. **manifest.json Indentation**: 2 spaces, no trailing commas, no extra newlines
+   - Only change specific values
+   - Preserve existing structure
+   - Don't reformat the entire file
+
+**Always verify these THREE rules before submitting code.**
+
 ## Project Overview
 
 This repository contains a **Home Assistant custom integration** for the NRGkick Gen2 EV charging controller. It provides local control and monitoring through the device's REST JSON API, following Home Assistant 2025.10+ best practices.
@@ -148,6 +171,88 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
 - **Whitespace**: No trailing whitespace on any line
 - **JSON/YAML/Markdown**: Formatted with Prettier (except translations and examples)
 
+### ⚠️ Critical Pre-Commit Failure Points
+
+**ALWAYS follow these rules to avoid pre-commit failures:**
+
+1. **Line Length (flake8/pylint)**:
+   - **MAXIMUM 88 characters per line** (strictly enforced)
+   - Break long lines using parentheses, backslashes, or multi-line strings
+   - Long strings: Use implicit string concatenation or triple quotes
+   - Long function calls: Break at commas, use one argument per line
+   - Long imports: Use parentheses for multi-line imports
+
+   ```python
+   # ❌ WRONG - Line too long
+   some_very_long_function_call(argument1, argument2, argument3, argument4, argument5, argument6)
+
+   # ✅ CORRECT - Break at commas
+   some_very_long_function_call(
+       argument1, argument2, argument3,
+       argument4, argument5, argument6
+   )
+
+   # ❌ WRONG - Long string
+   error_message = "This is a very long error message that exceeds the 88 character limit and will fail"
+
+   # ✅ CORRECT - Implicit concatenation
+   error_message = (
+       "This is a very long error message that exceeds "
+       "the 88 character limit and will fail"
+   )
+   ```
+
+2. **File Endings (end-of-file-fixer)**:
+   - **ALWAYS end files with exactly ONE newline character**
+   - Never leave files without a trailing newline
+   - Never leave multiple blank lines at file end
+   - This applies to ALL files: .py, .json, .yaml, .md, .sh
+
+   ```python
+   # ❌ WRONG - No newline at end
+   def my_function():
+       return "value"[EOF - no newline here]
+
+   # ❌ WRONG - Multiple newlines at end
+   def my_function():
+       return "value"
+
+
+   [EOF - two blank lines]
+
+   # ✅ CORRECT - Exactly one newline
+   def my_function():
+       return "value"
+   [EOF - one newline here]
+   ```
+
+3. **JSON Formatting (manifest.json)**:
+   - **Use 2-space indentation** (not 4 spaces, not tabs)
+   - **NO trailing commas** in JSON (unlike Python)
+   - Keep existing structure - don't add/remove newlines unnecessarily
+   - Prettier will auto-format, but start with correct indentation
+
+   ```json
+   {
+     "domain": "nrgkick",
+     "name": "NRGkick",
+     "codeowners": ["@andijakl"],
+     "config_flow": true,
+     "dependencies": [],
+     "documentation": "https://github.com/andijakl/nrgkick-homeassistant",
+     "iot_class": "local_polling",
+     "issue_tracker": "https://github.com/andijakl/nrgkick-homeassistant/issues",
+     "requirements": [],
+     "version": "2.0.0"
+   }
+   ```
+
+   **When modifying manifest.json**:
+   - Only change the specific values needed
+   - Preserve exact indentation (2 spaces)
+   - Don't reformat or reflow the entire file
+   - Don't add line breaks within string values
+
 ### Naming Conventions
 
 - **Classes**: PascalCase (`NRGkickDataUpdateCoordinator`)
@@ -155,6 +260,63 @@ SENSORS: tuple[NRGkickSensorEntityDescription, ...] = (
 - **Constants**: UPPER_SNAKE_CASE (`CONF_SCAN_INTERVAL`, `DEFAULT_SCAN_INTERVAL`)
 - **Private Methods**: Prefix with `_` (`_get_device_info`)
 - **Entity Keys**: snake_case matching translation keys
+
+### Writing Code That Passes Pre-Commit
+
+**Before writing ANY code:**
+
+1. **Check line length** - Count characters, keep under 88
+2. **Plan line breaks** - For long statements, use parentheses/backslashes
+3. **Add trailing newline** - Every file ends with exactly one newline
+4. **Use 2-space JSON indent** - When editing manifest.json or other JSON
+
+**Common patterns to avoid failures:**
+
+```python
+# Long function definitions - break parameters
+async def some_long_function_name(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Docstring."""
+    pass
+
+# Long conditionals - use parentheses
+if (
+    some_very_long_condition
+    and another_condition
+    or yet_another_condition
+):
+    do_something()
+
+# Long dictionary definitions - one key per line
+config = {
+    "host": "192.168.1.100",
+    "username": "admin",
+    "password": "secret",
+    "scan_interval": 30,
+}
+
+# Long imports - use parentheses
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry,
+)
+
+# Long string formatting - break into parts
+message = (
+    f"Failed to connect to device at {host}. "
+    f"Please check the connection and try again."
+)
+
+# Long error messages - use implicit concatenation
+raise HomeAssistantError(
+    "Unable to update charging current: "
+    "device returned unexpected response"
+)
+```
 
 ### Home Assistant Patterns
 
@@ -245,10 +407,34 @@ async def test_setup_entry(hass, mock_config_entry):
 
 ### Validation Before Commit
 
+**MANDATORY before every commit:**
+
 ```bash
 ./validate.sh
 # Runs: pre-commit checks + all tests
 # Must pass before committing!
+```
+
+**If validation fails:**
+
+1. **Line too long errors**: Break lines at 88 characters using parentheses
+2. **File ending errors**: Add/remove newlines so file ends with exactly ONE newline
+3. **JSON formatting errors**: Use 2-space indentation, no trailing commas
+4. **Re-run validation** after fixes until all checks pass
+
+**Common fix pattern:**
+
+```bash
+# Pre-commit fails with line-too-long or file ending errors
+./validate.sh  # FAILS
+
+# Fix the issues in your code
+# - Break long lines
+# - Fix file endings
+
+git add -u  # Stage the fixes
+./validate.sh  # Should PASS now
+git commit -m "message"
 ```
 
 ## Common Development Tasks
@@ -441,6 +627,70 @@ ZEROCONF_TYPE = "_nrgkick._tcp.local."
 ```
 
 ## Troubleshooting Development Issues
+
+### Pre-Commit Check Failures
+
+**Problem**: `flake8` or `pylint` error: "Line too long (XX/88)"
+
+**Solution**: Break the line into multiple lines
+
+```python
+# ❌ WRONG - 92 characters
+result = await self.api_client.get_values(sections=["powerflow", "energy", "temperatures"])
+
+# ✅ CORRECT - Break with parentheses
+result = await self.api_client.get_values(
+    sections=["powerflow", "energy", "temperatures"]
+)
+
+# ❌ WRONG - Long error message
+raise HomeAssistantError("Failed to connect to NRGkick device at 192.168.1.100: Connection timeout")
+
+# ✅ CORRECT - Implicit string concatenation
+raise HomeAssistantError(
+    "Failed to connect to NRGkick device at 192.168.1.100: "
+    "Connection timeout"
+)
+```
+
+**Problem**: `end-of-file-fixer` error: "Fixing missing newline at end of file"
+
+**Solution**: Ensure file ends with exactly ONE newline
+
+- Open file in editor
+- Go to last line
+- Ensure there's a blank line after the last code line
+- Ensure there's only ONE blank line, not multiple
+
+**Problem**: `prettier` error on `manifest.json`: "Formatting changes"
+
+**Solution**: Don't reformat the entire file when changing values
+
+```json
+# ❌ WRONG - Added newlines, changed indentation
+{
+  "domain": "nrgkick",
+
+  "name": "NRGkick",
+
+  "version": "2.1.0"
+}
+
+# ✅ CORRECT - Only changed version value
+{
+  "domain": "nrgkick",
+  "name": "NRGkick",
+  "version": "2.1.0"
+}
+```
+
+**When editing manifest.json:**
+
+1. Open the file
+2. Locate the specific key you need to change
+3. Change ONLY the value, don't touch indentation or newlines
+4. Save the file
+5. Let prettier auto-fix if needed
 
 ### Import Errors in Pylint
 
