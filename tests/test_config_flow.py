@@ -467,7 +467,10 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
-    assert result["description_placeholders"] == {"name": "NRGkick Test"}
+    assert result["description_placeholders"] == {
+        "name": "NRGkick Test",
+        "device_ip": "192.168.1.100",
+    }
 
     with patch(
         "custom_components.nrgkick.config_flow.NRGkickAPI",
@@ -704,4 +707,7 @@ async def test_zeroconf_fallback_to_model_type(
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     # When device_name is not in properties, it falls back to model_type
-    assert result["description_placeholders"] == {"name": "NRGkick Gen2 SIM"}
+    assert result["description_placeholders"] == {
+        "name": "NRGkick Gen2 SIM",
+        "device_ip": "192.168.1.100",
+    }

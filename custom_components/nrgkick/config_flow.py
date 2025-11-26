@@ -95,7 +95,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "device_ip": user_input[CONF_HOST] if user_input else ""
+            },
         )
 
     async def async_step_zeroconf(
@@ -170,7 +175,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                     vol.Optional(CONF_PASSWORD): str,
                 }
             ),
-            description_placeholders={"name": self._discovered_name or "NRGkick"},
+            description_placeholders={
+                "name": self._discovered_name or "NRGkick",
+                "device_ip": self._discovered_host or "",
+            },
             errors=errors,
         )
 
@@ -185,16 +193,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
     ) -> ConfigFlowResult:
         """Handle reauthentication confirmation."""
         errors: dict[str, str] = {}
+        entry_id = self.context.get("entry_id")
+        if not entry_id:
+            return self.async_abort(reason="reauth_failed")
+
+        entry = self.hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            return self.async_abort(reason="reauth_failed")
 
         if user_input is not None:
-            entry_id = self.context.get("entry_id")
-            if not entry_id:
-                return self.async_abort(reason="reauth_failed")
-
-            entry = self.hass.config_entries.async_get_entry(entry_id)
-            if entry is None:
-                return self.async_abort(reason="reauth_failed")
-
             data = {
                 CONF_HOST: entry.data[CONF_HOST],
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
@@ -224,6 +231,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "host": entry.data[CONF_HOST],
+                "device_ip": entry.data[CONF_HOST],
+            },
         )
 
     async def async_step_reconfigure(
@@ -277,6 +288,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "host": host,
+                "device_ip": user_input[CONF_HOST] if user_input else host,
+            },
         )
 
     @staticmethod

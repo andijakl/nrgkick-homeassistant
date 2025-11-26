@@ -6,7 +6,7 @@
       "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
     },
     "error": {
-      "cannot_connect": "Verbindung fehlgeschlagen",
+      "cannot_connect": "Verbindung zum NRGkick-Ger\u00e4t fehlgeschlagen. Testen Sie die Verbindung im Browser: http://{device_ip}/info",
       "invalid_auth": "Ung\u00fcltige Authentifizierung",
       "unknown": "Unerwarteter Fehler"
     },
@@ -26,7 +26,7 @@
         },
         "description": "Bitte aktualisieren Sie Ihre Anmeldedaten f\u00fcr {host}."
       },
-      "reconfigure": {
+      "reconfigure_confirm": {
         "data": {
           "host": "Host",
           "password": "Passwort",

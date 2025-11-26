@@ -6,7 +6,7 @@
             "reconfigure_successful": "Reconfiguration was successful"
         },
         "error": {
-            "cannot_connect": "Failed to connect",
+            "cannot_connect": "Cannot connect to the NRGkick device. Test the connection using a browser: http://{device_ip}/info",
             "invalid_auth": "Invalid authentication",
             "unknown": "Unexpected error"
         },
@@ -26,7 +26,7 @@
                 },
                 "description": "Please update your credentials for {host}."
             },
-            "reconfigure": {
+            "reconfigure_confirm": {
                 "data": {
                     "host": "Host",
                     "password": "Password",

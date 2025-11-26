@@ -219,4 +219,7 @@ async def test_zeroconf_fallback_to_default_name(
 
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     # Should fallback to "NRGkick"
-    assert result["description_placeholders"] == {"name": "NRGkick"}
+    assert result["description_placeholders"] == {
+        "name": "NRGkick",
+        "device_ip": "192.168.1.100",
+    }
