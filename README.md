@@ -25,6 +25,7 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 - **Network**: IP/MAC address, WiFi SSID/RSSI
 - **Device Info**: Connector details, grid info, firmware versions
 - **Session**: Connect time, charging time
+  28: - **Localization**: Fully translated entity names and error messages (English/German)
 
 ### Controls
 
@@ -187,7 +188,7 @@ entities:
 **More Examples:**
 
 - **Automations**: See [`examples/automations.yaml`](examples/automations.yaml) for solar charging, time-based control, notifications, temperature protection, and more
-- **Dashboard Cards**: See [`examples/lovelace_cards.yaml`](examples/lovelace_cards.yaml) for status cards, gauges, graphs, mobile layouts, and custom cards
+- **Dashboard Cards**: See [`examples/dashboard.yaml`](examples/dashboard.yaml) for status cards, gauges, graphs, mobile layouts, and custom cards
 
 ## Troubleshooting
 

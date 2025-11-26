@@ -104,7 +104,11 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         except NRGkickApiClientAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except NRGkickApiClientCommunicationError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
 
     async def _async_execute_command_with_verification(
         self,

@@ -348,8 +348,10 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 The API client encapsulates all HTTP communication with the device. It uses a custom exception hierarchy for proper error handling:
 
 ```python
-class NRGkickApiClientError(Exception):
+class NRGkickApiClientError(HomeAssistantError):
     """Base exception for NRGkick API client errors."""
+    def __init__(self, translation_domain=None, translation_key=None, translation_placeholders=None):
+        super().__init__(translation_domain=translation_domain, translation_key=translation_key, translation_placeholders=translation_placeholders)
 
 class NRGkickApiClientCommunicationError(NRGkickApiClientError):
     """Exception to indicate communication errors."""
@@ -428,12 +430,12 @@ class NRGkickAPI:
 
   This separation reduces method complexity, improves testability (each component can be tested independently), and makes the retry behavior easier to understand and modify.
 
-- **Custom Exception Hierarchy**: Three exception types provide clear error semantics:
-  - `NRGkickApiClientError` (base) - Catch-all for API errors
-  - `NRGkickApiClientCommunicationError` - Network issues, timeouts, connection failures (triggers retry and entity unavailability)
-  - `NRGkickApiClientAuthenticationError` - Invalid credentials (401/403 responses, triggers re-auth flow)
+- **Custom Exception Hierarchy**: Three exception types provide clear error semantics and localization support:
+  - `NRGkickApiClientError` (base) - Inherits from `HomeAssistantError` for translation support
+  - `NRGkickApiClientCommunicationError` - Network issues, timeouts (triggers retry and entity unavailability)
+  - `NRGkickApiClientAuthenticationError` - Invalid credentials (triggers re-auth flow)
 
-  This typed approach allows the coordinator to handle authentication errors differently (trigger re-auth) versus communication errors (retry and mark entities unavailable).
+  This typed approach allows the coordinator to handle authentication errors differently versus communication errors, while ensuring all error messages are fully translatable via `en.json`/`de.json`.
 
 - **Session Management**: The session is passed in from Home Assistant rather than created internally. This allows the integration to leverage Home Assistant's connection pooling and SSL context.
 

@@ -60,42 +60,51 @@ class NRGkickAPI:
 
     def _handle_auth_error(self, response_status: int, url: str) -> None:
         """Handle authentication errors with detailed logging."""
-        error_msg = (
-            f"Authentication failed (HTTP {response_status}). "
-            "Verify that BasicAuth is enabled in the NRGkick app "
-            "(Extended → Local API → Authentication (JSON)) and that "
-            "the username and password are correct (case-sensitive). "
-            f"Attempted to access: {url}"
+        _LOGGER.warning(
+            "Authentication failed (HTTP %d). Verify BasicAuth settings. Target: %s",
+            response_status,
+            url,
         )
-        _LOGGER.warning(error_msg)
-        raise NRGkickApiClientAuthenticationError(error_msg)
+        raise NRGkickApiClientAuthenticationError(
+            translation_domain=DOMAIN,
+            translation_key="auth_failure",
+            translation_placeholders={
+                "status_code": str(response_status),
+                "url": url,
+            },
+        )
 
     def _handle_timeout_error(self, exc: asyncio.TimeoutError, url: str) -> None:
         """Handle timeout errors with detailed troubleshooting info."""
-        error_msg = (
-            f"Connection timeout after {MAX_RETRIES} attempts. "
-            "Verify: (1) The NRGkick device is powered on and "
-            "the LED is active, (2) The device is reachable on "
-            f"the network (try: ping {self.host!r}), "
-            "(3) Home Assistant and NRGkick are on the same "
-            "network/VLAN, (4) No firewall is blocking HTTP "
-            f"traffic on port 80. Target: {url}"
+        _LOGGER.error(
+            "Connection timeout after %d attempts. Target: %s", MAX_RETRIES, url
         )
-        _LOGGER.error(error_msg)
-        raise NRGkickApiClientCommunicationError(error_msg) from exc
+        raise NRGkickApiClientCommunicationError(
+            translation_domain=DOMAIN,
+            translation_key="connection_timeout",
+            translation_placeholders={
+                "attempts": str(MAX_RETRIES),
+                "url": url,
+            },
+        ) from exc
 
     def _handle_http_error(self, exc: aiohttp.ClientResponseError, url: str) -> None:
         """Handle HTTP response errors with troubleshooting info."""
-        error_msg = (
-            f"Device returned HTTP error {exc.status} ({exc.message}). "
-            "This usually indicates: (1) The requested action is not "
-            "allowed in the current device state, (2) The API endpoint "
-            "doesn't exist (check firmware version is up to date), or "
-            "(3) The device rejected the request parameters. "
-            f"URL: {url}"
+        _LOGGER.error(
+            "Device returned HTTP error %d (%s). URL: %s",
+            exc.status,
+            exc.message,
+            url,
         )
-        _LOGGER.error(error_msg)
-        raise NRGkickApiClientCommunicationError(error_msg) from exc
+        raise NRGkickApiClientCommunicationError(
+            translation_domain=DOMAIN,
+            translation_key="http_error",
+            translation_placeholders={
+                "status_code": str(exc.status),
+                "status_message": str(exc.message),
+                "url": url,
+            },
+        ) from exc
 
     def _handle_connection_error(
         self,
@@ -103,28 +112,37 @@ class NRGkickAPI:
         url: str,
     ) -> None:
         """Handle connection errors with troubleshooting info."""
-        error_msg = (
-            f"Network connection failed after {MAX_RETRIES} attempts: "
-            f"{exc}. Check: (1) The IP address {self.host!r} is correct, "
-            "(2) The device is on the same network as Home Assistant, "
-            "(3) There are no network issues (try ping or traceroute), "
-            f"(4) The device is not blocking connections. Target: {url}"
+        _LOGGER.error(
+            "Network connection failed after %d attempts: %s. Target: %s",
+            MAX_RETRIES,
+            exc,
+            url,
         )
-        _LOGGER.error(error_msg)
-        raise NRGkickApiClientCommunicationError(error_msg) from exc
+        raise NRGkickApiClientCommunicationError(
+            translation_domain=DOMAIN,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "error_details": str(exc),
+                "url": url,
+            },
+        ) from exc
 
     def _handle_generic_error(self, exc: ClientError, url: str) -> None:
         """Handle generic client errors with troubleshooting info."""
-        error_msg = (
-            f"Connection failed after {MAX_RETRIES} attempts: {exc}. "
-            "This may indicate a network problem or device issue. "
-            "Try: (1) Restarting the NRGkick device, "
-            "(2) Checking network connectivity, "
-            "(3) Verifying the device firmware is up to date. "
-            f"Target: {url}"
+        _LOGGER.error(
+            "Connection failed after %d attempts: %s. Target: %s",
+            MAX_RETRIES,
+            exc,
+            url,
         )
-        _LOGGER.error(error_msg)
-        raise NRGkickApiClientCommunicationError(error_msg) from exc
+        raise NRGkickApiClientCommunicationError(
+            translation_domain=DOMAIN,
+            translation_key="generic_error",
+            translation_placeholders={
+                "error_details": str(exc),
+                "url": url,
+            },
+        ) from exc
 
     async def _make_request_attempt(
         self,
@@ -292,7 +310,15 @@ class NRGkickAPI:
         # Should never reach here, but just in case
         if last_exception:
             raise NRGkickApiClientCommunicationError(
-                f"Failed after {MAX_RETRIES} attempts. " f"Last error: {last_exception}"
+                translation_domain=DOMAIN,
+                translation_key="generic_error",
+                translation_placeholders={
+                    "error_details": (
+                        f"Failed after {MAX_RETRIES} attempts. "
+                        f"Last error: {last_exception}"
+                    ),
+                    "url": url,
+                },
             ) from last_exception
         return {}
 

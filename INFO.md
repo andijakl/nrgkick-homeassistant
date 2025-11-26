@@ -43,7 +43,7 @@ custom_components/nrgkick/
 - Automatic retry with exponential backoff (3 attempts, 1.5s base)
 - Retries: Timeouts, HTTP 500-504, connection errors
 - No retry: Authentication errors (401/403), client errors (4xx)
-- Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError`, `NRGkickApiClientError`
+- Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError` (translatable)
 - Methods: `get_info()`, `get_control()`, `get_values()`, `set_current()`, `set_charge_pause()`, `set_energy_limit()`, `set_phase_count()`, `test_connection()`
 
 **`ConfigFlow`** (`config_flow.py`)

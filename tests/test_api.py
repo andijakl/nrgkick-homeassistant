@@ -341,7 +341,7 @@ async def test_api_retry_exhausted_on_timeout(mock_session) -> None:
     with pytest.raises(NRGkickApiClientCommunicationError) as exc_info:
         await api.get_info()
 
-    assert "timeout after 3 attempts" in str(exc_info.value).lower()
+    assert exc_info.value.translation_key == "connection_timeout"
 
 
 async def test_api_retry_on_connection_error(mock_session) -> None:

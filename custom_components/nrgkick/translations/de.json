@@ -169,6 +169,24 @@
     },
     "authentication_error": {
       "message": "Authentifizierung fehlgeschlagen. Bitte \u00fcberpr\u00fcfen Sie Ihre Anmeldedaten."
+    },
+    "auth_failure": {
+      "message": "Authentifizierung fehlgeschlagen (HTTP {status_code}). \u00dcberpr\u00fcfen Sie die BasicAuth-Einstellungen. Ziel: {url}"
+    },
+    "connection_timeout": {
+      "message": "Zeit\u00fcberschreitung der Verbindung nach {attempts} Versuchen. Stromversorgung und Netzwerk pr\u00fcfen. Ziel: {url}"
+    },
+    "http_error": {
+      "message": "Ger\u00e4t meldet HTTP-Fehler {status_code} ({status_message}). URL: {url}"
+    },
+    "connection_failed": {
+      "message": "Netzwerkverbindung fehlgeschlagen: {error_details}. Ziel: {url}"
+    },
+    "generic_error": {
+      "message": "Verbindung fehlgeschlagen: {error_details}. Ziel: {url}"
+    },
+    "set_failed": {
+      "message": "Fehler beim Setzen von {target} auf {value}."
     }
   }
 }
