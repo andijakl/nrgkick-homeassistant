@@ -520,7 +520,6 @@ async def async_setup_entry(
         NRGkickSensor(
             coordinator,
             key="total_active_power",
-            name="Total Active Power",
             unit=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -591,7 +590,6 @@ def native_value(self) -> float | int | str | None:
 NRGkickSensor(
     coordinator,
     key="status",
-    name="Charging Status",
     value_path=["values", "general", "status"],
     value_fn=lambda x: STATUS_MAP.get(x, "Unknown"),  # Convert 3 → "Charging"
 )

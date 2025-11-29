@@ -54,7 +54,6 @@ async def async_setup_entry(
             step=100,
             value_path=["control", "energy_limit"],
             mode=NumberMode.BOX,
-            entity_category=EntityCategory.CONFIG,
         ),
         NRGkickNumber(
             coordinator,
@@ -65,7 +64,6 @@ async def async_setup_entry(
             step=1,
             value_path=["control", "phase_count"],
             mode=NumberMode.SLIDER,
-            entity_category=EntityCategory.CONFIG,
         ),
     ]
 

@@ -41,71 +41,29 @@
             "rated_current": {
                 "name": "Rated current"
             },
-            "charging_current": {
-                "name": "Charging current"
+            "connector_phase_count": {
+                "name": "Connector phase count"
             },
-            "charging_voltage_l1": {
-                "name": "Charging voltage L1"
-            },
-            "charging_voltage_l2": {
-                "name": "Charging voltage L2"
-            },
-            "charging_voltage_l3": {
-                "name": "Charging voltage L3"
-            },
-            "charging_current_l1": {
-                "name": "Charging current L1"
-            },
-            "charging_current_l2": {
-                "name": "Charging current L2"
-            },
-            "charging_current_l3": {
-                "name": "Charging current L3"
-            },
-            "charging_power": {
-                "name": "Charging power"
-            },
-            "charging_power_l1": {
-                "name": "Charging power L1"
-            },
-            "charging_power_l2": {
-                "name": "Charging power L2"
-            },
-            "charging_power_l3": {
-                "name": "Charging power L3"
-            },
-            "charging_energy": {
-                "name": "Charging energy"
-            },
-            "total_energy": {
-                "name": "Total energy"
-            },
-            "frequency": {
-                "name": "Frequency"
-            },
-            "connector_temp_l1": {
-                "name": "Connector temperature L1"
-            },
-            "connector_temp_l2": {
-                "name": "Connector temperature L2"
-            },
-            "housing_temp": {
-                "name": "Housing temperature"
-            },
-            "versions_sw_sm": {
-                "name": "Software version"
-            },
-            "warning_code": {
-                "name": "Warning code"
-            },
-            "network_ip_address": {
-                "name": "IP address"
+            "connector_max_current": {
+                "name": "Connector max current"
             },
             "connector_type": {
                 "name": "Connector type"
             },
             "connector_serial": {
                 "name": "Connector serial"
+            },
+            "grid_voltage": {
+                "name": "Grid voltage"
+            },
+            "grid_frequency": {
+                "name": "Grid frequency"
+            },
+            "grid_phases": {
+                "name": "Grid phases"
+            },
+            "network_ip_address": {
+                "name": "IP address"
             },
             "network_mac_address": {
                 "name": "MAC address"
@@ -116,20 +74,158 @@
             "network_rssi": {
                 "name": "Signal strength"
             },
+            "versions_sw_sm": {
+                "name": "Software version"
+            },
+            "versions_hw_sm": {
+                "name": "Hardware version"
+            },
+            "current_set": {
+                "name": "Charging current set"
+            },
+            "charge_pause": {
+                "name": "Charge pause"
+            },
+            "energy_limit": {
+                "name": "Energy limit"
+            },
+            "phase_count": {
+                "name": "Phase count"
+            },
+            "total_charged_energy": {
+                "name": "Total charged energy"
+            },
+            "charged_energy": {
+                "name": "Charged energy"
+            },
+            "charging_voltage": {
+                "name": "Charging voltage"
+            },
+            "charging_current": {
+                "name": "Charging current"
+            },
+            "powerflow_grid_frequency": {
+                "name": "Powerflow grid frequency"
+            },
+            "peak_power": {
+                "name": "Peak power"
+            },
+            "total_active_power": {
+                "name": "Total active power"
+            },
+            "total_reactive_power": {
+                "name": "Total reactive power"
+            },
+            "total_apparent_power": {
+                "name": "Total apparent power"
+            },
+            "total_power_factor": {
+                "name": "Total power factor"
+            },
+            "l1_voltage": {
+                "name": "L1 voltage"
+            },
+            "l1_current": {
+                "name": "L1 current"
+            },
+            "l1_active_power": {
+                "name": "L1 active power"
+            },
+            "l1_reactive_power": {
+                "name": "L1 reactive power"
+            },
+            "l1_apparent_power": {
+                "name": "L1 apparent power"
+            },
+            "l1_power_factor": {
+                "name": "L1 power factor"
+            },
+            "l2_voltage": {
+                "name": "L2 voltage"
+            },
+            "l2_current": {
+                "name": "L2 current"
+            },
+            "l2_active_power": {
+                "name": "L2 active power"
+            },
+            "l2_reactive_power": {
+                "name": "L2 reactive power"
+            },
+            "l2_apparent_power": {
+                "name": "L2 apparent power"
+            },
+            "l2_power_factor": {
+                "name": "L2 power factor"
+            },
+            "l3_voltage": {
+                "name": "L3 voltage"
+            },
+            "l3_current": {
+                "name": "L3 current"
+            },
+            "l3_active_power": {
+                "name": "L3 active power"
+            },
+            "l3_reactive_power": {
+                "name": "L3 reactive power"
+            },
+            "l3_apparent_power": {
+                "name": "L3 apparent power"
+            },
+            "l3_power_factor": {
+                "name": "L3 power factor"
+            },
+            "n_current": {
+                "name": "Neutral current"
+            },
+            "charging_rate": {
+                "name": "Charging rate"
+            },
+            "vehicle_connect_time": {
+                "name": "Vehicle connect time"
+            },
+            "vehicle_charging_time": {
+                "name": "Vehicle charging time"
+            },
             "status": {
                 "name": "Status"
+            },
+            "charge_permitted": {
+                "name": "Charge permitted"
             },
             "relay_state": {
                 "name": "Relay state"
             },
+            "charge_count": {
+                "name": "Charge count"
+            },
             "rcd_trigger": {
                 "name": "RCD trigger"
+            },
+            "warning_code": {
+                "name": "Warning code"
             },
             "error_code": {
                 "name": "Error code"
             },
-            "connector_phase_count": {
-                "name": "Connector phase count"
+            "housing_temperature": {
+                "name": "Housing temperature"
+            },
+            "connector_l1_temperature": {
+                "name": "Connector L1 temperature"
+            },
+            "connector_l2_temperature": {
+                "name": "Connector L2 temperature"
+            },
+            "connector_l3_temperature": {
+                "name": "Connector L3 temperature"
+            },
+            "domestic_plug_1_temperature": {
+                "name": "Domestic plug 1 temperature"
+            },
+            "domestic_plug_2_temperature": {
+                "name": "Domestic plug 2 temperature"
             }
         },
         "binary_sensor": {

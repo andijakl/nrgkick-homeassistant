@@ -41,71 +41,29 @@
       "rated_current": {
         "name": "Nennstrom"
       },
-      "charging_current": {
-        "name": "Ladestrom"
+      "connector_phase_count": {
+        "name": "Steckerphasenanzahl"
       },
-      "charging_voltage_l1": {
-        "name": "Ladespannung L1"
-      },
-      "charging_voltage_l2": {
-        "name": "Ladespannung L2"
-      },
-      "charging_voltage_l3": {
-        "name": "Ladespannung L3"
-      },
-      "charging_current_l1": {
-        "name": "Ladestrom L1"
-      },
-      "charging_current_l2": {
-        "name": "Ladestrom L2"
-      },
-      "charging_current_l3": {
-        "name": "Ladestrom L3"
-      },
-      "charging_power": {
-        "name": "Ladeleistung"
-      },
-      "charging_power_l1": {
-        "name": "Ladeleistung L1"
-      },
-      "charging_power_l2": {
-        "name": "Ladeleistung L2"
-      },
-      "charging_power_l3": {
-        "name": "Ladeleistung L3"
-      },
-      "charging_energy": {
-        "name": "Ladeenergie"
-      },
-      "total_energy": {
-        "name": "Gesamtenergie"
-      },
-      "frequency": {
-        "name": "Frequenz"
-      },
-      "connector_temp_l1": {
-        "name": "Steckertemperatur L1"
-      },
-      "connector_temp_l2": {
-        "name": "Steckertemperatur L2"
-      },
-      "housing_temp": {
-        "name": "Geh\u00e4usetemperatur"
-      },
-      "versions_sw_sm": {
-        "name": "Softwareversion"
-      },
-      "warning_code": {
-        "name": "Warncode"
-      },
-      "network_ip_address": {
-        "name": "IP-Adresse"
+      "connector_max_current": {
+        "name": "Stecker Max-Strom"
       },
       "connector_type": {
         "name": "Steckertyp"
       },
       "connector_serial": {
         "name": "Steckerseriennummer"
+      },
+      "grid_voltage": {
+        "name": "Netzspannung"
+      },
+      "grid_frequency": {
+        "name": "Netzfrequenz"
+      },
+      "grid_phases": {
+        "name": "Netzphasen"
+      },
+      "network_ip_address": {
+        "name": "IP-Adresse"
       },
       "network_mac_address": {
         "name": "MAC-Adresse"
@@ -116,20 +74,158 @@
       "network_rssi": {
         "name": "Signalst\u00e4rke"
       },
+      "versions_sw_sm": {
+        "name": "Softwareversion"
+      },
+      "versions_hw_sm": {
+        "name": "Hardwareversion"
+      },
+      "current_set": {
+        "name": "Ladestrom Sollwert"
+      },
+      "charge_pause": {
+        "name": "Ladepause"
+      },
+      "energy_limit": {
+        "name": "Energielimit"
+      },
+      "phase_count": {
+        "name": "Phasenanzahl"
+      },
+      "total_charged_energy": {
+        "name": "Gesamt geladene Energie"
+      },
+      "charged_energy": {
+        "name": "Geladene Energie"
+      },
+      "charging_voltage": {
+        "name": "Ladespannung"
+      },
+      "charging_current": {
+        "name": "Ladestrom"
+      },
+      "powerflow_grid_frequency": {
+        "name": "Netzfrequenz (Powerflow)"
+      },
+      "peak_power": {
+        "name": "Spitzenleistung"
+      },
+      "total_active_power": {
+        "name": "Gesamtwirkleistung"
+      },
+      "total_reactive_power": {
+        "name": "Gesamtblindleistung"
+      },
+      "total_apparent_power": {
+        "name": "Gesamtscheinleistung"
+      },
+      "total_power_factor": {
+        "name": "Gesamtleistungsfaktor"
+      },
+      "l1_voltage": {
+        "name": "L1 Spannung"
+      },
+      "l1_current": {
+        "name": "L1 Strom"
+      },
+      "l1_active_power": {
+        "name": "L1 Wirkleistung"
+      },
+      "l1_reactive_power": {
+        "name": "L1 Blindleistung"
+      },
+      "l1_apparent_power": {
+        "name": "L1 Scheinleistung"
+      },
+      "l1_power_factor": {
+        "name": "L1 Leistungsfaktor"
+      },
+      "l2_voltage": {
+        "name": "L2 Spannung"
+      },
+      "l2_current": {
+        "name": "L2 Strom"
+      },
+      "l2_active_power": {
+        "name": "L2 Wirkleistung"
+      },
+      "l2_reactive_power": {
+        "name": "L2 Blindleistung"
+      },
+      "l2_apparent_power": {
+        "name": "L2 Scheinleistung"
+      },
+      "l2_power_factor": {
+        "name": "L2 Leistungsfaktor"
+      },
+      "l3_voltage": {
+        "name": "L3 Spannung"
+      },
+      "l3_current": {
+        "name": "L3 Strom"
+      },
+      "l3_active_power": {
+        "name": "L3 Wirkleistung"
+      },
+      "l3_reactive_power": {
+        "name": "L3 Blindleistung"
+      },
+      "l3_apparent_power": {
+        "name": "L3 Scheinleistung"
+      },
+      "l3_power_factor": {
+        "name": "L3 Leistungsfaktor"
+      },
+      "n_current": {
+        "name": "Neutralleiterstrom"
+      },
+      "charging_rate": {
+        "name": "Laderate"
+      },
+      "vehicle_connect_time": {
+        "name": "Fahrzeug verbunden seit"
+      },
+      "vehicle_charging_time": {
+        "name": "Fahrzeug l\u00e4dt seit"
+      },
       "status": {
         "name": "Status"
+      },
+      "charge_permitted": {
+        "name": "Laden erlaubt"
       },
       "relay_state": {
         "name": "Relaisstatus"
       },
+      "charge_count": {
+        "name": "Ladezyklen"
+      },
       "rcd_trigger": {
         "name": "RCD-Ausl\u00f6sung"
+      },
+      "warning_code": {
+        "name": "Warncode"
       },
       "error_code": {
         "name": "Fehlercode"
       },
-      "connector_phase_count": {
-        "name": "Steckerphasenanzahl"
+      "housing_temperature": {
+        "name": "Geh\u00e4usetemperatur"
+      },
+      "connector_l1_temperature": {
+        "name": "Steckertemperatur L1"
+      },
+      "connector_l2_temperature": {
+        "name": "Steckertemperatur L2"
+      },
+      "connector_l3_temperature": {
+        "name": "Steckertemperatur L3"
+      },
+      "domestic_plug_1_temperature": {
+        "name": "Haushaltsstecker 1 Temperatur"
+      },
+      "domestic_plug_2_temperature": {
+        "name": "Haushaltsstecker 2 Temperatur"
       }
     },
     "binary_sensor": {
