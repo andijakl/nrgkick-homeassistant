@@ -25,7 +25,7 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 - **Network**: IP/MAC address, WiFi SSID/RSSI
 - **Device Info**: Connector details, grid info, firmware versions
 - **Session**: Connect time, charging time
-  28: - **Localization**: Fully translated entity names and error messages (English/German)
+- **Localization**: Fully translated entity names and error messages (English/German)
 
 ### Controls
 

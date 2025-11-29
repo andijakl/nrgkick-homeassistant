@@ -215,7 +215,6 @@ class NRGkickEntity(CoordinatorEntity):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_has_entity_name = True
         self._attr_translation_key = key
         self._setup_device_info()
 
