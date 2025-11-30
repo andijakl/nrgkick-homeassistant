@@ -9,7 +9,7 @@ custom_components/nrgkick/
 ├── __init__.py           # Coordinator, setup/teardown
 ├── api.py                # REST client, custom exceptions
 ├── binary_sensor.py      # 3 binary sensors
-├── config_flow.py        # UI flows (user, zeroconf, reauth, options)
+├── config_flow.py        # UI flows (user, zeroconf, reauth, reconfigure, options)
 ├── const.py              # Constants, STATUS_MAP, entity definitions
 ├── diagnostics.py        # Diagnostics provider
 ├── manifest.json         # Integration metadata
@@ -43,7 +43,7 @@ custom_components/nrgkick/
 - Automatic retry with exponential backoff (3 attempts, 1.5s base)
 - Retries: Timeouts, HTTP 500-504, connection errors
 - No retry: Authentication errors (401/403), client errors (4xx)
-- Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError`, `NRGkickApiClientError`
+- Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError` (translatable)
 - Methods: `get_info()`, `get_control()`, `get_values()`, `set_current()`, `set_charge_pause()`, `set_energy_limit()`, `set_phase_count()`, `test_connection()`
 
 **`ConfigFlow`** (`config_flow.py`)
@@ -171,13 +171,14 @@ Control responses from device:
 Run tests: `./run-tests.sh`
 Run validation: `./validate.sh` (pre-commit + pytest)
 
-**Test suite**: 75 tests with 97% coverage
+**Test suite**: 73 tests with 96% coverage
 
-- API tests: 26 (97% coverage)
-- Config flow tests: 26 (98% coverage)
-- Coordinator tests: 13 (100% coverage)
-- Platform tests: 8 (100% coverage)
+- API tests: 26 (94% coverage)
+- Config flow tests: 24 (95% coverage)
+- Coordinator tests: 13 (95% coverage)
+- Platform tests: 7 (97-100% coverage)
 - Naming tests: 2 (100% coverage)
+- Diagnostics tests: 1 (100% coverage)
 
 ## Performance Characteristics
 

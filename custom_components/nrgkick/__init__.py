@@ -104,7 +104,11 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         except NRGkickApiClientAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except NRGkickApiClientCommunicationError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
 
     async def _async_execute_command_with_verification(
         self,
@@ -207,14 +211,10 @@ class NRGkickEntity(CoordinatorEntity):
     coordinator: NRGkickDataUpdateCoordinator
     _attr_has_entity_name = True
 
-    def __init__(
-        self, coordinator: NRGkickDataUpdateCoordinator, key: str, name: str
-    ) -> None:
+    def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_has_entity_name = True
-        self._attr_name = name
         self._attr_translation_key = key
         self._setup_device_info()
 

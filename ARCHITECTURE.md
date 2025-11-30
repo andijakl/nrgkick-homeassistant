@@ -227,8 +227,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # 4. Perform first data fetch (raises exception if device unavailable)
     await coordinator.async_config_entry_first_refresh()
 
-    # 5. Store coordinator for entity platforms to access
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    # 5. Store coordinator in entry runtime_data
+    entry.runtime_data = coordinator
 
     # 6. Forward setup to entity platforms (sensor, switch, number, binary_sensor)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -241,7 +241,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 **Integration with Home Assistant:**
 
-1. **Storage in `hass.data`**: Home Assistant provides `hass.data` as a dictionary for integrations to store runtime data. We use `hass.data[DOMAIN][entry.entry_id]` to store the coordinator, making it accessible to all entity platforms. The `entry_id` key allows multiple NRGkick devices to coexist in the same Home Assistant instance.
+1. **Storage in `entry.runtime_data`**: Modern Home Assistant integrations use `entry.runtime_data` instead of `hass.data` for storing integration runtime data. This provides automatic cleanup when the entry is removed and cleaner memory management. The coordinator is stored directly on the config entry object, making it accessible to all entity platforms.
 
 2. **Session Reuse**: `async_get_clientsession(hass)` returns Home Assistant's global aiohttp ClientSession, which maintains a connection pool and reduces overhead compared to creating a new session per integration.
 
@@ -348,8 +348,10 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 The API client encapsulates all HTTP communication with the device. It uses a custom exception hierarchy for proper error handling:
 
 ```python
-class NRGkickApiClientError(Exception):
+class NRGkickApiClientError(HomeAssistantError):
     """Base exception for NRGkick API client errors."""
+    def __init__(self, translation_domain=None, translation_key=None, translation_placeholders=None):
+        super().__init__(translation_domain=translation_domain, translation_key=translation_key, translation_placeholders=translation_placeholders)
 
 class NRGkickApiClientCommunicationError(NRGkickApiClientError):
     """Exception to indicate communication errors."""
@@ -428,12 +430,12 @@ class NRGkickAPI:
 
   This separation reduces method complexity, improves testability (each component can be tested independently), and makes the retry behavior easier to understand and modify.
 
-- **Custom Exception Hierarchy**: Three exception types provide clear error semantics:
-  - `NRGkickApiClientError` (base) - Catch-all for API errors
-  - `NRGkickApiClientCommunicationError` - Network issues, timeouts, connection failures (triggers retry and entity unavailability)
-  - `NRGkickApiClientAuthenticationError` - Invalid credentials (401/403 responses, triggers re-auth flow)
+- **Custom Exception Hierarchy**: Three exception types provide clear error semantics and localization support:
+  - `NRGkickApiClientError` (base) - Inherits from `HomeAssistantError` for translation support
+  - `NRGkickApiClientCommunicationError` - Network issues, timeouts (triggers retry and entity unavailability)
+  - `NRGkickApiClientAuthenticationError` - Invalid credentials (triggers re-auth flow)
 
-  This typed approach allows the coordinator to handle authentication errors differently (trigger re-auth) versus communication errors (retry and mark entities unavailable).
+  This typed approach allows the coordinator to handle authentication errors differently versus communication errors, while ensuring all error messages are fully translatable via `en.json`/`de.json`.
 
 - **Session Management**: The session is passed in from Home Assistant rather than created internally. This allows the integration to leverage Home Assistant's connection pooling and SSL context.
 
@@ -510,15 +512,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NRGkick sensors based on a config entry."""
-    # 1. Get coordinator from hass.data registry
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    # 1. Get coordinator from entry runtime_data
+    coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
     # 2. Create entity instances with value_path configuration
     entities = [
         NRGkickSensor(
             coordinator,
             key="total_active_power",
-            name="Total Active Power",
             unit=UnitOfPower.WATT,
             device_class=SensorDeviceClass.POWER,
             state_class=SensorStateClass.MEASUREMENT,
@@ -536,7 +537,7 @@ async def async_setup_entry(
 
 - **Parallel Updates**: `PARALLEL_UPDATES` is set to 0 in all platforms. Since the `DataUpdateCoordinator` handles all data fetching centrally, individual entities do not need to poll the device. This setting disables Home Assistant's default parallel update logic, ensuring efficient resource usage.
 
-- **Coordinator Retrieval**: Each platform retrieves the coordinator from `hass.data[DOMAIN][entry.entry_id]`. This is the same coordinator instance created in `async_setup_entry()`.
+- **Coordinator Retrieval**: Each platform retrieves the coordinator from `entry.runtime_data`. This is the same coordinator instance created in `async_setup_entry()`.
 
 - **Base Class Inheritance**: All entity classes inherit from `NRGkickEntity`, which provides common device info setup and proper type annotation for the coordinator.
 
@@ -589,7 +590,6 @@ def native_value(self) -> float | int | str | None:
 NRGkickSensor(
     coordinator,
     key="status",
-    name="Charging Status",
     value_path=["values", "general", "status"],
     value_fn=lambda x: STATUS_MAP.get(x, "Unknown"),  # Convert 3 → "Charging"
 )
@@ -671,30 +671,48 @@ Home Assistant's device registry groups entities by device. The `NRGkickEntity` 
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities."""
 
-    def __init__(self, coordinator: NRGkickDataUpdateCoordinator) -> None:
+    coordinator: NRGkickDataUpdateCoordinator
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
         """Initialize NRGkick entity."""
         super().__init__(coordinator)
+        self._key = key
         self._attr_has_entity_name = True
+        self._attr_translation_key = key
+        self._setup_device_info()
+
+    def _setup_device_info(self) -> None:
+        """Set up device info and unique ID."""
+        device_info = self.coordinator.data.get("info", {}).get("general", {})
+        serial = device_info.get("serial_number", "unknown")
 
         # Get device name with fallback to "NRGkick"
-        device_name = coordinator.data["general"]["device_name"]
+        device_name = device_info.get("device_name")
         if not device_name:
             device_name = "NRGkick"
 
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, coordinator.data["general"]["serial_number"])},
-            name=device_name,
-            manufacturer="DiniTech",
-            model=coordinator.data["general"]["model_type"],
-            sw_version=coordinator.data["versions"]["smartmodule"],
-        )
+        self._attr_unique_id = f"{serial}_{self._key}"
+        self._attr_device_info = {
+            "identifiers": {(DOMAIN, serial)},
+            "name": device_name,
+            "manufacturer": "DiniTech",
+            "model": device_info.get("model_type", "NRGkick Gen2"),
+            "sw_version": self.coordinator.data.get("info", {})
+            .get("versions", {})
+            .get("sw_sm"),
+        }
 ```
 
 **Device Registry Behavior:**
 
 - **Base Class Pattern**: All entity types (sensor, binary_sensor, switch, number) inherit from `NRGkickEntity`, eliminating duplicate device info setup.
 
+- **Modern Entity Naming (`has_entity_name = True`)**: Modern Home Assistant integrations use `has_entity_name = True`, which enables automatic device-based entity naming. Entity IDs are formed as `{device_name}_{entity_key}` (e.g., `sensor.garage_total_active_power` if device is named "Garage"). The `translation_key` provides localized entity names via the `translations/` directory.
+
 - **Type Annotation**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference throughout the entity hierarchy.
+
+- **Device Name Fallback**: If the device API returns an empty device name, the integration defaults to "NRGkick" to ensure entity IDs are always generated consistently (e.g., `sensor.nrgkick_total_active_power`).
 
 - **Identifier Matching**: Home Assistant uses the `identifiers` tuple to determine if entities belong to the same device. All entities use `(DOMAIN, serial_number)`, so they automatically group together.
 
@@ -820,126 +838,70 @@ async def async_step_zeroconf(self, discovery_info: ZeroconfServiceInfo) -> Conf
 - `model_type`: "NRGkick Gen2"
 - `json_api_enabled`: "0" or "1"
 
-### 3. Options Flow (Reconfiguration)
+### 3. Options Flow (Preferences)
 
-The `OptionsFlowHandler` class allows users to modify settings after initial setup. The base class provides `config_entry` as a property:
+The `OptionsFlowHandler` class allows users to modify runtime preferences (scan interval) without affecting connection settings.
 
 ```python
-from homeassistant import config_entries
-
 class OptionsFlowHandler(config_entries.OptionsFlow):
     """Handle options flow for NRGkick."""
 
-    # No __init__ method - base class provides self.config_entry property
-
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""
-        errors = {}
-
         if user_input is not None:
-            # Build connection data for validation
-            data = {
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_USERNAME: user_input.get(CONF_USERNAME),
-                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
-            }
+            return self.async_create_entry(title="", data=user_input)
 
-            try:
-                # Validate connection with new settings
-                await validate_input(self.hass, data)
-            except NRGkickApiClientCommunicationError:
-                errors["base"] = "cannot_connect"
-            except NRGkickApiClientAuthenticationError:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                errors["base"] = "unknown"
-            else:
-                # Validation successful - update both data and options
-
-                # Update connection settings in entry.data
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={
-                        **self.config_entry.data,
-                        CONF_HOST: data[CONF_HOST],
-                        CONF_USERNAME: data.get(CONF_USERNAME),
-                        CONF_PASSWORD: data.get(CONF_PASSWORD),
-                    },
-                )
-
-                # Return options via data parameter
-                # This triggers the update listener automatically
-                return self.async_create_entry(
-                    title="",
-                    data={CONF_SCAN_INTERVAL: user_input[CONF_SCAN_INTERVAL]},
-                )
-
-        # Pre-fill form with current values
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema({
                 vol.Required(
-                    CONF_HOST,
-                    default=self.config_entry.data.get(CONF_HOST, "")
-                ): str,
-                vol.Optional(
-                    CONF_USERNAME,
-                    default=self.config_entry.data.get(CONF_USERNAME, "")
-                ): str,
-                vol.Optional(
-                    CONF_PASSWORD,
-                    default=self.config_entry.data.get(CONF_PASSWORD, "")
-                ): str,
-                vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL,
-                        DEFAULT_SCAN_INTERVAL
+                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
                     ),
-                ): vol.All(
-                    vol.Coerce(int),
-                    vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL),
-                ),
+                ): vol.All(vol.Coerce(int), vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL)),
             }),
-            errors=errors,
         )
-
-
-@staticmethod
-def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
-    """Get the options flow for this handler."""
-    return OptionsFlowHandler()  # No parameters - base class injects config_entry
 ```
 
 **Options Flow Pattern:**
 
-1. **Base Class Property**: The base `OptionsFlow` class provides `self.config_entry` as a property. The framework sets it before calling `async_step_init()` - no manual initialization needed.
+1.  **Preference Management**: Handles settings that don't affect API connectivity, like `scan_interval`.
+2.  **Automatic Reload**: Returning `async_create_entry()` triggers the update listener, which reloads the integration to apply the new scan interval.
 
-2. **Options Flow Factory**: The `async_get_options_flow()` static method returns a new handler instance without parameters. The framework injects the `config_entry` property after instantiation but before any step methods are called.
+### 4. Reconfiguration Flow
 
-3. **Full Reconfiguration Support**: This options flow allows changing ALL settings (host, credentials, scan interval), not just preferences. This provides users with a single UI to update any aspect of the integration without needing separate reauth flows for credentials-only changes.
+The integration supports Home Assistant's native reconfiguration flow for updating connection details (host, username, password) if the device IP changes or credentials are updated.
 
-4. **Two-Stage Update Pattern**:
-   - **Stage 1**: Call `async_update_entry()` to update connection settings in `entry.data`
-   - **Stage 2**: Return `async_create_entry()` to update preferences in `entry.options`
+```python
+async def async_step_reconfigure(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    """Handle reconfiguration."""
+    # 1. Pre-fill form with current values
+    return self.async_show_form(
+        step_id="reconfigure_confirm",
+        data_schema=vol.Schema({
+            vol.Required(CONF_HOST, default=self._reconfigure_entry.data[CONF_HOST]): str,
+            # ... auth fields
+        }),
+    )
 
-   Both updates trigger the same reload mechanism via the update listener.
+async def async_step_reconfigure_confirm(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+    """Handle reconfiguration confirmation."""
+    # 2. Validate new connection details
+    # 3. Update entry and reload
+    return self.async_update_reload_and_abort(
+        self._reconfigure_entry,
+        data={...},
+        reason="reconfigure_successful",
+    )
+```
 
-5. **Data vs Options Storage**:
-   - `entry.data`: Connection settings (host, username, password) - critical for establishing API communication
-   - `entry.options`: User preferences (scan_interval) - tunable parameters that don't affect connectivity
+**Reconfiguration vs. Options:**
 
-   This separation allows the integration to handle both types of configuration changes through a unified interface while maintaining proper storage semantics.
+- **Reconfigure Flow**: Updates `entry.data` (connection settings). Critical for connectivity.
+- **Options Flow**: Updates `entry.options` (preferences). Tunable parameters.
 
-6. **Automatic Reload Trigger**: When `async_create_entry()` completes, Home Assistant detects the entry was modified (either `entry.data` or `entry.options` changed) and calls the update listener registered in `async_setup_entry()`. The listener triggers `async_reload_entry()`, which:
-   - Unloads all entity platforms
-   - Destroys the old coordinator (stops polling loop)
-   - Creates a new coordinator with updated settings
-   - Recreates all entities with the new coordinator
-
-   This happens automatically - the options flow doesn't need to explicitly call reload.
-
-### 4. Configuration Storage
+### 5. Configuration Storage
 
 Home Assistant stores configuration in two locations:
 
@@ -1103,19 +1065,14 @@ Home Assistant calls this function when the user removes the integration:
 ```python
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    # 1. Unload all platform entities
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # 2. Remove coordinator from storage
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok  # True if successful
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 ```
 
 **Cleanup Process:**
 
 1. **Platform Unloading**: `async_unload_platforms()` calls each platform's cleanup code. For entities inheriting from `CoordinatorEntity`, this automatically unsubscribes them from coordinator updates.
 
-2. **Coordinator Destruction**: Removing the coordinator from `hass.data` drops the last reference. Python's garbage collector then destroys the coordinator, which cancels its background polling task.
+2. **Coordinator Destruction**: With the `runtime_data` pattern, Home Assistant automatically clears the coordinator reference when the entry is unloaded. Python's garbage collector then destroys the coordinator, which cancels its background polling task. This eliminates the need for manual cleanup that was required with older `hass.data` storage patterns.
 
 3. **Session Management**: The aiohttp session is owned by Home Assistant (passed via `async_get_clientsession()`), so we don't close it. Home Assistant manages the session lifecycle globally.
 
@@ -1498,21 +1455,26 @@ STATUS_MAP: Final = {
 
 ## Testing Strategy
 
-The integration includes comprehensive test coverage (94%) across all components. Tests use mocks to avoid requiring real hardware, enabling fast and reliable CI/CD pipelines.
+The integration includes comprehensive test coverage (96%) across all components. Tests use mocks to avoid requiring real hardware, enabling fast and reliable CI/CD pipelines.
 
 ### Test Organization
 
 ```
 tests/
 ├── test_api.py                    # 26 tests - API client, HTTP communication, error handling
-├── test_config_flow.py            # 18 tests - Core config flow scenarios
-├── test_config_flow_additional.py # 8 tests - Edge cases and error scenarios
+├── test_config_flow.py            # 17 tests - Core config flow scenarios
+├── test_config_flow_additional.py # 5 tests - Edge cases and error scenarios
 ├── test_init.py                   # 13 tests - Coordinator, setup/teardown, control methods
 ├── test_naming.py                 # 2 tests - Device naming & fallback logic
-└── ...                            # Platform tests
+├── test_sensor.py                 # 1 test - Sensor entity values & attributes
+├── test_binary_sensor.py          # 1 test - Binary sensor state mapping
+├── test_number.py                 # 2 tests - Number entity values & control
+├── test_switch.py                 # 3 tests - Switch state & toggle commands
+├── test_diagnostics.py            # 1 test - Diagnostics data generation
+└── conftest.py                    # Shared fixtures and mocks
 ```
 
-**Total: 75 tests, 100% pass rate**
+**Total: 73 tests, 100% pass rate**
 
 ### Config Flow Test Coverage
 
@@ -1539,12 +1501,15 @@ The config flow tests cover all four flow types with comprehensive error handlin
 - Connection errors during reauth
 - Unknown exceptions during reauth
 
-**Options Flow (Settings Reconfiguration):**
+**Options Flow (Settings):**
 
-- Full reconfiguration (host + credentials + scan_interval)
-- Scan interval-only updates
-- Credential removal (empty credentials for non-auth devices)
-- All three error types (connection, authentication, unknown)
+- Scan interval updates
+
+**Reconfiguration Flow:**
+
+- Host/IP address updates
+- Credential updates
+- Connection validation
 
 ### Test Design Patterns
 
@@ -1817,6 +1782,8 @@ The NRGkick integration follows Home Assistant best practices with:
 
 **Key Implementation Patterns:**
 
+- ✅ Modern pattern: `entry.runtime_data` for coordinator storage (automatic cleanup)
+- ✅ Modern pattern: `has_entity_name = True` for automatic device-based entity naming
 - ✅ OptionsFlowHandler with base class `config_entry` property
 - ✅ Reauth flow uses `async_update_reload_and_abort()` helper method
 - ✅ Zeroconf discovery via `homeassistant.helpers.service_info.zeroconf`
@@ -1849,8 +1816,8 @@ The NRGkick integration follows Home Assistant best practices with:
 
 **Testing:**
 
-- 75 tests with 100% pass rate
-- 94% code coverage
+- 73 tests with 100% pass rate
+- 96% code coverage
 - Comprehensive config flow testing (26 tests covering all flows and error scenarios)
 - No real hardware required (full mock architecture)
 

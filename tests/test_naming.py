@@ -46,9 +46,12 @@ async def test_device_name_fallback(
     # With has_entity_name=True, if device name is "NRGkick",
     # entity ID should be sensor.nrgkick_total_active_power
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("sensor.nrgkick_total_active_power")
+    unique_id = f"{mock_info_data['general']['serial_number']}_total_active_power"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id
+    entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.original_name == "Total Active Power"
+    assert entry.translation_key == "total_active_power"
 
 
 @pytest.mark.requires_integration
@@ -87,6 +90,9 @@ async def test_device_name_custom(
     # With has_entity_name=True, if device name is "Garage Charger",
     # entity ID should be sensor.garage_charger_total_active_power
     entity_registry = er.async_get(hass)
-    entry = entity_registry.async_get("sensor.garage_charger_total_active_power")
+    unique_id = f"{mock_info_data['general']['serial_number']}_total_active_power"
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+    assert entity_id
+    entry = entity_registry.async_get(entity_id)
     assert entry
-    assert entry.original_name == "Total Active Power"
+    assert entry.translation_key == "total_active_power"

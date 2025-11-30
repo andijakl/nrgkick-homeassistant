@@ -25,6 +25,7 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 - **Network**: IP/MAC address, WiFi SSID/RSSI
 - **Device Info**: Connector details, grid info, firmware versions
 - **Session**: Connect time, charging time
+- **Localization**: Fully translated entity names and error messages (English/German)
 
 ### Controls
 
@@ -45,6 +46,20 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 - NRGkick Gen2 device with firmware >= SmartModule 4.0.0.0
 - Local network access to your NRGkick device
 - JSON API enabled in the NRGkick App (Extended → Local API)
+
+## Supported Devices
+
+- **NRGkick Gen2** (Smart Cable)
+- **Firmware Requirement**: SmartModule firmware 4.0.0.0 or newer
+
+_Note: NRGkick Gen1 (Bluetooth only) is not supported._
+
+## Known Limitations
+
+- **Polling Interval**: The minimum polling interval is 10 seconds to protect the device's internal flash memory and CPU.
+- **Phase-Specific Sensors**: Sensors for Phase 2 and Phase 3 (voltage, current, power) only report data when a 3-phase source is connected and active.
+- **Temperature Sensors**: Availability of specific temperature sensors (e.g., connector pins) depends on the attached connector attachment.
+- **Cloud Independence**: This integration works entirely locally. It does not access the NRGkick Cloud and cannot control cloud-specific features (like cloud-based charging reports).
 
 ## ⚠️ Upgrading from v1.x to v2.0.0
 
@@ -173,7 +188,7 @@ entities:
 **More Examples:**
 
 - **Automations**: See [`examples/automations.yaml`](examples/automations.yaml) for solar charging, time-based control, notifications, temperature protection, and more
-- **Dashboard Cards**: See [`examples/lovelace_cards.yaml`](examples/lovelace_cards.yaml) for status cards, gauges, graphs, mobile layouts, and custom cards
+- **Dashboard Cards**: See [`examples/dashboard.yaml`](examples/dashboard.yaml) for status cards, gauges, graphs, mobile layouts, and custom cards
 
 ## Troubleshooting
 

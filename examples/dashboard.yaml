@@ -1,4 +1,4 @@
-# Example Lovelace Dashboard Configurations for NRGkick
+# Example Dashboard Configurations for NRGkick
 
 # Copy these card configurations to your Home Assistant dashboard
 # Customize colors, icons, and layouts to match your theme
@@ -477,6 +477,98 @@ elements:
     style:
       bottom: 10%
       left: 25%
+
+# ============================================================================
+# PREMIUM CHARGING DASHBOARD (Visual & Interactive)
+# ============================================================================
+# This dashboard view combines visual elements with detailed data.
+# Requires:
+# - custom:mushroom-card
+# - custom:mini-graph-card
+# - custom:stack-in-card
+
+type: custom:stack-in-card
+cards:
+  # Header with Device Image and Status
+  - type: picture-elements
+    image: /local/nrgkick_device.png  # Replace with your device image
+    elements:
+      - type: state-badge
+        entity: sensor.nrgkick_charging_status
+        style:
+          top: 10%
+          right: 5%
+          '--label-badge-background-color': 'rgba(255, 255, 255, 0.8)'
+          '--label-badge-text-color': 'black'
+
+      - type: state-label
+        entity: sensor.nrgkick_total_active_power
+        style:
+          bottom: 10%
+          left: 50%
+          transform: translate(-50%, 0)
+          font-size: 24px
+          font-weight: bold
+          color: white
+          text-shadow: 1px 1px 2px black
+
+  # Active Session Data
+  - type: horizontal-stack
+    cards:
+      - type: custom:mushroom-entity-card
+        entity: sensor.nrgkick_current_session_energy
+        name: Energy
+        icon: mdi:lightning-bolt-circle
+        primary_info: state
+        secondary_info: name
+        icon_color: green
+
+      - type: custom:mushroom-entity-card
+        entity: sensor.nrgkick_vehicle_charging_time
+        name: Duration
+        icon: mdi:timer-outline
+        primary_info: state
+        secondary_info: name
+        icon_color: blue
+
+      - type: custom:mushroom-entity-card
+        entity: sensor.nrgkick_charging_rate
+        name: Rate
+        icon: mdi:speedometer
+        primary_info: state
+        secondary_info: name
+        icon_color: orange
+
+  # Phase Visualization (if 3-phase)
+  - type: horizontal-stack
+    cards:
+      - type: custom:mini-graph-card
+        entities:
+          - sensor.nrgkick_l1_active_power
+          - sensor.nrgkick_l2_active_power
+          - sensor.nrgkick_l3_active_power
+        name: Phase Load
+        height: 100
+        line_width: 2
+        show:
+          legend: true
+          fill: fade
+
+  # Controls
+  - type: horizontal-stack
+    cards:
+      - type: custom:mushroom-entity-card
+        entity: switch.nrgkick_charge_pause
+        name: Pause/Resume
+        layout: vertical
+        tap_action:
+          action: toggle
+
+      - type: custom:mushroom-number-card
+        entity: number.nrgkick_charging_current
+        name: Current Limit
+        layout: vertical
+        display_mode: slider
 
 # ============================================================================
 # NOTES

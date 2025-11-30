@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfElectricCurrent
+from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -38,7 +38,6 @@ async def async_setup_entry(
         NRGkickNumber(
             coordinator,
             key="current_set",
-            name="Charging Current",
             unit=UnitOfElectricCurrent.AMPERE,
             min_value=6.0,
             max_value=float(rated_current),
@@ -49,7 +48,6 @@ async def async_setup_entry(
         NRGkickNumber(
             coordinator,
             key="energy_limit",
-            name="Energy Limit (0 = No Limit)",
             unit="Wh",
             min_value=0,
             max_value=100000,
@@ -60,7 +58,6 @@ async def async_setup_entry(
         NRGkickNumber(
             coordinator,
             key="phase_count",
-            name="Phase Count",
             unit=None,
             min_value=1,
             max_value=3,
@@ -81,22 +78,23 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
         coordinator: NRGkickDataUpdateCoordinator,
         *,
         key: str,
-        name: str,
         unit: str | None,
         min_value: float,
         max_value: float,
         step: float,
         value_path: list[str],
         mode: NumberMode = NumberMode.BOX,
+        entity_category: EntityCategory | None = None,
     ) -> None:
         """Initialize the number entity."""
-        super().__init__(coordinator, key, name)
+        super().__init__(coordinator, key)
         self._attr_native_unit_of_measurement = unit
         self._attr_native_min_value = min_value
         self._attr_native_max_value = max_value
         self._attr_native_step = step
         self._attr_mode = mode
         self._value_path = value_path
+        self._attr_entity_category = entity_category
 
     @property
     def native_value(self) -> float | None:
@@ -119,5 +117,5 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
                 await self.coordinator.async_set_phase_count(int(value))
         except NRGkickApiClientError as err:
             raise HomeAssistantError(
-                f"Unable to update {self._attr_name}: {err}"
+                f"Unable to update {self._attr_translation_key}: {err}"
             ) from err

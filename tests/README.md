@@ -121,27 +121,27 @@ def mock_session():
 | Test Suite             | Count  | CI Status      | Local Status | Pass Rate |
 | ---------------------- | ------ | -------------- | ------------ | --------- |
 | API Tests              | 26     | ✅ PASS        | ✅ PASS      | 100%      |
-| Config Flow Tests      | 18     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Config Flow Additional | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| Config Flow Tests      | 19     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
+| Config Flow Additional | 5      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Coordinator Tests      | 13     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Naming Tests           | 2      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Platform Tests         | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| **Total**              | **75** | **26 pass**    | **75 pass**  | **100%**  |
+| **Total**              | **73** | **26 pass**    | **73 pass**  | **100%**  |
 
-**Note**: All 75 tests work in both environments. CI skips 49 integration tests for faster builds (runs in ~2s instead of ~5s).
+**Note**: All 73 tests work in both environments. CI skips 47 integration tests for faster builds (runs in ~2s instead of ~5s).
 
 ### GitHub Actions (CI)
 
 ```
 ✅ 26 tests pass (non-integration only for speed)
-⏭️ 49 tests skipped (integration tests - work but skipped for fast CI)
+⏭️ 47 tests skipped (integration tests - work but skipped for fast CI)
 ❌ 0 tests fail
 ```
 
 ### Local Development (Full Suite)
 
 ```
-✅ 75 tests pass (all tests including integration)
+✅ 73 tests pass (all tests including integration)
 ❌ 0 tests fail
 ⏭️ 0 tests skipped
 ```
@@ -179,7 +179,7 @@ def mock_session():
 | `test_api_no_retry_client`      | ✅     | No retry for 4xx errors           |
 | `test_api_retry_backoff`        | ✅     | Exponential backoff timing        |
 
-#### Config Flow Tests (`test_config_flow.py`) - 18/18 ✅ PASSING
+#### Config Flow Tests (`test_config_flow.py`) - 19/19 ✅ PASSING
 
 | Test                                    | CI   | What It Tests                  |
 | --------------------------------------- | ---- | ------------------------------ |
@@ -202,20 +202,18 @@ def mock_session():
 | `test_zeroconf_cannot_connect`          | SKIP | Zeroconf connection errors     |
 | `test_zeroconf_fallback_to_model_type`  | SKIP | Fallback naming logic          |
 
-#### Config Flow Additional Tests (`test_config_flow_additional.py`) - 8/8 ✅ PASSING
+#### Config Flow Additional Tests (`test_config_flow_additional.py`) - 5/5 ✅ PASSING
 
 Tests covering edge cases and error scenarios:
 
-| Test                                        | CI   | What It Tests                            |
-| ------------------------------------------- | ---- | ---------------------------------------- |
-| `test_reauth_flow_invalid_auth`             | SKIP | Reauth with wrong credentials            |
-| `test_reauth_flow_unknown_exception`        | SKIP | Reauth unexpected error handling         |
-| `test_options_flow_unknown_exception`       | SKIP | Options flow unexpected error handling   |
-| `test_options_flow_scan_interval_only`      | SKIP | Update only scan_interval                |
-| `test_options_flow_with_empty_credentials`  | SKIP | Remove credentials (set to empty)        |
-| `test_zeroconf_discovery_invalid_auth`      | SKIP | Zeroconf auth error during confirmation  |
-| `test_zeroconf_discovery_unknown_exception` | SKIP | Zeroconf unexpected error handling       |
-| `test_zeroconf_fallback_to_default_name`    | SKIP | Fallback to "NRGkick" when names missing |
+| Test                                     | CI   | What It Tests                            |
+| ---------------------------------------- | ---- | ---------------------------------------- |
+| `test_reauth_flow_invalid_auth`          | SKIP | Reauth with wrong credentials            |
+| `test_reauth_flow_unknown_exception`     | SKIP | Reauth unexpected error handling         |
+| `test_options_flow_unknown_exception`    | SKIP | Options flow unexpected error handling   |
+| `test_options_flow_scan_interval_only`   | SKIP | Update only scan_interval                |
+| `test_zeroconf_discovery_invalid_auth`   | SKIP | Zeroconf auth error during confirmation  |
+| `test_zeroconf_fallback_to_default_name` | SKIP | Fallback to "NRGkick" when names missing |
 
 #### Integration Tests (`test_init.py`) - 13/13 ✅ PASSING
 
@@ -662,7 +660,7 @@ This ensures compatibility with the latest Home Assistant versions that require 
 
 **Notes:**
 
-- **Overall**: Exceeds Silver Tier requirement (>95%) with 96% coverage
+- **Overall**: Achieves 96% coverage (exceeds 95% goal)
 - **Platforms**: All entity platforms have 97%+ coverage including error paths
 - **Diagnostics**: Full coverage for diagnostics data generation
 - **Constants**: Full coverage for all constant definitions
@@ -735,8 +733,8 @@ Potential enhancements to the testing strategy:
 
 ---
 
-**Last Updated**: November 19, 2025
-**Test Suite Version**: 3.3.0
+**Last Updated**: November 26, 2025
+**Test Suite Version**: 3.5.0
 **Python Version**: 3.13
 **Maintainer**: @andijakl
-**Status**: All 75 Tests Passing (96% Coverage)
+**Status**: All 73 Tests Passing (96% Coverage)

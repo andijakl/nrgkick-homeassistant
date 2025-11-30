@@ -35,8 +35,19 @@ async def test_number_entities(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+    # Helper to get entity_id by unique ID
+    from homeassistant.helpers import entity_registry as er
+
+    entity_registry = er.async_get(hass)
+
+    def get_entity_id_by_key(key):
+        unique_id = f"TEST123456_{key}"
+        return entity_registry.async_get_entity_id("number", "nrgkick", unique_id)
+
     # 1. Current Set
-    state = hass.states.get("number.nrgkick_test_charging_current")
+    entity_id = get_entity_id_by_key("current_set")
+    assert entity_id
+    state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 16.0
     assert state.attributes["min"] == 6.0
@@ -48,19 +59,21 @@ async def test_number_entities(
     await hass.services.async_call(
         "number",
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.nrgkick_test_charging_current", "value": 10.0},
+        {ATTR_ENTITY_ID: entity_id, "value": 10.0},
         blocking=True,
     )
 
     mock_nrgkick_api.set_current.assert_called_once_with(10.0)
 
     # Verify state update (coordinator should update)
-    state = hass.states.get("number.nrgkick_test_charging_current")
+    state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 10.0
 
     # 2. Energy Limit
-    state = hass.states.get("number.nrgkick_test_energy_limit_0_no_limit")
+    entity_id = get_entity_id_by_key("energy_limit")
+    assert entity_id
+    state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 0.0
 
@@ -70,17 +83,19 @@ async def test_number_entities(
     await hass.services.async_call(
         "number",
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.nrgkick_test_energy_limit_0_no_limit", "value": 5000},
+        {ATTR_ENTITY_ID: entity_id, "value": 5000},
         blocking=True,
     )
 
     mock_nrgkick_api.set_energy_limit.assert_called_once_with(5000)
-    state = hass.states.get("number.nrgkick_test_energy_limit_0_no_limit")
+    state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 5000.0
 
     # 3. Phase Count
-    state = hass.states.get("number.nrgkick_test_phase_count")
+    entity_id = get_entity_id_by_key("phase_count")
+    assert entity_id
+    state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 3.0
 
@@ -90,12 +105,12 @@ async def test_number_entities(
     await hass.services.async_call(
         "number",
         SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: "number.nrgkick_test_phase_count", "value": 1},
+        {ATTR_ENTITY_ID: entity_id, "value": 1},
         blocking=True,
     )
 
     mock_nrgkick_api.set_phase_count.assert_called_once_with(1)
-    state = hass.states.get("number.nrgkick_test_phase_count")
+    state = hass.states.get(entity_id)
     assert state
     assert float(state.state) == 1.0
 
@@ -125,10 +140,18 @@ async def test_number_set_value_error(
     # Mock error
     mock_nrgkick_api.set_current.side_effect = NRGkickApiClientError("API Error")
 
+    # Helper to get entity_id by unique ID
+    from homeassistant.helpers import entity_registry as er
+
+    entity_registry = er.async_get(hass)
+    unique_id = "TEST123456_current_set"
+    entity_id = entity_registry.async_get_entity_id("number", "nrgkick", unique_id)
+    assert entity_id
+
     with pytest.raises(HomeAssistantError, match="Unable to update"):
         await hass.services.async_call(
             "number",
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.nrgkick_test_charging_current", "value": 10.0},
+            {ATTR_ENTITY_ID: entity_id, "value": 10.0},
             blocking=True,
         )

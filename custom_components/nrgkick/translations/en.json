@@ -1,82 +1,288 @@
 {
     "config": {
+        "abort": {
+            "already_configured": "Device is already configured",
+            "reauth_successful": "Re-authentication was successful",
+            "reconfigure_successful": "Reconfiguration was successful"
+        },
+        "error": {
+            "cannot_connect": "Cannot connect to the NRGkick device. Test the connection using a browser: http://{device_ip}/info",
+            "invalid_auth": "Invalid authentication",
+            "unknown": "Unexpected error"
+        },
         "step": {
             "user": {
-                "title": "Connect to NRGkick",
-                "description": "Enter the connection details for your NRGkick device.\n\nUsername and password are only required if BasicAuth is enabled in the NRGkick mobile app (Extended → Local API → Authentication (JSON)).\n\nFor setup instructions, see: https://github.com/andijakl/nrgkick-homeassistant#configuration",
                 "data": {
-                    "host": "IP Address or Hostname",
-                    "username": "Username (optional)",
-                    "password": "Password (optional)"
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
                 },
-                "data_description": {
-                    "host": "IP address (e.g., 192.168.1.100) or hostname (e.g., nrgkick.local)",
-                    "username": "Only needed if BasicAuth is enabled on the device",
-                    "password": "Only needed if BasicAuth is enabled on the device"
-                }
-            },
-            "zeroconf_confirm": {
-                "title": "Discovered NRGkick: {name}",
-                "description": "A NRGkick device was discovered on your network.\n\nUsername and password are only required if BasicAuth is enabled in the NRGkick mobile app (Extended → Local API → Authentication (JSON)). Leave empty if BasicAuth is not enabled.\n\nFor more information, see: https://github.com/andijakl/nrgkick-homeassistant#configuration",
-                "data": {
-                    "username": "Username (optional)",
-                    "password": "Password (optional)"
-                },
-                "data_description": {
-                    "username": "Only needed if BasicAuth is enabled on the device",
-                    "password": "Only needed if BasicAuth is enabled on the device"
-                }
+                "description": "Set up your NRGkick device. Ensure the device is powered on and reachable on the network."
             },
             "reauth_confirm": {
-                "title": "Reauthenticate NRGkick",
-                "description": "The authentication failed. Please verify your credentials.\n\nCredentials are configured in the NRGkick mobile app: Extended → Local API → Authentication (JSON).\n\nFor troubleshooting, see: https://github.com/andijakl/nrgkick-homeassistant#troubleshooting",
                 "data": {
-                    "username": "Username",
-                    "password": "Password"
+                    "password": "Password",
+                    "username": "Username"
                 },
-                "data_description": {
-                    "username": "Username configured in the NRGkick mobile app",
-                    "password": "Password configured in the NRGkick mobile app"
-                }
+                "description": "Please update your credentials for {host}."
+            },
+            "reconfigure_confirm": {
+                "data": {
+                    "host": "Host",
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "description": "Update configuration for {host}."
             }
-        },
-        "error": {
-            "cannot_connect": "Cannot connect to the NRGkick device. Verify: (1) The device is powered on and the LED is active, (2) The IP address is correct (you can ping it from a computer), (3) Home Assistant and the NRGkick are on the same network/VLAN, (4) The JSON API is enabled in the NRGkick app (Extended → Local API → JSON API), (5) No firewall is blocking port 80. Check Home Assistant logs for detailed error messages.",
-            "invalid_auth": "Authentication failed. Verify that: (1) BasicAuth is enabled in the NRGkick app (Extended → Local API → Authentication (JSON)), (2) The username and password match exactly what is configured in the app (case-sensitive), (3) You can access http://{device_ip}/info with these credentials in a browser. If the problem persists, try disabling and re-enabling BasicAuth in the NRGkick app.",
-            "unknown": "An unexpected error occurred during setup. Check the Home Assistant logs (Settings → System → Logs) for detailed error information. Common causes: network issues, device firmware incompatibility, or temporary device unavailability. Try: (1) Restarting the NRGkick device, (2) Verifying network connectivity, (3) Checking the device firmware is up to date."
-        },
-        "abort": {
-            "already_configured": "This device is already configured.",
-            "reauth_successful": "Reauthentication was successful.",
-            "reauth_failed": "Reauthentication failed. Please remove and re-add the integration.",
-            "json_api_disabled": "The JSON API is not enabled on this NRGkick device. Please enable it in the NRGkick app.",
-            "no_serial_number": "Could not determine the serial number of the discovered device."
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "title": "Reconfigure NRGkick Connection",
-                "description": "Update the connection details for your NRGkick device. The integration will restart after saving.\n\nUsername and password are only required if BasicAuth is enabled in the NRGkick mobile app (Extended → Local API → Authentication (JSON)).",
-                "data": {
-                    "host": "IP Address or Hostname",
-                    "username": "Username (optional)",
-                    "password": "Password (optional)",
-                    "scan_interval": "Scan Interval (seconds)"
-                },
-                "data_description": {
-                    "host": "IP address or hostname of your NRGkick device",
-                    "username": "Only needed if BasicAuth is enabled on the device",
-                    "password": "Only needed if BasicAuth is enabled on the device",
-                    "scan_interval": "How often to poll the device for updates (10-300 seconds, default: 30)"
-                }
+    "entity": {
+        "sensor": {
+            "rated_current": {
+                "name": "Rated current"
+            },
+            "connector_phase_count": {
+                "name": "Connector phase count"
+            },
+            "connector_max_current": {
+                "name": "Connector max current"
+            },
+            "connector_type": {
+                "name": "Connector type"
+            },
+            "connector_serial": {
+                "name": "Connector serial"
+            },
+            "grid_voltage": {
+                "name": "Grid voltage"
+            },
+            "grid_frequency": {
+                "name": "Grid frequency"
+            },
+            "grid_phases": {
+                "name": "Grid phases"
+            },
+            "network_ip_address": {
+                "name": "IP address"
+            },
+            "network_mac_address": {
+                "name": "MAC address"
+            },
+            "network_ssid": {
+                "name": "SSID"
+            },
+            "network_rssi": {
+                "name": "Signal strength"
+            },
+            "versions_sw_sm": {
+                "name": "Software version"
+            },
+            "versions_hw_sm": {
+                "name": "Hardware version"
+            },
+            "current_set": {
+                "name": "Charging current set"
+            },
+            "charge_pause": {
+                "name": "Charge pause"
+            },
+            "energy_limit": {
+                "name": "Energy limit"
+            },
+            "phase_count": {
+                "name": "Phase count"
+            },
+            "total_charged_energy": {
+                "name": "Total charged energy"
+            },
+            "charged_energy": {
+                "name": "Charged energy"
+            },
+            "charging_voltage": {
+                "name": "Charging voltage"
+            },
+            "charging_current": {
+                "name": "Charging current"
+            },
+            "powerflow_grid_frequency": {
+                "name": "Powerflow grid frequency"
+            },
+            "peak_power": {
+                "name": "Peak power"
+            },
+            "total_active_power": {
+                "name": "Total active power"
+            },
+            "total_reactive_power": {
+                "name": "Total reactive power"
+            },
+            "total_apparent_power": {
+                "name": "Total apparent power"
+            },
+            "total_power_factor": {
+                "name": "Total power factor"
+            },
+            "l1_voltage": {
+                "name": "L1 voltage"
+            },
+            "l1_current": {
+                "name": "L1 current"
+            },
+            "l1_active_power": {
+                "name": "L1 active power"
+            },
+            "l1_reactive_power": {
+                "name": "L1 reactive power"
+            },
+            "l1_apparent_power": {
+                "name": "L1 apparent power"
+            },
+            "l1_power_factor": {
+                "name": "L1 power factor"
+            },
+            "l2_voltage": {
+                "name": "L2 voltage"
+            },
+            "l2_current": {
+                "name": "L2 current"
+            },
+            "l2_active_power": {
+                "name": "L2 active power"
+            },
+            "l2_reactive_power": {
+                "name": "L2 reactive power"
+            },
+            "l2_apparent_power": {
+                "name": "L2 apparent power"
+            },
+            "l2_power_factor": {
+                "name": "L2 power factor"
+            },
+            "l3_voltage": {
+                "name": "L3 voltage"
+            },
+            "l3_current": {
+                "name": "L3 current"
+            },
+            "l3_active_power": {
+                "name": "L3 active power"
+            },
+            "l3_reactive_power": {
+                "name": "L3 reactive power"
+            },
+            "l3_apparent_power": {
+                "name": "L3 apparent power"
+            },
+            "l3_power_factor": {
+                "name": "L3 power factor"
+            },
+            "n_current": {
+                "name": "Neutral current"
+            },
+            "charging_rate": {
+                "name": "Charging rate"
+            },
+            "vehicle_connect_time": {
+                "name": "Vehicle connect time"
+            },
+            "vehicle_charging_time": {
+                "name": "Vehicle charging time"
+            },
+            "status": {
+                "name": "Status"
+            },
+            "charge_permitted": {
+                "name": "Charge permitted"
+            },
+            "relay_state": {
+                "name": "Relay state"
+            },
+            "charge_count": {
+                "name": "Charge count"
+            },
+            "rcd_trigger": {
+                "name": "RCD trigger"
+            },
+            "warning_code": {
+                "name": "Warning code"
+            },
+            "error_code": {
+                "name": "Error code"
+            },
+            "housing_temperature": {
+                "name": "Housing temperature"
+            },
+            "connector_l1_temperature": {
+                "name": "Connector L1 temperature"
+            },
+            "connector_l2_temperature": {
+                "name": "Connector L2 temperature"
+            },
+            "connector_l3_temperature": {
+                "name": "Connector L3 temperature"
+            },
+            "domestic_plug_1_temperature": {
+                "name": "Domestic plug 1 temperature"
+            },
+            "domestic_plug_2_temperature": {
+                "name": "Domestic plug 2 temperature"
             }
         },
-        "error": {
-            "cannot_connect": "Cannot connect to the NRGkick device with the new settings. Please verify: (1) The IP address/hostname is correct and reachable, (2) The JSON API is still enabled on the device, (3) If you changed authentication settings, the credentials match the device configuration. Test the connection using a browser: http://{device_ip}/info",
-            "invalid_auth": "Authentication failed with the new credentials. Ensure that: (1) BasicAuth is enabled in the NRGkick app if you're providing credentials, (2) The username and password match exactly (case-sensitive), (3) You haven't changed the credentials in the app without updating them here. Try accessing http://{device_ip}/info in a browser with these credentials to verify.",
-            "invalid_scan_interval": "Scan interval must be between 10 and 300 seconds. Lower values provide more frequent updates but increase network traffic and device load. The recommended range is 20-60 seconds for most use cases.",
-            "unknown": "An unexpected error occurred while saving the new settings. Check the logs (Settings → System → Logs) for details. The integration was not changed - your previous settings are still active. Common issues: temporary network problems, device busy/rebooting, or firmware issues."
+        "binary_sensor": {
+            "charging": {
+                "name": "Charging"
+            },
+            "charge_permitted": {
+                "name": "Charge permitted"
+            },
+            "charge_pause": {
+                "name": "Charge pause"
+            }
+        },
+        "switch": {
+            "charge_pause": {
+                "name": "Charge pause"
+            }
+        },
+        "number": {
+            "current_set": {
+                "name": "Charging current"
+            },
+            "energy_limit": {
+                "name": "Energy limit"
+            },
+            "phase_count": {
+                "name": "Phase count"
+            }
+        }
+    },
+    "exceptions": {
+        "unknown_error": {
+            "message": "An unknown error occurred."
+        },
+        "communication_error": {
+            "message": "Communication error with NRGkick device: {error}"
+        },
+        "authentication_error": {
+            "message": "Authentication failed. Please check your credentials."
+        },
+        "auth_failure": {
+            "message": "Authentication failed (HTTP {status_code}). Verify BasicAuth settings. Target: {url}"
+        },
+        "connection_timeout": {
+            "message": "Connection timeout after {attempts} attempts. Check power and network. Target: {url}"
+        },
+        "http_error": {
+            "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
+        },
+        "connection_failed": {
+            "message": "Network connection failed: {error_details}. Target: {url}"
+        },
+        "generic_error": {
+            "message": "Connection failed: {error_details}. Target: {url}"
+        },
+        "set_failed": {
+            "message": "Failed to set {target} to {value}."
         }
     }
 }
