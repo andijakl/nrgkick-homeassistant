@@ -1455,21 +1455,26 @@ STATUS_MAP: Final = {
 
 ## Testing Strategy
 
-The integration includes comprehensive test coverage (94%) across all components. Tests use mocks to avoid requiring real hardware, enabling fast and reliable CI/CD pipelines.
+The integration includes comprehensive test coverage (96%) across all components. Tests use mocks to avoid requiring real hardware, enabling fast and reliable CI/CD pipelines.
 
 ### Test Organization
 
 ```
 tests/
 ├── test_api.py                    # 26 tests - API client, HTTP communication, error handling
-├── test_config_flow.py            # 18 tests - Core config flow scenarios
-├── test_config_flow_additional.py # 8 tests - Edge cases and error scenarios
+├── test_config_flow.py            # 17 tests - Core config flow scenarios
+├── test_config_flow_additional.py # 5 tests - Edge cases and error scenarios
 ├── test_init.py                   # 13 tests - Coordinator, setup/teardown, control methods
 ├── test_naming.py                 # 2 tests - Device naming & fallback logic
-└── ...                            # Platform tests
+├── test_sensor.py                 # 1 test - Sensor entity values & attributes
+├── test_binary_sensor.py          # 1 test - Binary sensor state mapping
+├── test_number.py                 # 2 tests - Number entity values & control
+├── test_switch.py                 # 3 tests - Switch state & toggle commands
+├── test_diagnostics.py            # 1 test - Diagnostics data generation
+└── conftest.py                    # Shared fixtures and mocks
 ```
 
-**Total: 75 tests, 100% pass rate**
+**Total: 73 tests, 100% pass rate**
 
 ### Config Flow Test Coverage
 

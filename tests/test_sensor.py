@@ -135,16 +135,12 @@ async def test_sensor_entities(
     assert state
     assert float(state.state) == 32.0
 
-    # If it existed before, I might have removed it or renamed it.
-    # Let's check if I can find a similar sensor.
-    # 5. Control Sensor (Set Current)
-    # Note: This sensor might not exist anymore if it was redundant with the number entity
-    # or if its key changed. Checking sensor.py...
-    # It seems there is no sensor for "current_set", only a number entity.
-    # There is "charging_current" (measured) and "rated_current".
-    # The test was checking "sensor.nrgkick_test_set_current".
-    # Maybe it was "charging_current"?
-    # Let's assume it was removed or I should check "charging_current".
-    state = hass.states.get("sensor.nrgkick_test_charging_current")
+    # 5. Charging Current (measured)
+    state = get_state_by_key("charging_current")
+    assert state
+    assert float(state.state) == 16.0
+
+    # 6. Set Current (from control data - separate from the number entity)
+    state = get_state_by_key("current_set")
     assert state
     assert float(state.state) == 16.0

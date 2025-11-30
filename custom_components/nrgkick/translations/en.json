@@ -265,6 +265,24 @@
         },
         "authentication_error": {
             "message": "Authentication failed. Please check your credentials."
+        },
+        "auth_failure": {
+            "message": "Authentication failed (HTTP {status_code}). Verify BasicAuth settings. Target: {url}"
+        },
+        "connection_timeout": {
+            "message": "Connection timeout after {attempts} attempts. Check power and network. Target: {url}"
+        },
+        "http_error": {
+            "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
+        },
+        "connection_failed": {
+            "message": "Network connection failed: {error_details}. Target: {url}"
+        },
+        "generic_error": {
+            "message": "Connection failed: {error_details}. Target: {url}"
+        },
+        "set_failed": {
+            "message": "Failed to set {target} to {value}."
         }
     }
 }
