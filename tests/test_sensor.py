@@ -139,3 +139,8 @@ async def test_sensor_entities(
     state = get_state_by_key("charging_current")
     assert state
     assert float(state.state) == 16.0
+
+    # 6. Set Current (from control data - separate from the number entity)
+    state = get_state_by_key("current_set")
+    assert state
+    assert float(state.state) == 16.0

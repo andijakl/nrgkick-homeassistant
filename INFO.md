@@ -173,11 +173,12 @@ Run validation: `./validate.sh` (pre-commit + pytest)
 
 **Test suite**: 73 tests with 96% coverage
 
-- API tests: 26 (93% coverage)
-- Config flow tests: 24 (98% coverage)
-- Coordinator tests: 13 (96% coverage)
-- Platform tests: 8 (97-100% coverage)
+- API tests: 26 (94% coverage)
+- Config flow tests: 24 (95% coverage)
+- Coordinator tests: 13 (95% coverage)
+- Platform tests: 7 (97-100% coverage)
 - Naming tests: 2 (100% coverage)
+- Diagnostics tests: 1 (100% coverage)
 
 ## Performance Characteristics
 
