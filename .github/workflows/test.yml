@@ -29,9 +29,9 @@ jobs:
 
       - name: Run tests with pytest
         run: |
-          # Run non-integration tests only for faster CI
-          # Integration tests work locally with: ./run-tests.sh all
-          pytest tests/ -v -m "not requires_integration" --cov=custom_components.nrgkick --cov-report=xml --cov-report=term
+          # Run all tests including integration tests
+          # pytest-homeassistant-custom-component provides full HA test environment
+          pytest tests/ -v --cov=custom_components.nrgkick --cov-report=xml --cov-report=term
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
