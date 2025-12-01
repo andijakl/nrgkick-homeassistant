@@ -201,6 +201,10 @@ stateDiagram-v2
     Running --> Reauth: 401 Auth Error
     Reauth --> ReauthFlow: Update credentials
     ReauthFlow --> Running: async_reload_entry()
+
+    Running --> Reconfigure: User reconfigures
+    Reconfigure --> ReconfigureFlow: Update host/auth
+    ReconfigureFlow --> Running: async_reload_entry()
 ```
 
 ### 3. Setup Entry (`__init__.py::async_setup_entry`)
@@ -604,27 +608,27 @@ graph LR
     end
 
     subgraph "Sensors (80+)"
-        S1[Total Power]
-        S2[L1 Voltage]
-        S3[Charging Status]
-        S4[Energy Total]
-        S5[Temperature]
+        S1[total_active_power]
+        S2[l1_voltage]
+        S3[charging_status]
+        S4[total_energy]
+        S5[housing_temperature]
     end
 
     subgraph "Binary Sensors (3)"
-        B1[Charging Active]
-        B2[Charge Permitted]
-        B3[Pause State]
+        B1[charging]
+        B2[charge_permitted]
+        B3[charge_pause]
     end
 
     subgraph "Switches (1)"
-        SW1[Charge Pause]
+        SW1[charge_pause]
     end
 
     subgraph "Numbers (3)"
-        N1[Charging Current]
-        N2[Energy Limit]
-        N3[Phase Count]
+        N1[charging_current]
+        N2[energy_limit]
+        N3[phase_count]
     end
 
     CD --> S1
@@ -1388,6 +1392,7 @@ custom_components/nrgkick/
 ├── api.py                      # HTTP client, API methods
 ├── config_flow.py              # UI configuration, validation, options
 ├── const.py                    # Constants (domain, status map, intervals)
+├── icons.json                  # Default icon mapping
 ├── manifest.json               # Integration metadata
 │
 ├── sensor.py                   # 80+ sensor entities
@@ -1474,17 +1479,20 @@ tests/
 └── conftest.py                    # Shared fixtures and mocks
 ```
 
-**Total: 73 tests, 100% pass rate**
+**Total:**
+
+- API tests: `test_api.py`
+- Config flow tests: `test_config_flow.py`, `test_config_flow_additional.py`
+- Coordinator tests: `test_init.py`
+- Platform tests: `test_sensor.py`, `test_switch.py`, `test_number.py`, `test_binary_sensor.py`
+- Naming tests: `test_naming.py`
+- Diagnostics tests: `test_diagnostics.py`
 
 ### Config Flow Test Coverage
 
 The config flow tests cover all four flow types with comprehensive error handling:
 
 **User Flow (Manual Setup):**
-
-- Successful setup with/without credentials
-- Connection failures, authentication errors, unknown exceptions
-- Duplicate device detection (unique ID system)
 
 **Zeroconf Flow (mDNS Discovery):**
 

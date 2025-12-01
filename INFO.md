@@ -12,6 +12,7 @@ custom_components/nrgkick/
 ├── config_flow.py        # UI flows (user, zeroconf, reauth, reconfigure, options)
 ├── const.py              # Constants, STATUS_MAP, entity definitions
 ├── diagnostics.py        # Diagnostics provider
+├── icons.json            # Default icon mapping
 ├── manifest.json         # Integration metadata
 ├── number.py             # 3 number controls
 ├── sensor.py             # 80+ sensors
