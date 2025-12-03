@@ -234,6 +234,10 @@ echo -e "${GREEN}[OK] Cleaned up temp directory${NC}"
 # Get file size
 FILE_SIZE_KB=$(du -k "$ZIP_PATH" | cut -f1)
 
+# Determine the release branch name
+RELEASE_BRANCH="Version${VERSION}"
+CURRENT_BRANCH=$(git branch --show-current)
+
 # Summary
 echo ""
 echo -e "${YELLOW}================================================${NC}"
@@ -247,6 +251,37 @@ echo -e "${WHITE}  Size:     $FILE_SIZE_KB KB${NC}"
 echo ""
 echo -e "${YELLOW}================================================${NC}"
 echo ""
+
+# Check if we're on the correct release branch
+if [ "$CURRENT_BRANCH" = "$RELEASE_BRANCH" ]; then
+    echo -e "${GREEN}✓ Already on release branch: $RELEASE_BRANCH${NC}"
+    echo ""
+else
+    echo -e "${YELLOW}Current branch: $CURRENT_BRANCH${NC}"
+    echo -e "${YELLOW}Expected release branch: $RELEASE_BRANCH${NC}"
+    echo ""
+
+    # Check if the release branch exists
+    if git show-ref --verify --quiet refs/heads/"$RELEASE_BRANCH"; then
+        echo -e "${CYAN}Release branch '$RELEASE_BRANCH' exists.${NC}"
+        read -p "Switch to it? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            git checkout "$RELEASE_BRANCH"
+            echo -e "${GREEN}[OK] Switched to $RELEASE_BRANCH${NC}"
+        fi
+    else
+        echo -e "${CYAN}Release branch '$RELEASE_BRANCH' does not exist.${NC}"
+        read -p "Create and switch to it? (y/n) " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            git checkout -b "$RELEASE_BRANCH"
+            echo -e "${GREEN}[OK] Created and switched to $RELEASE_BRANCH${NC}"
+        fi
+    fi
+    echo ""
+fi
+
 echo -e "${CYAN}Next steps:${NC}"
 echo ""
 echo "  1. Test the release package by installing it in Home Assistant"
@@ -254,13 +289,23 @@ echo ""
 echo "  2. Run full validation including integration tests (optional):"
 echo "     ./validate.sh"
 echo ""
-echo "  3. If everything works, commit and tag the release:"
+echo "  3. If everything works, commit and push the release branch:"
 echo "     git add ."
 echo "     git commit -m 'Release $VERSION_TAG'"
-echo "     git tag -a $VERSION_TAG -m 'Release $VERSION_TAG'"
-echo "     git push origin main --tags"
+echo "     git push origin $RELEASE_BRANCH"
 echo ""
-echo "  4. Create GitHub release:"
+echo "  4. Create a Pull Request on GitHub:"
+echo "     - Go to: https://github.com/andijakl/nrgkick-homeassistant/compare/main...$RELEASE_BRANCH"
+echo "     - Review changes and create PR"
+echo "     - Merge PR after review/approval"
+echo ""
+echo "  5. After PR is merged, tag the release on main:"
+echo "     git checkout main"
+echo "     git pull origin main"
+echo "     git tag -a $VERSION_TAG -m 'Release $VERSION_TAG'"
+echo "     git push origin --tags"
+echo ""
+echo "  6. Create GitHub release:"
 echo "     - Go to: https://github.com/andijakl/nrgkick-homeassistant/releases/new"
 echo "     - Select tag: $VERSION_TAG"
 echo "     - Upload: $RELEASES_DIR/$ZIP_FILE_NAME"

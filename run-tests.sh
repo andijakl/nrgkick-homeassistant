@@ -34,9 +34,17 @@ show_help() {
 
 check_venv() {
     if [[ -z "$VIRTUAL_ENV" ]]; then
-        echo -e "${YELLOW}Warning: Virtual environment not activated${NC}"
-        echo "Consider running: source venv/bin/activate"
-        echo ""
+        if [ -d "venv" ]; then
+            echo -e "${YELLOW}Activating virtual environment...${NC}"
+            source venv/bin/activate
+            echo -e "${GREEN}[OK] Virtual environment activated${NC}"
+            echo ""
+        else
+            echo -e "${RED}Error: Virtual environment not found at ./venv${NC}"
+            echo "Create one with: python3 -m venv venv"
+            echo "Then install dependencies: pip install -r requirements_dev.txt"
+            exit 1
+        fi
     fi
 }
 
