@@ -5,7 +5,6 @@ from typing import Final
 DOMAIN: Final = "nrgkick"
 
 # Configuration
-CONF_HOST: Final = "host"
 CONF_SCAN_INTERVAL: Final = "scan_interval"
 
 # Default values
@@ -18,7 +17,8 @@ ENDPOINT_INFO: Final = "/info"
 ENDPOINT_CONTROL: Final = "/control"
 ENDPOINT_VALUES: Final = "/values"
 
-# Charging Status
+# Charging Status Constants
+# These map to the numeric values returned by the API's status field
 STATUS_UNKNOWN: Final = 0
 STATUS_STANDBY: Final = 1
 STATUS_CONNECTED: Final = 2
@@ -26,18 +26,12 @@ STATUS_CHARGING: Final = 3
 STATUS_ERROR: Final = 6
 STATUS_WAKEUP: Final = 7
 
+# Human-readable status mapping for the status sensor
 STATUS_MAP: Final = {
-    0: "Unknown",
-    1: "Standby",
-    2: "Connected",
-    3: "Charging",
-    6: "Error",
-    7: "Wakeup",
+    STATUS_UNKNOWN: "Unknown",
+    STATUS_STANDBY: "Standby",
+    STATUS_CONNECTED: "Connected",
+    STATUS_CHARGING: "Charging",
+    STATUS_ERROR: "Error",
+    STATUS_WAKEUP: "Wakeup",
 }
-
-# Attributes
-ATTR_STATUS: Final = "status"
-ATTR_POWER: Final = "power"
-ATTR_CURRENT: Final = "current"
-ATTR_VOLTAGE: Final = "voltage"
-ATTR_ENERGY: Final = "energy"

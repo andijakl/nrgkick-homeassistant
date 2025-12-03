@@ -197,6 +197,17 @@ entities:
 
 ## Technical Details
 
+### Entity Design
+
+Some device states are exposed through multiple entity types to support different use cases:
+
+| State                | Entity Types                        | Purpose                                                                                       |
+| -------------------- | ----------------------------------- | --------------------------------------------------------------------------------------------- |
+| **Charge Pause**     | `sensor`, `binary_sensor`, `switch` | Sensor shows raw API value, binary sensor for automations conditions, switch for user control |
+| **Charge Permitted** | `sensor`, `binary_sensor`           | Sensor shows raw value, binary sensor for easy boolean checks                                 |
+
+This design provides flexibility: use the switch in dashboards for user control, use binary sensors in automation conditions, and use sensors when you need the raw numeric value for templates.
+
 ### API
 
 Uses the official [NRGkick Gen2 Local REST JSON API](https://www.nrgkick.com/wp-content/uploads/2024/12/local_api_docu_simulate-1.html) (`http://{device_ip}`):

@@ -10,7 +10,7 @@ import aiohttp
 from aiohttp import ClientError
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DOMAIN
+from .const import DOMAIN, ENDPOINT_CONTROL, ENDPOINT_INFO, ENDPOINT_VALUES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -328,11 +328,11 @@ class NRGkickAPI:
         if sections:
             for section in sections:
                 params[section] = "1"
-        return await self._request("/info", params)
+        return await self._request(ENDPOINT_INFO, params)
 
     async def get_control(self) -> dict[str, Any]:
         """Get control information."""
-        return await self._request("/control")
+        return await self._request(ENDPOINT_CONTROL)
 
     async def get_values(self, sections: list[str] | None = None) -> dict[str, Any]:
         """Get current values."""
@@ -340,25 +340,27 @@ class NRGkickAPI:
         if sections:
             for section in sections:
                 params[section] = "1"
-        return await self._request("/values", params)
+        return await self._request(ENDPOINT_VALUES, params)
 
     async def set_current(self, current: float) -> dict[str, Any]:
         """Set charging current."""
-        return await self._request("/control", {"current_set": current})
+        return await self._request(ENDPOINT_CONTROL, {"current_set": current})
 
     async def set_charge_pause(self, pause: bool) -> dict[str, Any]:
         """Set charge pause state."""
-        return await self._request("/control", {"charge_pause": "1" if pause else "0"})
+        return await self._request(
+            ENDPOINT_CONTROL, {"charge_pause": "1" if pause else "0"}
+        )
 
     async def set_energy_limit(self, limit: int) -> dict[str, Any]:
         """Set energy limit in Wh (0 = no limit)."""
-        return await self._request("/control", {"energy_limit": limit})
+        return await self._request(ENDPOINT_CONTROL, {"energy_limit": limit})
 
     async def set_phase_count(self, phases: int) -> dict[str, Any]:
         """Set phase count (1-3)."""
         if phases not in [1, 2, 3]:
             raise ValueError("Phase count must be 1, 2, or 3")
-        return await self._request("/control", {"phase_count": phases})
+        return await self._request(ENDPOINT_CONTROL, {"phase_count": phases})
 
     async def test_connection(self) -> bool:
         """Test if we can connect to the device."""

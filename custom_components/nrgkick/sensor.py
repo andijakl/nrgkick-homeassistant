@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -628,7 +629,7 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
         state_class: SensorStateClass | None,
         value_path: list[str],
         entity_category: EntityCategory | None = None,
-        value_fn: Any = None,
+        value_fn: Callable[[Any], Any] | None = None,
         precision: int | None = None,
         suggested_unit: str | None = None,
         enabled_default: bool = True,
