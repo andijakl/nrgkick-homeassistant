@@ -26,6 +26,10 @@ homeassistant>=2025.12.0
 aiohttp>=3.13.2
 zeroconf>=0.148.0
 
+# Fix aiodns/pycares compatibility: aiodns 3.5.0 requires pycares>=4 but its
+# type hints use ares_query_a_result which was added in pycares 4.4.0
+pycares>=4.4.0
+
 
 # NRGkick API Library
 # For CI/production: use published PyPI package
