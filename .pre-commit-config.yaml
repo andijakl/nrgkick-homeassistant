@@ -84,7 +84,7 @@ repos:
           - --disable=C0111,C0103,W0212,W0223,W0718,R0913,R0902,R0914,R0801
           - --max-line-length=88
         additional_dependencies:
-          - homeassistant>=2025.10.0
+          - homeassistant>=2025.12.0
           - aiohttp>=3.8.0
         exclude: ^tests/
 

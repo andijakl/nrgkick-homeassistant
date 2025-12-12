@@ -25,7 +25,7 @@
 
 ## Project Overview
 
-This repository contains a **Home Assistant custom integration** for the NRGkick Gen2 EV charging controller. It provides local control and monitoring through the device's REST JSON API, following Home Assistant 2025.10+ best practices.
+This repository contains a **Home Assistant custom integration** for the NRGkick Gen2 EV charging controller. It provides local control and monitoring through the device's REST JSON API, following Home Assistant 2025.12+ best practices.
 
 **Key Facts:**
 
@@ -696,10 +696,10 @@ raise HomeAssistantError(
 
 **Problem**: `E0401: Unable to import 'homeassistant.helpers.service_info.zeroconf'`
 
-**Solution**: Ensure pre-commit uses Python 3.13+ and Home Assistant 2025.10.0+
+**Solution**: Ensure pre-commit uses Python 3.13+ and Home Assistant 2025.12.0+
 
 - Check `.pre-commit-config.yaml`: `default_language_version: python: python3.13`
-- Check pylint dependencies: `homeassistant>=2025.10.0`
+- Check pylint dependencies: `homeassistant>=2025.12.0`
 - Clean cache: `pre-commit clean`
 
 ### Tests Fail with Import Errors
@@ -771,4 +771,4 @@ For maintainers only:
 5. **Check ARCHITECTURE.md first** - comprehensive technical documentation
 6. **Run validation before PR** - `./validate.sh` must pass
 7. **Update both strings.json and translations/** - keep localization in sync
-8. **Follow HA 2025.10+ patterns** - use modern import paths and patterns
+8. **Follow HA 2025.12+ patterns** - use modern import paths and patterns

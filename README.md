@@ -42,7 +42,7 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 
 ## Requirements
 
-- Home Assistant 2025.10 or newer
+- Home Assistant 2025.12 or newer
 - NRGkick Gen2 device with firmware >= SmartModule 4.0.0.0
 - Local network access to your NRGkick device
 - JSON API enabled in the NRGkick App (Extended → Local API)
