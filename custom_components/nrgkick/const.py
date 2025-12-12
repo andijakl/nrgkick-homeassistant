@@ -12,10 +12,8 @@ DEFAULT_SCAN_INTERVAL: Final = 30
 MIN_SCAN_INTERVAL: Final = 10
 MAX_SCAN_INTERVAL: Final = 300
 
-# API Endpoints
-ENDPOINT_INFO: Final = "/info"
-ENDPOINT_CONTROL: Final = "/control"
-ENDPOINT_VALUES: Final = "/values"
+# Note: API Endpoints are in the nrgkick-api library
+# Import from nrgkick_api if needed: from nrgkick_api import ENDPOINT_INFO, ...
 
 # Charging Status Constants
 # These map to the numeric values returned by the API's status field

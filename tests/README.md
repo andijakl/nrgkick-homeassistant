@@ -54,17 +54,29 @@ pytest tests/ -v -m "not requires_integration"
 
 This project uses **pytest-homeassistant-custom-component** which provides a full Home Assistant test environment. All tests, including integration tests marked with `@pytest.mark.requires_integration`, now run successfully in both CI and local environments.
 
+### Architecture
+
+The integration uses a **two-layer architecture**:
+
+1. **nrgkick-api** - Standalone PyPI library for device communication
+   - Has its own test suite (31 tests) in a separate repository
+   - Tests HTTP communication, retries, authentication
+   - See: https://github.com/andijakl/nrgkick-api
+
+2. **Home Assistant Integration** - This repository
+   - Tests the HA wrapper, config flows, coordinator, entities
+   - Uses mocked library responses (doesn't test actual HTTP calls)
+
 ### Test Categories
 
 #### 1. **Unit Tests** ✅ (Run everywhere)
 
 These tests validate individual components in isolation using mocks:
 
-- **API Tests** (`test_api.py`): 17 tests
-  - All API client methods
-  - HTTP error handling
-  - Authentication flows
-  - Timeout behavior
+- **API Wrapper Tests** (`test_api.py`): 19 tests
+  - Wrapper initialization and delegation to library
+  - Exception translation (library → Home Assistant)
+  - All wrapper methods pass-through correctly
 
 **Execution**: Run everywhere (CI and local).
 
@@ -120,15 +132,15 @@ def mock_session():
 
 | Test Suite             | Count  | CI Status      | Local Status | Pass Rate |
 | ---------------------- | ------ | -------------- | ------------ | --------- |
-| API Tests              | 26     | ✅ PASS        | ✅ PASS      | 100%      |
+| API Wrapper Tests      | 19     | ✅ PASS        | ✅ PASS      | 100%      |
 | Config Flow Tests      | 19     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Config Flow Additional | 5      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Coordinator Tests      | 13     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Naming Tests           | 2      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
 | Platform Tests         | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| **Total**              | **73** | **26 pass**    | **73 pass**  | **100%**  |
+| **Total**              | **66** | **19 pass**    | **66 pass**  | **100%**  |
 
-**Note**: All 73 tests work in both environments. CI skips 47 integration tests for faster builds (runs in ~2s instead of ~5s).
+**Note**: All 66 integration tests work in both environments. The `nrgkick-api` library has an additional 31 tests in its own repository.
 
 ### GitHub Actions (CI)
 
@@ -148,36 +160,33 @@ def mock_session():
 
 ### Detailed Test Breakdown
 
-#### API Tests (`test_api.py`) - 26/26 ✅ PASSING
+#### API Wrapper Tests (`test_api.py`) - 19/19 ✅ PASSING
 
-| Test                            | Status | What It Tests                     |
-| ------------------------------- | ------ | --------------------------------- |
-| `test_api_init`                 | ✅     | API object creation               |
-| `test_get_info`                 | ✅     | GET /info endpoint                |
-| `test_get_info_with_sections`   | ✅     | GET /info with query params       |
-| `test_get_control`              | ✅     | GET /control endpoint             |
-| `test_get_values`               | ✅     | GET /values endpoint              |
-| `test_get_values_with_sections` | ✅     | GET /values with query params     |
-| `test_set_current`              | ✅     | POST current setting              |
-| `test_set_charge_pause`         | ✅     | POST pause/resume                 |
-| `test_set_energy_limit`         | ✅     | POST energy limit                 |
-| `test_set_phase_count`          | ✅     | POST phase count                  |
-| `test_set_phase_count_invalid`  | ✅     | Error handling for invalid phases |
-| `test_api_with_auth`            | ✅     | BasicAuth authentication          |
-| `test_test_connection_success`  | ✅     | Connection test success           |
-| `test_test_connection_failure`  | ✅     | Connection test failure           |
-| `test_api_timeout`              | ✅     | Timeout handling                  |
-| `test_api_client_error`         | ✅     | Client error handling             |
-| `test_api_auth_error`           | ✅     | Authentication error handling     |
-| `test_api_http_error_with_json` | ✅     | HTTP error with JSON response     |
-| `test_api_http_error_no_json`   | ✅     | HTTP error without JSON response  |
-| `test_api_retry_on_timeout`     | ✅     | Retry logic for timeouts          |
-| `test_api_retry_on_http_error`  | ✅     | Retry logic for 5xx errors        |
-| `test_api_retry_exhausted`      | ✅     | Retry exhaustion handling         |
-| `test_api_retry_connection`     | ✅     | Retry logic for connection errors |
-| `test_api_no_retry_auth`        | ✅     | No retry for auth errors          |
-| `test_api_no_retry_client`      | ✅     | No retry for 4xx errors           |
-| `test_api_retry_backoff`        | ✅     | Exponential backoff timing        |
+These tests verify the Home Assistant wrapper around the `nrgkick-api` library:
+
+| Test                                     | Status | What It Tests                           |
+| ---------------------------------------- | ------ | --------------------------------------- |
+| `test_api_init`                          | ✅     | Wrapper initialization                  |
+| `test_wrapper_converts_auth_error`       | ✅     | Library auth error → HA exception       |
+| `test_wrapper_converts_connection_error` | ✅     | Library connection error → HA exception |
+| `test_get_info_passes_through`           | ✅     | get_info delegates to library           |
+| `test_get_info_with_sections`            | ✅     | get_info with sections parameter        |
+| `test_get_control`                       | ✅     | get_control delegates to library        |
+| `test_get_values`                        | ✅     | get_values delegates to library         |
+| `test_set_current`                       | ✅     | set_current delegates to library        |
+| `test_set_charge_pause`                  | ✅     | set_charge_pause delegates to library   |
+| `test_set_energy_limit`                  | ✅     | set_energy_limit delegates to library   |
+| `test_set_phase_count`                   | ✅     | set_phase_count delegates to library    |
+| `test_set_phase_count_invalid`           | ✅     | Invalid phase count error handling      |
+| `test_api_with_auth`                     | ✅     | Wrapper passes auth to library          |
+| `test_test_connection_success`           | ✅     | test_connection success path            |
+| `test_test_connection_failure`           | ✅     | test_connection failure path            |
+| `test_api_timeout`                       | ✅     | Timeout converted to HA exception       |
+| `test_api_auth_error`                    | ✅     | Auth error converted to HA exception    |
+| `test_exception_inheritance`             | ✅     | Exception class hierarchy correct       |
+| `test_exception_translation_keys`        | ✅     | Exceptions have translation keys        |
+
+**Note**: HTTP-level tests (retries, backoff, actual requests) are in the `nrgkick-api` library's test suite.
 
 #### Config Flow Tests (`test_config_flow.py`) - 19/19 ✅ PASSING
 
@@ -377,18 +386,20 @@ tests/
 ├── __init__.py                       # Test package initialization
 ├── conftest.py                       # Shared pytest fixtures
 ├── pytest.ini                        # pytest configuration (in root)
-├── test_api.py                       # API client tests (17 tests)
+├── test_api.py                       # API wrapper tests (19 tests)
 ├── test_binary_sensor.py             # Binary sensor platform tests
-├── test_config_flow.py               # Config flow tests (18 tests)
-├── test_config_flow_additional.py    # Config flow edge cases (8 tests)
+├── test_config_flow.py               # Config flow tests (19 tests)
+├── test_config_flow_additional.py    # Config flow edge cases (5 tests)
 ├── test_diagnostics.py               # Diagnostics tests
-├── test_init.py                      # Integration setup tests (11 tests)
+├── test_init.py                      # Integration setup tests (13 tests)
 ├── test_naming.py                    # Device naming & fallback tests (2 tests)
 ├── test_number.py                    # Number platform tests
 ├── test_sensor.py                    # Sensor platform tests
 ├── test_switch.py                    # Switch platform tests
 └── README.md                         # This file
 ```
+
+**Note**: The `nrgkick-api` library has its own test suite at https://github.com/andijakl/nrgkick-api
 
 ### Fixtures (`conftest.py`)
 
@@ -733,8 +744,8 @@ Potential enhancements to the testing strategy:
 
 ---
 
-**Last Updated**: November 26, 2025
-**Test Suite Version**: 3.5.0
+**Last Updated**: December 8, 2025
+**Test Suite Version**: 4.0.0
 **Python Version**: 3.13
 **Maintainer**: @andijakl
-**Status**: All 73 Tests Passing (96% Coverage)
+**Status**: All 66 Integration Tests Passing + 31 Library Tests (97% Coverage)

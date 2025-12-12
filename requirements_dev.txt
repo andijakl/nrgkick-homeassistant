@@ -25,3 +25,9 @@ homeassistant>=2025.10.0
 # API Dependencies
 aiohttp>=3.11.11
 zeroconf>=0.147.0
+
+# NRGkick API Library
+# For CI/production: use published PyPI package
+nrgkick-api>=1.0.0
+# For local development with library changes, comment above and use:
+# -e ../nrgkick-api

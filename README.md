@@ -208,6 +208,15 @@ Some device states are exposed through multiple entity types to support differen
 
 This design provides flexibility: use the switch in dashboards for user control, use binary sensors in automation conditions, and use sensors when you need the raw numeric value for templates.
 
+### Architecture
+
+This integration uses a modular architecture:
+
+- **API Library** ([nrgkick-api](https://github.com/andijakl/nrgkick-api)): Standalone Python library published on [PyPI](https://pypi.org/project/nrgkick-api/) that handles all device communication. Maintained in a separate repository and can be used independently of Home Assistant.
+- **Integration Wrapper**: This repository (`custom_components/nrgkick/`) adapts the library for Home Assistant, providing entities, config flows, and translations.
+
+This separation allows the API library to be used by other projects and meets the requirements for potential Home Assistant core integration.
+
 ### API
 
 Uses the official [NRGkick Gen2 Local REST JSON API](https://www.nrgkick.com/wp-content/uploads/2024/12/local_api_docu_simulate-1.html) (`http://{device_ip}`):
@@ -226,29 +235,36 @@ Polls device every 30 seconds (configurable 10-300s). Uses Home Assistant's `Dat
 ### Project Structure
 
 ```
-custom_components/nrgkick/
-├── __init__.py           # Integration setup, coordinator
-├── api.py                # REST API client
-├── binary_sensor.py      # Binary sensor platform
-├── config_flow.py        # UI configuration flow
-├── const.py              # Constants, mappings
-├── icons.json            # Default icon mapping
-├── manifest.json         # Integration metadata
-├── number.py             # Number entity controls
-├── sensor.py             # Sensor platform (80+ sensors)
-├── switch.py             # Switch platform
-└── translations/         # Internationalization
-    ├── en.json           # English translations
-    └── de.json           # German translations
+nrgkick-homeassistant/
+├── custom_components/nrgkick/  # Home Assistant integration
+│   ├── __init__.py             # Integration setup, coordinator
+│   ├── api.py                  # HA exception wrapper for nrgkick-api
+│   ├── binary_sensor.py        # Binary sensor platform
+│   ├── config_flow.py          # UI configuration flow
+│   ├── const.py                # Constants, mappings
+│   ├── icons.json              # Default icon mapping
+│   ├── manifest.json           # Integration metadata
+│   ├── number.py               # Number entity controls
+│   ├── sensor.py               # Sensor platform (80+ sensors)
+│   ├── switch.py               # Switch platform
+│   └── translations/           # Internationalization
+│       ├── en.json             # English translations
+│       └── de.json             # German translations
+└── tests/                      # Integration tests
 ```
+
+**External Dependency**: This integration uses the [nrgkick-api](https://github.com/andijakl/nrgkick-api) library (installed from PyPI) for device communication.
 
 ### Local Development
 
 1. Clone repository
-2. Copy `custom_components/nrgkick` to your HA config
-3. Restart Home Assistant
-4. Configure integration via UI
-5. Check logs for any errors
+2. Create virtual environment and install dependencies: `pip install -r requirements_dev.txt`
+3. Copy `custom_components/nrgkick` to your HA config
+4. Restart Home Assistant
+5. Configure integration via UI
+6. Check logs for any errors
+
+**Developing the API library**: If you need to modify the [nrgkick-api](https://github.com/andijakl/nrgkick-api) library, clone it separately and install in editable mode: `pip install -e ../nrgkick-api`
 
 ### Contributing
 
