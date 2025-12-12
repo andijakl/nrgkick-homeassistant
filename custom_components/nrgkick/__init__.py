@@ -87,6 +87,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=scan_interval),
+            config_entry=entry,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
