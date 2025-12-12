@@ -29,7 +29,7 @@ repos:
   # Ruff - Python linting and formatting (replaces Black, isort, flake8)
   # This is what Home Assistant core uses
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.0
+    rev: v0.14.9
     hooks:
       - id: ruff
         args:
