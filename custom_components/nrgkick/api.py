@@ -13,8 +13,11 @@ import aiohttp
 from homeassistant.exceptions import HomeAssistantError
 
 # pylint: disable=import-error
-from nrgkick_api import NRGkickAPI as LibraryAPI
-from nrgkick_api import NRGkickAuthenticationError, NRGkickConnectionError
+from nrgkick_api import (
+    NRGkickAPI as LibraryAPI,
+    NRGkickAuthenticationError,
+    NRGkickConnectionError,
+)
 
 from .const import DOMAIN
 

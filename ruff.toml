@@ -1,0 +1,70 @@
+# Ruff configuration for NRGkick Home Assistant Integration
+# Aligned with Home Assistant core configuration
+# https://github.com/home-assistant/core/blob/dev/pyproject.toml
+
+# Target Python 3.13 (Home Assistant 2025.x requirement)
+target-version = "py313"
+
+# Line length to match Home Assistant
+line-length = 88
+
+# Exclude common directories
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "__pycache__",
+    "htmlcov",
+    "releases",
+]
+
+[lint]
+# Rules aligned with Home Assistant core
+select = [
+    "B",      # flake8-bugbear
+    "C",      # complexity
+    "E",      # pycodestyle errors
+    "F",      # pyflakes/autoflake
+    "I",      # isort
+    "ICN001", # import conventions
+    "LOG",    # flake8-logging
+    "N804",   # First argument of a class method should be named cls
+    "N805",   # First argument of a method should be named self
+    "N815",   # Variable in class scope should not be mixedCase
+    "PERF",   # Perflint
+    "PGH",    # pygrep-hooks
+    "PIE",    # flake8-pie
+    "PL",     # pylint
+    "PT",     # flake8-pytest-style
+    "RUF",    # Ruff-specific rules
+    "SIM",    # flake8-simplify
+    "T20",    # flake8-print
+    "UP",     # pyupgrade
+    "W",      # pycodestyle warnings
+]
+
+ignore = [
+    "E501",     # line too long (handled by formatter)
+    "PLR0913",  # Too many arguments - entity __init__ and test fixtures require many params
+]
+
+[lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+split-on-trailing-comma = false
+
+[lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+
+[lint.mccabe]
+max-complexity = 25
+
+[lint.per-file-ignores]
+# Tests: allow imports inside functions and magic values in assertions
+"tests/*" = ["PLC0415", "PLR2004"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "lf"

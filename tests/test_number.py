@@ -2,11 +2,11 @@
 
 from unittest.mock import patch
 
-import pytest
 from homeassistant.components.number.const import SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+import pytest
 
 from custom_components.nrgkick.api import NRGkickApiClientError
 
@@ -29,9 +29,10 @@ async def test_number_entities(
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
     # Setup entry
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -131,9 +132,10 @@ async def test_number_set_value_error(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

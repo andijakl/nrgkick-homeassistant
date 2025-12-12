@@ -11,7 +11,8 @@ from . import NRGkickDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry  # pylint: disable=unused-argument
+    hass: HomeAssistant,
+    entry: ConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data

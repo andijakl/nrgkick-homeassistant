@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-import pytest
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+import pytest
 
 from custom_components.nrgkick.const import STATUS_CHARGING
 
@@ -94,9 +94,10 @@ async def test_sensor_entities(
     mock_nrgkick_api.get_values.return_value = mock_values_data_sensor
 
     # Setup entry
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

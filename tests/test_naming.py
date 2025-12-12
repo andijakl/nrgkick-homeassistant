@@ -2,10 +2,9 @@
 
 from unittest.mock import patch
 
-import pytest
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+import pytest
 
 from custom_components.nrgkick.const import DOMAIN
 
@@ -28,9 +27,10 @@ async def test_device_name_fallback(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -72,9 +72,10 @@ async def test_device_name_custom(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

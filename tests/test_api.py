@@ -6,9 +6,11 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
+from nrgkick_api import (
+    NRGkickAuthenticationError as LibAuthError,
+    NRGkickConnectionError as LibConnectionError,
+)
 import pytest
-from nrgkick_api import NRGkickAuthenticationError as LibAuthError
-from nrgkick_api import NRGkickConnectionError as LibConnectionError
 
 from custom_components.nrgkick.api import (
     NRGkickAPI,
@@ -55,25 +57,29 @@ class TestHAAPIWrapper:
         """Test wrapper converts library auth error to HA exception."""
         api = NRGkickAPI(host="192.168.1.100", session=mock_session)
 
-        with patch.object(
-            api._api,
-            "get_info",
-            side_effect=LibAuthError("Auth failed"),
+        with (
+            patch.object(
+                api._api,
+                "get_info",
+                side_effect=LibAuthError("Auth failed"),
+            ),
+            pytest.raises(NRGkickApiClientAuthenticationError),
         ):
-            with pytest.raises(NRGkickApiClientAuthenticationError):
-                await api.get_info()
+            await api.get_info()
 
     async def test_wrapper_converts_connection_error(self, mock_session):
         """Test wrapper converts library connection error to HA exception."""
         api = NRGkickAPI(host="192.168.1.100", session=mock_session)
 
-        with patch.object(
-            api._api,
-            "get_info",
-            side_effect=LibConnectionError("Connection failed"),
+        with (
+            patch.object(
+                api._api,
+                "get_info",
+                side_effect=LibConnectionError("Connection failed"),
+            ),
+            pytest.raises(NRGkickApiClientCommunicationError),
         ):
-            with pytest.raises(NRGkickApiClientCommunicationError):
-                await api.get_info()
+            await api.get_info()
 
     async def test_get_info_passes_through(self, mock_session):
         """Test get_info passes through to library."""

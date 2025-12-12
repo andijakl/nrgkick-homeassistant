@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import pytest
 
 from custom_components.nrgkick.const import DOMAIN
 
@@ -18,11 +18,11 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations defined in the test dir."""
-    yield
+    return
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "custom_components.nrgkick.async_setup_entry", return_value=True

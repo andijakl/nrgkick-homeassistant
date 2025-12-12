@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+import pytest
 
 from custom_components.nrgkick.const import STATUS_CHARGING
 
@@ -39,9 +39,10 @@ async def test_binary_sensors(
     mock_nrgkick_api.get_values.return_value = mock_values_data_binary_sensor
 
     # Setup entry
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

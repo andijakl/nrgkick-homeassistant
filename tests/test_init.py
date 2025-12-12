@@ -4,10 +4,10 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+import pytest
 
 from custom_components.nrgkick import async_setup_entry
 from custom_components.nrgkick.api import (
@@ -25,9 +25,10 @@ async def test_setup_entry(
     """Test successful setup of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         # Use the config_entries.async_setup to properly set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -44,10 +45,10 @@ async def test_setup_entry_failed_connection(
 
     mock_nrgkick_api.get_info.side_effect = Exception("Connection failed")
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"), pytest.raises(
-        Exception
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+        pytest.raises(Exception, match="Connection failed"),
     ):
         await async_setup_entry(hass, mock_config_entry)
 
@@ -59,9 +60,10 @@ async def test_unload_entry(
     """Test successful unload of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         # Use proper setup to set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -80,17 +82,19 @@ async def test_reload_entry(
     """Test reload of entry."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         # Use proper setup to set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
     # Test that reload calls the config_entries.async_reload
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_reload(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -111,9 +115,10 @@ async def test_coordinator_update_success(
     mock_nrgkick_api.get_control.return_value = mock_control_data
     mock_nrgkick_api.get_values.return_value = mock_values_data
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         # Use proper setup to set entry state
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -172,9 +177,10 @@ async def test_coordinator_async_set_current(
     # Mock API to return the new current value in the response
     mock_nrgkick_api.set_current.return_value = {"current_set": 6.7}
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -196,9 +202,10 @@ async def test_coordinator_async_set_charge_pause(
     # Mock API to return the new pause state in the response
     mock_nrgkick_api.set_charge_pause.return_value = {"charge_pause": 1}
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -220,9 +227,10 @@ async def test_coordinator_async_set_energy_limit(
     # Mock API to return the new energy limit in the response
     mock_nrgkick_api.set_energy_limit.return_value = {"energy_limit": 50000}
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -244,9 +252,10 @@ async def test_coordinator_async_set_phase_count(
     # Mock API to return the new phase count in the response
     mock_nrgkick_api.set_phase_count.return_value = {"phase_count": 1}
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -270,9 +279,10 @@ async def test_coordinator_command_blocked_by_solar(
         "Response": "Charging pause is blocked by solar-charging"
     }
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -295,9 +305,10 @@ async def test_coordinator_command_unexpected_value(
     # Mock API to return different value than requested
     mock_nrgkick_api.set_current.return_value = {"current_set": 10.0}
 
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 

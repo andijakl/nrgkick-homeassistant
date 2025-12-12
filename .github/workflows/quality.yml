@@ -35,8 +35,8 @@ jobs:
       - name: Run pre-commit hooks
         run: pre-commit run --all-files --show-diff-on-failure
 
-  black:
-    name: Check code formatting (Black)
+  ruff:
+    name: Linting & Formatting (Ruff)
     runs-on: ubuntu-latest
 
     steps:
@@ -48,51 +48,14 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install Black
-        run: pip install black>=23.0.0
+      - name: Install Ruff
+        run: pip install ruff>=0.14.0
 
-      - name: Run Black
-        run: black --check --diff custom_components/ tests/
+      - name: Run Ruff linter
+        run: ruff check custom_components/ tests/
 
-  isort:
-    name: Check import sorting (isort)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install isort
-        run: pip install isort>=5.12.0
-
-      - name: Run isort
-        run: isort --profile=black --line-length=88 --multi-line=3 --trailing-comma --check-only --diff custom_components/ tests/
-
-  flake8:
-    name: Linting (Flake8)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install Flake8
-        run: |
-          pip install flake8>=6.0.0
-          pip install flake8-bugbear flake8-comprehensions
-
-      - name: Run Flake8
-        run: flake8 custom_components/ tests/ --max-line-length=88 --extend-ignore=E203,E266,E501,W503 --max-complexity=18 --statistics
+      - name: Run Ruff formatter
+        run: ruff format --check --diff custom_components/ tests/
 
   pylint:
     name: Linting (Pylint)
