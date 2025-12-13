@@ -88,6 +88,9 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
             name=DOMAIN,
             update_interval=timedelta(seconds=scan_interval),
             config_entry=entry,
+            # Data is a dict that supports __eq__ comparison.
+            # Avoid unnecessary entity updates when data hasn't changed.
+            always_update=False,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
