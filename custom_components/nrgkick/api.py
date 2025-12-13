@@ -69,6 +69,7 @@ class NRGkickAPI:
             username: Optional username for Basic Auth.
             password: Optional password for Basic Auth.
             session: aiohttp ClientSession for requests.
+
         """
         self.host = host
         self._api = LibraryAPI(
@@ -90,6 +91,7 @@ class NRGkickAPI:
         Raises:
             NRGkickApiClientAuthenticationError: If authentication fails.
             NRGkickApiClientCommunicationError: If communication fails.
+
         """
         try:
             return await coro
@@ -124,6 +126,7 @@ class NRGkickAPI:
 
         Returns:
             Device information dictionary.
+
         """
         return await self._wrap_call(self._api.get_info(sections))
 
@@ -132,6 +135,7 @@ class NRGkickAPI:
 
         Returns:
             Control parameters dictionary.
+
         """
         return await self._wrap_call(self._api.get_control())
 
@@ -143,6 +147,7 @@ class NRGkickAPI:
 
         Returns:
             Current values dictionary.
+
         """
         return await self._wrap_call(self._api.get_values(sections))
 
@@ -154,6 +159,7 @@ class NRGkickAPI:
 
         Returns:
             Response dictionary with confirmed value.
+
         """
         return await self._wrap_call(self._api.set_current(current))
 
@@ -165,6 +171,7 @@ class NRGkickAPI:
 
         Returns:
             Response dictionary with confirmed value.
+
         """
         return await self._wrap_call(self._api.set_charge_pause(pause))
 
@@ -176,6 +183,7 @@ class NRGkickAPI:
 
         Returns:
             Response dictionary with confirmed value.
+
         """
         return await self._wrap_call(self._api.set_energy_limit(limit))
 
@@ -187,6 +195,7 @@ class NRGkickAPI:
 
         Returns:
             Response dictionary with confirmed value.
+
         """
         return await self._wrap_call(self._api.set_phase_count(phases))
 
@@ -195,5 +204,6 @@ class NRGkickAPI:
 
         Returns:
             True if connection successful.
+
         """
         return await self._wrap_call(self._api.test_connection())

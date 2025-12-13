@@ -29,10 +29,10 @@ from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.NUMBER,
     Platform.SENSOR,
     Platform.SWITCH,
-    Platform.NUMBER,
-    Platform.BINARY_SENSOR,
 ]
 
 
@@ -50,10 +50,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     entry.runtime_data = coordinator
 
-    # Set up platforms
+    # Set up platforms.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Register update listener for options changes
+    # Register update listener for options changes.
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
@@ -79,7 +79,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         self.api = api
         self.entry = entry
 
-        # Get scan interval from options or use default
+        # Get scan interval from options or use default.
         scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
         super().__init__(
@@ -125,21 +125,22 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
             expected_value: Expected value after command execution
             control_key: Key in control data to verify (e.g., "charge_pause")
             error_message: Error message to show if verification fails
+
         """
-        # Execute command and get response
+        # Execute command and get response.
         response = await command_func()
 
-        # Check if response contains an error message
+        # Check if response contains an error message.
         if "Response" in response:
             raise NRGkickApiClientCommunicationError(
                 f"{error_message} {response['Response']}"
             )
 
-        # Check if response contains the expected key with the new value
+        # Check if response contains the expected key with the new value.
         if control_key in response:
             actual_value = response[control_key]
 
-            # Convert both values to float for comparison to handle type differences
+            # Convert both values to float for comparison to handle type differences.
             try:
                 actual_float = float(actual_value) if actual_value is not None else None
                 expected_float = (
@@ -155,16 +156,16 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
                     f"{error_message} Device returned invalid value."
                 ) from err
 
-            # Update coordinator data immediately with the new value
+            # Update coordinator data immediately with the new value.
             if "control" not in self.data:
                 self.data["control"] = {}
             self.data["control"][control_key] = actual_value
 
-            # Notify all entities that coordinator data has been updated
+            # Notify all entities that coordinator data has been updated.
             self.async_set_updated_data(self.data)
 
         else:
-            # Response doesn't contain expected key - refresh to get current state
+            # Response doesn't contain expected key - refresh to get current state.
             await asyncio.sleep(2)
             await self.async_request_refresh()
 

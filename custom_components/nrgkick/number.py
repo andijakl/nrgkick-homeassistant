@@ -29,7 +29,7 @@ async def async_setup_entry(
     """Set up NRGkick number entities based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
 
-    # Get rated current from device info
+    # Get rated current from device info.
     rated_current = (
         coordinator.data.get("info", {}).get("general", {}).get("rated_current", 32)
     )

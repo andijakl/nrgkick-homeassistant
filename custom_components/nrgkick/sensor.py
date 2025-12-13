@@ -1,4 +1,4 @@
-"""Platform for sensor integration."""
+"""Sensor platform for NRGkick."""
 
 from __future__ import annotations
 
