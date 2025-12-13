@@ -1,51 +1,70 @@
 # NRGkick Home Assistant Integration
 
-## ⚠️ CRITICAL: Pre-Commit Rules
+## ⚠️ CRITICAL: Pre-Commit Rules (Most AI Code Fails Here)
 
-**Most AI-generated code fails pre-commit. Follow these rules:**
-
-1. **Line Length**: Max 88 characters. Break with parentheses.
-2. **Docstrings (PEP 257)**: Blank line after last section before closing `"""`.
-3. **File Endings**: Exactly ONE newline at EOF for all files.
+1. **Line Length**: Max 88 chars. Break with parentheses, not backslashes.
+2. **Docstrings**: Google style with blank line before closing `"""`.
+3. **File Endings**: Exactly ONE newline at EOF.
 4. **JSON**: 2-space indent, no trailing commas.
+5. **Always run `./validate.sh` before committing.**
 
-## Project Overview
+## Architecture Overview
 
-- **Product**: Home Assistant integration for NRGkick Gen2 EV charger
-- **API**: Local REST JSON API (no cloud), endpoints: `/info`, `/control`, `/values`
-- **Architecture**: DataUpdateCoordinator polling (default 30s), 80+ sensors, 3 binary sensors, 1 switch, 3 numbers
-- **Python**: 3.13+ for dev, 3.11+ runtime
-
-## Key Files
+**Two-layer design**: `nrgkick-api` library (PyPI) handles HTTP/auth → HA wrapper adds coordinator pattern.
 
 ```
 custom_components/nrgkick/
-├── __init__.py      # Coordinator, setup/teardown
-├── api.py           # API client wrapper (delegates to nrgkick-api library)
-├── config_flow.py   # UI config, discovery, reauth
-├── const.py         # Constants, entity definitions
-├── sensor.py        # 80+ sensors
-├── binary_sensor.py # 3 binary sensors
+├── __init__.py      # NRGkickDataUpdateCoordinator + NRGkickEntity base class
+├── api.py           # Thin wrapper translating library exceptions to HA types
+├── sensor.py        # 80+ sensors using value_path pattern
+├── number.py        # Controls: current_set, energy_limit, phase_count
 ├── switch.py        # Charge pause toggle
-├── number.py        # Current, energy limit, phase count controls
-└── translations/    # en.json, de.json (all UI strings go here)
+└── translations/    # en.json AND de.json (both required!)
 ```
 
-## Code Style
+**Data Flow**: Coordinator polls `/info`, `/control`, `/values` → merges into `coordinator.data` dict → entities extract via `value_path`.
 
-- **Linter/Formatter**: Ruff (replaces Black, isort, flake8)
-- **Type Checking**: mypy strict
-- **Docstrings**: Google style, PEP 257 compliant
+## Entity Pattern (Critical)
 
-### Critical Patterns
+All entities use `value_path` arrays to navigate `coordinator.data`:
 
 ```python
-# Line breaks - use parentheses
-result = await self.api_client.get_values(
-    sections=["powerflow", "energy"]
+# In sensor.py - define entity with path to data
+NRGkickSensor(
+    coordinator,
+    key="active_power",  # Translation key + unique_id suffix
+    value_path=["values", "powerflow", "power", "total"],
+    # ... other params
 )
 
-# Docstrings - blank line after last section
+# In entity's native_value property
+data = self.coordinator.data
+for key in self._value_path:
+    data = data.get(key)  # Navigates: data["values"]["powerflow"]["power"]["total"]
+```
+
+## Adding New Features
+
+### New Sensor
+
+1. Add `NRGkickSensor(...)` instance to list in [sensor.py](custom_components/nrgkick/sensor.py)
+2. Add translation key to **both** `translations/en.json` AND `translations/de.json`
+
+### New Control (Number/Switch)
+
+1. Add entity to [number.py](custom_components/nrgkick/number.py) or [switch.py](custom_components/nrgkick/switch.py)
+2. Add coordinator method in `__init__.py` using `_async_execute_command_with_verification`
+3. Add translations to both language files
+
+## Code Style Examples
+
+```python
+# Long lines - use parentheses
+result = await self.coordinator.async_set_current(
+    value=16.0
+)
+
+# Docstring format (blank line before closing)
 def set_current(self, current: float) -> dict:
     """Set charging current.
 
@@ -55,91 +74,45 @@ def set_current(self, current: float) -> dict:
     """
     return self._api.set_current(current)
 
-# Long strings - implicit concatenation
-raise HomeAssistantError(
-    "Failed to connect to device: "
-    "Connection timeout"
-)
-```
-
-### HA 2025.12+ Patterns
-
-```python
-# Modern imports
-from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-# OptionsFlowHandler - no __init__, use self.config_entry property
-
-# Exception chaining
+# Exception chaining (HA 2025.12+)
 raise ConfigEntryAuthFailed from err
 ```
 
-## Adding Features
-
-### New Sensor
-
-1. Add to `SENSORS` tuple in `const.py` with `value_path`
-2. Add translation to **both** `translations/en.json` AND `translations/de.json`
-
-### New Control
-
-1. Add to `NUMBERS` or `SWITCHES` in `const.py`
-2. Implement in platform file
-3. Add translations to both language files
-
-## Testing
+## Testing & Validation
 
 ```bash
-./run-tests.sh          # Run all tests
-./run-tests.sh coverage # With coverage report
-./validate.sh           # Pre-commit + tests (run before commit!)
+./validate.sh           # Full validation (pre-commit + tests) - RUN BEFORE COMMIT
+./run-tests.sh          # Tests only
+./run-tests.sh coverage # Tests with HTML coverage report
 ```
 
-## API Reference
+Tests use `pytest-homeassistant-custom-component`. See [tests/conftest.py](tests/conftest.py) for mock fixtures.
+
+## Exception Handling
 
 ```python
-# Endpoints
-GET /info    # Device info, serial, versions
-GET /control # Current settings: current_set, charge_pause, energy_limit, phase_count
-GET /values  # Real-time: power, energy, temperatures, status
+# In api.py - translate library exceptions
+NRGkickApiClientAuthenticationError  # → triggers reauth flow
+NRGkickApiClientCommunicationError   # → entities show unavailable
 
-# Control (GET with params)
-GET /control?current_set=16.0
-GET /control?charge_pause=1
-GET /control?energy_limit=5000
-GET /control?phase_count=3
+# In coordinator - handle appropriately
+except NRGkickApiClientAuthenticationError as err:
+    raise ConfigEntryAuthFailed from err
 ```
-
-## Exception Hierarchy
-
-```python
-NRGkickApiClientError                    # Base
-├── NRGkickApiClientCommunicationError   # Timeout, connection - entities unavailable
-└── NRGkickApiClientAuthenticationError  # 401/403 - triggers reauth flow
-```
-
-## Troubleshooting
-
-| Problem                      | Solution                                      |
-| ---------------------------- | --------------------------------------------- |
-| Line too long                | Break with parentheses at 88 chars            |
-| Missing docstring blank line | Add blank line before closing `"""`           |
-| Import errors                | `pip install -r requirements_dev.txt` in venv |
-| Pre-commit modifies files    | Stage changes and commit again                |
 
 ## Key Constants
 
-```python
-DOMAIN = "nrgkick"
-DEFAULT_SCAN_INTERVAL = 30  # seconds (10-300 range)
-MIN_CURRENT = 6.0
-MAX_CURRENT_32A = 32.0
-```
+- `DOMAIN = "nrgkick"`
+- `DEFAULT_SCAN_INTERVAL = 30` (range: 10-300 seconds)
+- API endpoints: `/info`, `/control`, `/values`
 
-## Best Practices
+## Common Mistakes
 
-1. Use `value_path` arrays for entity data access
-2. Wait 2s after control commands before refresh
-3. Run `./validate.sh` before every commit
-4. Add translations to **both** en.json and de.json
-5. Check ARCHITECTURE.md for detailed patterns
+| Issue                | Fix                                            |
+| -------------------- | ---------------------------------------------- |
+| Missing translation  | Add to **both** en.json and de.json            |
+| Line too long        | Break at 88 chars with parentheses             |
+| Docstring format     | Add blank line before closing `"""`            |
+| Control not updating | Use `_async_execute_command_with_verification` |
+
+See [ARCHITECTURE.md](ARCHITECTURE.md) for detailed system design and data flow diagrams.
