@@ -219,7 +219,7 @@ This separation allows the API library to be used by other projects and meets th
 
 ### API
 
-Uses the official [NRGkick Gen2 Local REST JSON API](https://www.nrgkick.com/wp-content/uploads/2024/12/local_api_docu_simulate-1.html) (`http://{device_ip}`):
+Uses the official [NRGkick Gen2 Local REST JSON API](https://nrgkick.com/wp-content/uploads/local_api_docu_simulate-1.html) (`http://{device_ip}`):
 
 - `GET /info` - Device information
 - `GET /values` - Real-time telemetry

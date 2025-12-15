@@ -7,8 +7,6 @@ from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 import pytest
 
-from custom_components.nrgkick.const import STATUS_CHARGING
-
 
 @pytest.fixture
 def mock_values_data_sensor():
@@ -50,16 +48,16 @@ def mock_values_data_sensor():
             "n": {"current": 0.0},
         },
         "general": {
-            "status": STATUS_CHARGING,
+            "status": "CHARGING",
             "charging_rate": 11.0,
             "vehicle_connect_time": 100,
             "vehicle_charging_time": 50,
             "charge_count": 5,
             "charge_permitted": True,
-            "relay_state": True,
-            "rcd_trigger": 0,
-            "warning_code": 0,
-            "error_code": 0,
+            "relay_state": "N, L1, L2, L3",
+            "rcd_trigger": "NO_FAULT",
+            "warning_code": "NO_WARNING",
+            "error_code": "NO_ERROR",
         },
         "temperatures": {
             "housing": 35.0,
@@ -109,39 +107,43 @@ async def test_sensor_entities(
     def get_state_by_key(key):
         unique_id = f"TEST123456_{key}"
         entity_id = entity_registry.async_get_entity_id("sensor", "nrgkick", unique_id)
-        if not entity_id:
-            return None
-        return hass.states.get(entity_id)
+        return hass.states.get(entity_id) if entity_id else None
 
-    # 1. Total Active Power
+    # Test power sensor with attributes
     state = get_state_by_key("total_active_power")
-    assert state
+    assert state is not None
     assert float(state.state) == 11000.0
     assert state.attributes["unit_of_measurement"] == UnitOfPower.WATT
     assert state.attributes["device_class"] == SensorDeviceClass.POWER
 
-    # 2. Housing Temperature
+    # Test temperature sensor
     state = get_state_by_key("housing_temperature")
-    assert state
+    assert state is not None
     assert float(state.state) == 35.0
     assert state.attributes["unit_of_measurement"] == UnitOfTemperature.CELSIUS
 
-    # 3. Charging Status (mapped)
-    state = get_state_by_key("status")
-    assert state
-    assert state.state == "Charging"  # STATUS_MAP[3]
+    # Test mapped sensors (API returns strings, converted to translation keys)
+    mapped_sensors = {
+        "status": "charging",
+        "rcd_trigger": "no_fault",
+        "warning_code": "no_warning",
+        "error_code": "no_error",
+        "relay_state": "n_l1_l2_l3",
+        "connector_type": "type2",
+        "grid_phases": "l1_l2_l3",
+    }
+    for key, expected in mapped_sensors.items():
+        state = get_state_by_key(key)
+        assert state is not None, f"{key}: state not found"
+        assert state.state == expected, f"{key}: expected {expected}, got {state.state}"
 
-    # 4. Info Sensor (Rated Current)
-    state = get_state_by_key("rated_current")
-    assert state
-    assert float(state.state) == 32.0
-
-    # 5. Charging Current (measured)
-    state = get_state_by_key("charging_current")
-    assert state
-    assert float(state.state) == 16.0
-
-    # 6. Set Current (from control data - separate from the number entity)
-    state = get_state_by_key("current_set")
-    assert state
-    assert float(state.state) == 16.0
+    # Test numeric sensors
+    numeric_sensors = {
+        "rated_current": 32.0,
+        "charging_current": 16.0,
+        "current_set": 16.0,
+    }
+    for key, expected in numeric_sensors.items():
+        state = get_state_by_key(key)
+        assert state is not None, f"{key}: state not found"
+        assert float(state.state) == expected, f"{key}: expected {expected}"

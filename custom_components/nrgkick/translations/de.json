@@ -48,7 +48,15 @@
         "name": "Stecker Max-Strom"
       },
       "connector_type": {
-        "name": "Steckertyp"
+        "name": "Steckertyp",
+        "state": {
+          "unknown": "Unbekannt",
+          "cee": "CEE",
+          "domestic": "Haushaltsstecker",
+          "type2": "Typ 2",
+          "wall": "Wandsteckdose",
+          "aus": "Australisch (32A 5-polig)"
+        }
       },
       "connector_serial": {
         "name": "Steckerseriennummer"
@@ -60,7 +68,17 @@
         "name": "Netzfrequenz"
       },
       "grid_phases": {
-        "name": "Netzphasen"
+        "name": "Netzphasen",
+        "state": {
+          "unknown": "Unbekannt",
+          "l1": "L1",
+          "l2": "L2",
+          "l1_l2": "L1, L2",
+          "l3": "L3",
+          "l1_l3": "L1, L3",
+          "l2_l3": "L2, L3",
+          "l1_l2_l3": "L1, L2, L3"
+        }
       },
       "network_ip_address": {
         "name": "IP-Adresse"
@@ -72,7 +90,35 @@
         "name": "SSID"
       },
       "network_rssi": {
-        "name": "Signalst\u00e4rke"
+        "name": "Signalstärke"
+      },
+      "cellular_mode": {
+        "name": "Mobilfunkmodus",
+        "state": {
+          "unknown": "Unbekannt",
+          "no_service": "Kein Dienst",
+          "gsm": "GSM",
+          "lte_cat_m1": "LTE Cat-M1",
+          "lte_nb_iot": "LTE NB-IoT"
+        }
+      },
+      "cellular_rssi": {
+        "name": "Mobilfunk-Signalstärke"
+      },
+      "cellular_operator": {
+        "name": "Mobilfunkanbieter"
+      },
+      "gps_latitude": {
+        "name": "GPS Breitengrad"
+      },
+      "gps_longitude": {
+        "name": "GPS Längengrad"
+      },
+      "gps_altitude": {
+        "name": "GPS Höhe"
+      },
+      "gps_accuracy": {
+        "name": "GPS Genauigkeit"
       },
       "versions_sw_sm": {
         "name": "Softwareversion"
@@ -189,25 +235,110 @@
         "name": "Fahrzeug l\u00e4dt seit"
       },
       "status": {
-        "name": "Status"
+        "name": "Status",
+        "state": {
+          "unknown": "Unbekannt",
+          "standby": "Bereitschaft",
+          "connected": "Verbunden",
+          "charging": "Lädt",
+          "error": "Fehler",
+          "wakeup": "Aufwachen"
+        }
       },
       "charge_permitted": {
         "name": "Laden erlaubt"
       },
       "relay_state": {
-        "name": "Relaisstatus"
+        "name": "Relaisstatus",
+        "state": {
+          "no_relay": "Kein Relais",
+          "n": "N",
+          "l1": "L1",
+          "n_l1": "N, L1",
+          "l2": "L2",
+          "n_l2": "N, L2",
+          "l1_l2": "L1, L2",
+          "n_l1_l2": "N, L1, L2",
+          "l3": "L3",
+          "n_l3": "N, L3",
+          "l1_l3": "L1, L3",
+          "n_l1_l3": "N, L1, L3",
+          "l2_l3": "L2, L3",
+          "n_l2_l3": "N, L2, L3",
+          "l1_l2_l3": "L1, L2, L3",
+          "n_l1_l2_l3": "N, L1, L2, L3",
+          "unknown": "Unbekannt"
+        }
       },
       "charge_count": {
         "name": "Ladezyklen"
       },
       "rcd_trigger": {
-        "name": "RCD-Ausl\u00f6sung"
+        "name": "RCD-Auslösung",
+        "state": {
+          "no_fault": "Kein Fehler",
+          "ac_30ma_fault": "AC 30mA Fehler",
+          "ac_60ma_fault": "AC 60mA Fehler",
+          "ac_150ma_fault": "AC 150mA Fehler",
+          "dc_positive_6ma_fault": "DC +6mA Fehler",
+          "dc_negative_6ma_fault": "DC -6mA Fehler",
+          "unknown": "Unbekannt"
+        }
       },
       "warning_code": {
-        "name": "Warncode"
+        "name": "Warncode",
+        "state": {
+          "no_warning": "Keine Warnung",
+          "no_pe": "Kein Schutzleiter",
+          "blackout_protection": "Blackout-Schutz",
+          "energy_limit_reached": "Energielimit erreicht",
+          "ev_does_not_comply_standard": "Fahrzeug entspricht nicht dem Standard",
+          "unsupported_charging_mode": "Nicht unterstützter Lademodus",
+          "no_attachment_detected": "Kein Aufsatz erkannt",
+          "no_comm_with_type2_attachment": "Keine Kommunikation mit Typ-2-Aufsatz",
+          "increased_temperature": "Erhöhte Temperatur",
+          "increased_housing_temperature": "Erhöhte Gehäusetemperatur",
+          "increased_attachment_temperature": "Erhöhte Aufsatztemperatur",
+          "increased_domestic_plug_temperature": "Erhöhte Haushaltsstecker-Temperatur",
+          "unknown": "Unbekannt"
+        }
       },
       "error_code": {
-        "name": "Fehlercode"
+        "name": "Fehlercode",
+        "state": {
+          "no_error": "Kein Fehler",
+          "general_error": "Allgemeiner Fehler",
+          "32a_attachment_on_16a_unit": "32A-Aufsatz an 16A-Gerät",
+          "voltage_drop_detected": "Spannungsabfall erkannt",
+          "unplug_detection_triggered": "Absteckerkennung ausgelöst",
+          "type2_not_authorized": "Typ 2 nicht autorisiert",
+          "residual_current_detected": "Fehlerstrom erkannt",
+          "cp_signal_voltage_error": "CP-Signal Spannungsfehler",
+          "cp_signal_impermissible": "CP-Signal unzulässig",
+          "ev_diode_fault": "Fahrzeug-Diodenfehler",
+          "pe_self_test_failed": "PE-Selbsttest fehlgeschlagen",
+          "rcd_self_test_failed": "RCD-Selbsttest fehlgeschlagen",
+          "relay_self_test_failed": "Relais-Selbsttest fehlgeschlagen",
+          "pe_and_rcd_self_test_failed": "PE- und RCD-Selbsttest fehlgeschlagen",
+          "pe_and_relay_self_test_failed": "PE- und Relais-Selbsttest fehlgeschlagen",
+          "rcd_and_relay_self_test_failed": "RCD- und Relais-Selbsttest fehlgeschlagen",
+          "pe_and_rcd_and_relay_self_test_failed": "PE-, RCD- und Relais-Selbsttest fehlgeschlagen",
+          "supply_voltage_error": "Versorgungsspannungsfehler",
+          "phase_shift_error": "Phasenverschiebungsfehler",
+          "overvoltage_detected": "Überspannung erkannt",
+          "undervoltage_detected": "Unterspannung erkannt",
+          "overvoltage_without_pe_detected": "Überspannung ohne PE erkannt",
+          "undervoltage_without_pe_detected": "Unterspannung ohne PE erkannt",
+          "underfrequency_detected": "Unterfrequenz erkannt",
+          "overfrequency_detected": "Überfrequenz erkannt",
+          "unknown_frequency_type": "Unbekannter Frequenztyp",
+          "unknown_grid_type": "Unbekannter Netztyp",
+          "general_overtemperature": "Allgemeine Übertemperatur",
+          "housing_overtemperature": "Gehäuse-Übertemperatur",
+          "attachment_overtemperature": "Aufsatz-Übertemperatur",
+          "domestic_plug_overtemperature": "Haushaltsstecker-Übertemperatur",
+          "unknown": "Unbekannt"
+        }
       },
       "housing_temperature": {
         "name": "Geh\u00e4usetemperatur"
