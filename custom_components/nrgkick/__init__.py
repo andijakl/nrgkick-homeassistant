@@ -13,6 +13,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -28,6 +29,9 @@ from .const import CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+# Type alias for typed config entry with runtime_data.
+type NRGkickConfigEntry = ConfigEntry[NRGkickDataUpdateCoordinator]
+
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
@@ -36,7 +40,7 @@ PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
     """Set up NRGkick from a config entry."""
     api = NRGkickAPI(
         host=entry.data["host"],
@@ -59,21 +63,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> None:
     """Reload the config entry when it changed."""
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    result: bool = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return result
 
 
-class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
+class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching NRGkick data from the API."""
 
+    config_entry: NRGkickConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, api: NRGkickAPI, entry: ConfigEntry
+        self, hass: HomeAssistant, api: NRGkickAPI, entry: NRGkickConfigEntry
     ) -> None:
         """Initialize."""
         self.api = api
@@ -210,10 +217,9 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         )
 
 
-class NRGkickEntity(CoordinatorEntity):
+class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities with common device info setup."""
 
-    coordinator: NRGkickDataUpdateCoordinator
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
@@ -237,20 +243,21 @@ class NRGkickEntity(CoordinatorEntity):
 
     def _setup_device_info(self) -> None:
         """Set up device info and unique ID."""
-        device_info = self.coordinator.data.get("info", {}).get("general", {})
-        serial = device_info.get("serial_number", "unknown")
+        data = self.coordinator.data
+        info_data: dict[str, Any] = data.get("info", {}) if data else {}
+        device_info: dict[str, Any] = info_data.get("general", {})
+        serial: str = device_info.get("serial_number", "unknown")
 
-        device_name = device_info.get("device_name")
+        device_name: str | None = device_info.get("device_name")
         if not device_name:
             device_name = "NRGkick"
 
+        versions: dict[str, Any] = info_data.get("versions", {})
         self._attr_unique_id = f"{serial}_{self._key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, serial)},
-            "name": device_name,
-            "manufacturer": "DiniTech",
-            "model": device_info.get("model_type", "NRGkick Gen2"),
-            "sw_version": self.coordinator.data.get("info", {})
-            .get("versions", {})
-            .get("sw_sm"),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            name=device_name,
+            manufacturer="DiniTech",
+            model=device_info.get("model_type", "NRGkick Gen2"),
+            sw_version=versions.get("sw_sm"),
+        )

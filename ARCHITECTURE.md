@@ -699,44 +699,51 @@ Home Assistant's device registry groups entities by device. The `NRGkickEntity` 
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities."""
 
-    coordinator: NRGkickDataUpdateCoordinator
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
         """Initialize NRGkick entity."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_has_entity_name = True
         self._attr_translation_key = key
         self._setup_device_info()
 
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Return the suggested object ID for this entity.
+
+        Ensures entity_ids are always English-based regardless of
+        user language, while translation_key provides localized names.
+        """
+        return self._key
+
     def _setup_device_info(self) -> None:
         """Set up device info and unique ID."""
-        device_info = self.coordinator.data.get("info", {}).get("general", {})
-        serial = device_info.get("serial_number", "unknown")
+        data = self.coordinator.data
+        info_data: dict[str, Any] = data.get("info", {}) if data else {}
+        device_info: dict[str, Any] = info_data.get("general", {})
+        serial: str = device_info.get("serial_number", "unknown")
 
-        # Get device name with fallback to "NRGkick"
-        device_name = device_info.get("device_name")
+        device_name: str | None = device_info.get("device_name")
         if not device_name:
             device_name = "NRGkick"
 
+        versions: dict[str, Any] = info_data.get("versions", {})
         self._attr_unique_id = f"{serial}_{self._key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, serial)},
-            "name": device_name,
-            "manufacturer": "DiniTech",
-            "model": device_info.get("model_type", "NRGkick Gen2"),
-            "sw_version": self.coordinator.data.get("info", {})
-            .get("versions", {})
-            .get("sw_sm"),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            name=device_name,
+            manufacturer="DiniTech",
+            model=device_info.get("model_type", "NRGkick Gen2"),
+            sw_version=versions.get("sw_sm"),
+        )
 ```
 
 **Device Registry Behavior:**
 
 - **Base Class Pattern**: All entity types (sensor, binary_sensor, switch, number) inherit from `NRGkickEntity`, eliminating duplicate device info setup.
 
-- **Modern Entity Naming (`has_entity_name = True`)**: Modern Home Assistant integrations use `has_entity_name = True`, which enables automatic device-based entity naming. Entity IDs are formed as `{device_name}_{entity_key}` (e.g., `sensor.garage_total_active_power` if device is named "Garage"). The `translation_key` provides localized entity names via the `translations/` directory.
+- **Modern Entity Naming (`has_entity_name = True`)**: Modern Home Assistant integrations use `has_entity_name = True`, which enables automatic device-based entity naming. The `translation_key` provides localized display names via the `translations/` directory, while `suggested_object_id` ensures entity IDs remain English-based regardless of user language (e.g., `sensor.nrgkick_total_active_power` with German display name "Gesamte Wirkleistung").
 
 - **Type Annotation**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference throughout the entity hierarchy.
 
@@ -1641,19 +1648,32 @@ The `NRGkickEntity` base class provides common functionality for all entity type
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities."""
 
-    coordinator: NRGkickDataUpdateCoordinator
+    _attr_has_entity_name = True
 
-    def __init__(self, coordinator: NRGkickDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
         """Initialize NRGkick entity."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(...)
+        self._key = key
+        self._attr_translation_key = key
+        self._setup_device_info()
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Ensure entity IDs are English-based regardless of user language."""
+        return self._key
+
+    def _setup_device_info(self) -> None:
+        """Set up device info and unique ID."""
+        # ... device info setup with DeviceInfo dataclass
 ```
 
 **Why This Pattern:**
 
 - **Single Source of Truth**: Device info setup is defined once instead of duplicated across 4 entity files.
 
-- **Type Safety**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference without type ignores.
+- **Type Safety**: Generic typing with `CoordinatorEntity[NRGkickDataUpdateCoordinator]` enables proper type inference throughout the entity hierarchy.
+
+- **Consistent Entity IDs**: The `suggested_object_id` property ensures entity IDs remain English-based (e.g., `sensor.nrgkick_total_active_power`) regardless of user language settings, while `translation_key` provides localized display names.
 
 - **Maintainability**: Changes to device info logic only need to be made in one place.
 

@@ -3,14 +3,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -29,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import NRGkickDataUpdateCoordinator, NRGkickEntity
+from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import (
     CELLULAR_MODE_MAP,
     CONNECTOR_TYPE_MAP,
@@ -45,8 +44,8 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # pylint: disable=unused-argument
-    entry: ConfigEntry,
+    _hass: HomeAssistant,
+    entry: NRGkickConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NRGkick sensors based on a config entry."""
@@ -774,5 +773,5 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
             data = data.get(key)
 
         if self._value_fn and data is not None:
-            return self._value_fn(data)
-        return data
+            return cast(StateType, self._value_fn(data))
+        return cast(StateType, data)

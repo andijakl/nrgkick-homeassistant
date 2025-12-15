@@ -42,13 +42,12 @@ repos:
     hooks:
       - id: mypy
         args:
-          - --ignore-missing-imports
-          - --check-untyped-defs
-          - --disallow-untyped-defs
-          - --no-implicit-optional
-          - --warn-redundant-casts
+          - --config-file=mypy.ini
         additional_dependencies:
-          - types-aiofiles
+          - homeassistant>=2025.12.0
+          - voluptuous>=0.15.0
+          - aiohttp>=3.10.0
+          - nrgkick-api>=1.0.0
         exclude: ^tests/
 
   # Python code linting with pylint

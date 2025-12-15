@@ -7,7 +7,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/andijakl/nrgkick-homeassistant/issues",
-  "requirements": ["nrgkick-api==1.2.0"],
+  "requirements": ["nrgkick-api==1.3.0"],
   "version": "2.4.0",
   "zeroconf": ["_nrgkick._tcp.local."]
 }

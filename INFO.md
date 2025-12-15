@@ -44,9 +44,11 @@ custom_components/nrgkick/
 **`NRGkickEntity`** (`__init__.py`)
 
 - Base class for all entity types
-- Provides common device info setup
+- Provides common device info setup using `DeviceInfo` dataclass
 - Sets `_attr_has_entity_name = True` for modern naming
-- Type annotation: `coordinator: NRGkickDataUpdateCoordinator`
+- Implements `suggested_object_id` for consistent English-based entity IDs
+- Uses `translation_key` for localized display names
+- Generic typing: `CoordinatorEntity[NRGkickDataUpdateCoordinator]`
 
 **`NRGkickAPI`** ([nrgkick-api](https://github.com/andijakl/nrgkick-api) library - external)
 

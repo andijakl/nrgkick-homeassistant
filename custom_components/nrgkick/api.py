@@ -7,7 +7,7 @@ adding Home Assistant-specific exception handling with translation support.
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, TypeVar, cast
 
 import aiohttp
 from homeassistant.exceptions import HomeAssistantError
@@ -25,6 +25,8 @@ from .const import DOMAIN
 
 
 _LOGGER = logging.getLogger(__name__)
+
+_T = TypeVar("_T")
 
 
 class NRGkickApiClientError(HomeAssistantError):
@@ -79,14 +81,19 @@ class NRGkickAPI:
             session=session,
         )
 
-    async def _wrap_call(self, coro: Any) -> Any:
+    async def _wrap_call(
+        self,
+        coro: Any,
+        return_type: type[_T],  # pylint: disable=unused-argument
+    ) -> _T:
         """Wrap library calls with Home Assistant exception translation.
 
         Args:
             coro: Coroutine from the library API.
+            return_type: Expected return type for type safety (used by mypy).
 
         Returns:
-            Result from the library call.
+            Result from the library call, cast to expected type.
 
         Raises:
             NRGkickApiClientAuthenticationError: If authentication fails.
@@ -94,7 +101,8 @@ class NRGkickAPI:
 
         """
         try:
-            return await coro
+            result = await coro
+            return cast(_T, result)
         except NRGkickAuthenticationError as err:
             _LOGGER.warning(
                 "Authentication failed for NRGkick device at %s: %s",
@@ -128,7 +136,7 @@ class NRGkickAPI:
             Device information dictionary.
 
         """
-        return await self._wrap_call(self._api.get_info(sections))
+        return await self._wrap_call(self._api.get_info(sections), dict)
 
     async def get_control(self) -> dict[str, Any]:
         """Get current control parameters.
@@ -137,7 +145,7 @@ class NRGkickAPI:
             Control parameters dictionary.
 
         """
-        return await self._wrap_call(self._api.get_control())
+        return await self._wrap_call(self._api.get_control(), dict)
 
     async def get_values(self, sections: list[str] | None = None) -> dict[str, Any]:
         """Get current values.
@@ -149,7 +157,7 @@ class NRGkickAPI:
             Current values dictionary.
 
         """
-        return await self._wrap_call(self._api.get_values(sections))
+        return await self._wrap_call(self._api.get_values(sections), dict)
 
     async def set_current(self, current: float) -> dict[str, Any]:
         """Set charging current.
@@ -161,7 +169,7 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_current(current))
+        return await self._wrap_call(self._api.set_current(current), dict)
 
     async def set_charge_pause(self, pause: bool) -> dict[str, Any]:
         """Set charge pause state.
@@ -173,7 +181,7 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_charge_pause(pause))
+        return await self._wrap_call(self._api.set_charge_pause(pause), dict)
 
     async def set_energy_limit(self, limit: int) -> dict[str, Any]:
         """Set energy limit in Wh (0 = no limit).
@@ -185,7 +193,7 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_energy_limit(limit))
+        return await self._wrap_call(self._api.set_energy_limit(limit), dict)
 
     async def set_phase_count(self, phases: int) -> dict[str, Any]:
         """Set phase count (1-3).
@@ -197,7 +205,7 @@ class NRGkickAPI:
             Response dictionary with confirmed value.
 
         """
-        return await self._wrap_call(self._api.set_phase_count(phases))
+        return await self._wrap_call(self._api.set_phase_count(phases), dict)
 
     async def test_connection(self) -> bool:
         """Test if we can connect to the device.
@@ -206,4 +214,4 @@ class NRGkickAPI:
             True if connection successful.
 
         """
-        return await self._wrap_call(self._api.test_connection())
+        return await self._wrap_call(self._api.test_connection(), bool)

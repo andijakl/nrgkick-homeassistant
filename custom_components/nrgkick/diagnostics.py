@@ -4,15 +4,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import NRGkickDataUpdateCoordinator
+from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
+    _hass: HomeAssistant,
+    entry: NRGkickConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data

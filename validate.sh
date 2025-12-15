@@ -122,6 +122,18 @@ else
     exit 1
 fi
 
+# Run mypy type checking
+echo ""
+echo "🔍 Running mypy strict type checking..."
+if mypy custom_components/nrgkick; then
+    echo ""
+    echo "✅ Type checking passed!"
+else
+    echo ""
+    echo "❌ Type errors found. Please review the output above."
+    exit 1
+fi
+
 # Summary
 echo ""
 echo "=========================================="

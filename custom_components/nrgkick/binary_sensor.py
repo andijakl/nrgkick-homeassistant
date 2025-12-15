@@ -9,20 +9,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NRGkickDataUpdateCoordinator, NRGkickEntity
+from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import STATUS_CHARGING
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # pylint: disable=unused-argument
-    entry: ConfigEntry,
+    _hass: HomeAssistant,
+    entry: NRGkickConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up NRGkick binary sensors based on a config entry."""

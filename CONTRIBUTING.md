@@ -154,9 +154,10 @@ The repository includes three helper scripts to streamline development and relea
 1. Sets up virtual environment (if needed)
 2. Installs all dependencies
 3. Installs pre-commit hooks
-4. Runs pre-commit checks (Black, isort, Flake8, MyPy, Pylint)
+4. Runs pre-commit checks (Ruff, MyPy, Pylint, Prettier)
 5. Runs complete test suite with coverage
-6. Reports all issues
+6. Runs strict type checking with mypy
+7. Reports all issues
 
 **When to use**:
 
@@ -236,12 +237,11 @@ We use pre-commit hooks to maintain code quality. These run automatically before
 
 **What the hooks check:**
 
-- **Black**: Code formatting (88 character line length)
-- **isort**: Import statement organization
-- **Flake8**: Code linting and style issues
-- **MyPy**: Type checking
+- **Ruff**: Code linting and formatting (replaces Black, isort, Flake8)
+- **MyPy**: Strict type checking (PEP-561 compliant with `py.typed`)
 - **Pylint**: Additional code quality checks
 - **YAML/JSON**: File syntax validation
+- **Prettier**: JSON/YAML/Markdown formatting
 
 **Manual pre-commit usage:**
 
