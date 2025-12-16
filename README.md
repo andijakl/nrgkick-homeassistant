@@ -23,6 +23,8 @@ Supports automatic network discovery via mDNS/Zeroconf. Devices are automaticall
 - **Status**: Charging status, rate, relay state, charge count, error/warning codes
 - **Temperature**: Housing, per-phase connector, domestic plug
 - **Network**: IP/MAC address, WiFi SSID/RSSI
+- **Cellular** (SIM models): Operator, signal strength, connection mode
+- **GPS** (SIM models): Latitude, longitude, altitude, accuracy
 - **Device Info**: Connector details, grid info, firmware versions
 - **Session**: Connect time, charging time
 - **Localization**: Fully translated entity names and error messages (English/German)
@@ -59,6 +61,7 @@ _Note: NRGkick Gen1 (Bluetooth only) is not supported._
 - **Polling Interval**: The minimum polling interval is 10 seconds to protect the device's internal flash memory and CPU.
 - **Phase-Specific Sensors**: Sensors for Phase 2 and Phase 3 (voltage, current, power) only report data when a 3-phase source is connected and active.
 - **Temperature Sensors**: Availability of specific temperature sensors (e.g., connector pins) depends on the attached connector attachment.
+- **GPS/Cellular Sensors**: Only available on NRGkick Gen2 SIM models. These sensors are disabled by default and can be enabled in the entity settings.
 - **Cloud Independence**: This integration works entirely locally. It does not access the NRGkick Cloud and cannot control cloud-specific features (like cloud-based charging reports).
 
 ## Installation

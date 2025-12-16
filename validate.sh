@@ -123,16 +123,18 @@ else
 fi
 
 # Run mypy type checking
-echo ""
-echo "🔍 Running mypy strict type checking..."
-if mypy custom_components/nrgkick; then
-    echo ""
-    echo "✅ Type checking passed!"
-else
-    echo ""
-    echo "❌ Type errors found. Please review the output above."
-    exit 1
-fi
+# Already done by pre-commit, so this is optional
+# Uncomment if you want to run it separately
+# echo ""
+# echo "🔍 Running mypy strict type checking..."
+# if mypy custom_components/nrgkick; then
+#     echo ""
+#     echo "✅ Type checking passed!"
+# else
+#     echo ""
+#     echo "❌ Type errors found. Please review the output above."
+#     exit 1
+# fi
 
 # Summary
 echo ""

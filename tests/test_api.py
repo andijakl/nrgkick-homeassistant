@@ -82,7 +82,7 @@ class TestHAAPIWrapper:
             await api.get_info()
 
     async def test_get_info_passes_through(self, mock_session):
-        """Test get_info passes through to library."""
+        """Test get_info passes through to library with raw mode."""
         api = NRGkickAPI(host="192.168.1.100", session=mock_session)
         mock_session.get.return_value.__aenter__.return_value.json.return_value = {
             "general": {"device_name": "Test"}
@@ -92,16 +92,31 @@ class TestHAAPIWrapper:
 
         assert result == {"general": {"device_name": "Test"}}
         mock_session.get.assert_called_once()
+        call_args = mock_session.get.call_args
+        params = call_args[1]["params"]
+        # Default raw=True for translation support
+        assert params == {"raw": "1"}
 
     async def test_get_info_with_sections(self, mock_session):
-        """Test get_info with specific sections."""
+        """Test get_info with specific sections and raw mode."""
         api = NRGkickAPI(host="192.168.1.100", session=mock_session)
 
+        # Default: raw=True for translation support
         await api.get_info(["general", "network"])
 
         call_args = mock_session.get.call_args
         params = call_args[1]["params"]
-        assert params == {"general": "1", "network": "1"}
+        assert params == {"general": "1", "network": "1", "raw": "1"}
+
+    async def test_get_info_raw_disabled(self, mock_session):
+        """Test get_info with raw mode disabled."""
+        api = NRGkickAPI(host="192.168.1.100", session=mock_session)
+
+        await api.get_info(["general"], raw=False)
+
+        call_args = mock_session.get.call_args
+        params = call_args[1]["params"]
+        assert params == {"general": "1"}
 
     async def test_get_control(self, mock_session):
         """Test get_control API call."""
@@ -115,7 +130,7 @@ class TestHAAPIWrapper:
         assert result == {"charging_current": 16.0}
 
     async def test_get_values(self, mock_session):
-        """Test get_values API call."""
+        """Test get_values API call with raw mode (default)."""
         api = NRGkickAPI(host="192.168.1.100", session=mock_session)
         mock_session.get.return_value.__aenter__.return_value.json.return_value = {
             "powerflow": {"power": {"total": 11000}}
@@ -124,6 +139,36 @@ class TestHAAPIWrapper:
         result = await api.get_values()
 
         assert result == {"powerflow": {"power": {"total": 11000}}}
+        call_args = mock_session.get.call_args
+        params = call_args[1]["params"]
+        # Default raw=True for translation support
+        assert params == {"raw": "1"}
+
+    async def test_get_values_with_sections(self, mock_session):
+        """Test get_values with specific sections and raw mode."""
+        api = NRGkickAPI(host="192.168.1.100", session=mock_session)
+        mock_session.get.return_value.__aenter__.return_value.json.return_value = {
+            "general": {"status": 1}
+        }
+
+        await api.get_values(["general"])
+
+        call_args = mock_session.get.call_args
+        params = call_args[1]["params"]
+        assert params == {"general": "1", "raw": "1"}
+
+    async def test_get_values_raw_disabled(self, mock_session):
+        """Test get_values with raw mode disabled."""
+        api = NRGkickAPI(host="192.168.1.100", session=mock_session)
+        mock_session.get.return_value.__aenter__.return_value.json.return_value = {
+            "general": {"status": "STANDBY"}
+        }
+
+        await api.get_values(["general"], raw=False)
+
+        call_args = mock_session.get.call_args
+        params = call_args[1]["params"]
+        assert params == {"general": "1"}
 
     async def test_set_current(self, mock_session):
         """Test set_current API call."""

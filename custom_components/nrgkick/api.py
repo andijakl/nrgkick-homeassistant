@@ -126,17 +126,25 @@ class NRGkickAPI:
                 translation_placeholders={"error": str(err)},
             ) from err
 
-    async def get_info(self, sections: list[str] | None = None) -> dict[str, Any]:
+    async def get_info(
+        self,
+        sections: list[str] | None = None,
+        *,
+        raw: bool = True,
+    ) -> dict[str, Any]:
         """Get device information.
 
         Args:
             sections: Optional list of sections to retrieve.
+            raw: If True, return raw numeric values for enum fields.
+                This enables proper translation via Home Assistant's
+                translation system.
 
         Returns:
             Device information dictionary.
 
         """
-        return await self._wrap_call(self._api.get_info(sections), dict)
+        return await self._wrap_call(self._api.get_info(sections, raw=raw), dict)
 
     async def get_control(self) -> dict[str, Any]:
         """Get current control parameters.
@@ -147,17 +155,25 @@ class NRGkickAPI:
         """
         return await self._wrap_call(self._api.get_control(), dict)
 
-    async def get_values(self, sections: list[str] | None = None) -> dict[str, Any]:
+    async def get_values(
+        self,
+        sections: list[str] | None = None,
+        *,
+        raw: bool = True,
+    ) -> dict[str, Any]:
         """Get current values.
 
         Args:
             sections: Optional list of sections to retrieve.
+            raw: If True, return raw numeric values for enum fields.
+                This enables proper translation via Home Assistant's
+                translation system.
 
         Returns:
             Current values dictionary.
 
         """
-        return await self._wrap_call(self._api.get_values(sections), dict)
+        return await self._wrap_call(self._api.get_values(sections, raw=raw), dict)
 
     async def set_current(self, current: float) -> dict[str, Any]:
         """Set charging current.

@@ -77,10 +77,12 @@ custom_components/nrgkick/
 
 ## Entity Distribution
 
-- **Sensors**: 80+ (power, energy, voltage, current, temperatures, status, network, versions)
+- **Sensors**: 80+ (power, energy, voltage, current, temperatures, status, network, cellular, GPS, versions)
 - **Binary Sensors**: 3 (charging, charge_permitted, charge_pause)
 - **Switch**: 1 (charge_pause toggle)
 - **Numbers**: 3 (charging_current 6-32A, energy_limit 0-100kWh, phase_count 1-3)
+
+Cellular and GPS sensors are only available on NRGkick Gen2 SIM models and are disabled by default.
 
 All entities use value_path arrays for data extraction. Control commands verify responses immediately.
 

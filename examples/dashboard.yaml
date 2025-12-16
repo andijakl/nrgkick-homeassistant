@@ -84,6 +84,17 @@
 #   sensor.nrgkick_wifi_ssid - Connected WiFi network
 #   sensor.nrgkick_wifi_signal_strength - WiFi RSSI (dBm)
 #
+# SENSORS (Cellular - SIM models only, disabled by default):
+#   sensor.nrgkick_cellular_mode - Connection mode (GSM, LTE Cat-M1, etc.)
+#   sensor.nrgkick_cellular_rssi - Cellular signal strength (dBm)
+#   sensor.nrgkick_cellular_operator - Network operator name
+#
+# SENSORS (GPS - SIM models only, disabled by default):
+#   sensor.nrgkick_gps_latitude - Current latitude (°)
+#   sensor.nrgkick_gps_longitude - Current longitude (°)
+#   sensor.nrgkick_gps_altitude - Current altitude (m)
+#   sensor.nrgkick_gps_accuracy - GPS accuracy (m)
+#
 # SWITCHES:
 #   switch.nrgkick_charge_pause - Pause/resume charging
 #
