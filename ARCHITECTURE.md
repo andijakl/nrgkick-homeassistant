@@ -353,6 +353,8 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         "connector": {"phase_count", "max_current", "type", "serial"},
         "grid": {"voltage", "frequency", "phases"},
         "network": {"ip_address", "mac_address", "ssid", "rssi"},
+        "cellular": {"imei", "imsi", "operator", "rssi", "mode"},  # SIM models only
+        "gps": {"latitude", "longitude", "altitude", "accuracy"},  # SIM models only
         "versions": {"sw_sm", "hw_sm"}
     },
     "control": {
@@ -1419,7 +1421,8 @@ entities:
 
 ```
 custom_components/nrgkick/
-├── __init__.py                 # Entry point, coordinator, setup/teardown
+├── __init__.py                 # Entry point, setup/teardown
+├── coordinator.py              # DataUpdateCoordinator, base entity class
 ├── api.py                      # HTTP client, API methods
 ├── config_flow.py              # UI configuration, validation, options
 ├── const.py                    # Constants (domain, status map, intervals)
@@ -1439,16 +1442,17 @@ custom_components/nrgkick/
 
 ### Responsibility Matrix
 
-| File               | Responsibilities                                             | Dependencies                        |
-| ------------------ | ------------------------------------------------------------ | ----------------------------------- |
-| `__init__.py`      | Integration setup/teardown, coordinator, platform forwarding | `api.py`, `const.py`                |
-| `api.py`           | HTTP client, REST API calls, connection testing              | `aiohttp`                           |
-| `config_flow.py`   | UI configuration, validation, discovery, reauth              | `api.py`, `const.py`                |
-| `const.py`         | Constants, status map, configuration keys                    | None                                |
-| `sensor.py`        | 80+ sensor entity definitions, value mapping                 | `__init__.py`, `const.py`           |
-| `binary_sensor.py` | 3 binary sensor entities                                     | `__init__.py`, `const.py`           |
-| `switch.py`        | 1 switch entity (charge pause control)                       | `__init__.py`, `const.py`, `api.py` |
-| `number.py`        | 3 number entities (control inputs)                           | `__init__.py`, `const.py`, `api.py` |
+| File               | Responsibilities                                | Dependencies                           |
+| ------------------ | ----------------------------------------------- | -------------------------------------- |
+| `__init__.py`      | Integration setup/teardown, platform forwarding | `api.py`, `coordinator.py`             |
+| `coordinator.py`   | DataUpdateCoordinator, NRGkickEntity base class | `api.py`, `const.py`                   |
+| `api.py`           | HTTP client, REST API calls, connection testing | `aiohttp`                              |
+| `config_flow.py`   | UI configuration, validation, discovery, reauth | `api.py`, `const.py`                   |
+| `const.py`         | Constants, status map, configuration keys       | None                                   |
+| `sensor.py`        | 80+ sensor entity definitions, value mapping    | `coordinator.py`, `const.py`           |
+| `binary_sensor.py` | 3 binary sensor entities                        | `coordinator.py`, `const.py`           |
+| `switch.py`        | 1 switch entity (charge pause control)          | `coordinator.py`, `const.py`, `api.py` |
+| `number.py`        | 3 number entities (control inputs)              | `coordinator.py`, `const.py`, `api.py` |
 
 ### Key Constants (`const.py`)
 

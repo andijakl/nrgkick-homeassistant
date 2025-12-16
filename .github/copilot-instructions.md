@@ -14,7 +14,8 @@
 
 ```
 custom_components/nrgkick/
-├── __init__.py      # NRGkickDataUpdateCoordinator + NRGkickEntity base class
+├── __init__.py      # Entry point, setup/teardown
+├── coordinator.py   # NRGkickDataUpdateCoordinator + NRGkickEntity base class
 ├── api.py           # Thin wrapper translating library exceptions to HA types
 ├── sensor.py        # 80+ sensors using value_path pattern
 ├── number.py        # Controls: current_set, energy_limit, phase_count
