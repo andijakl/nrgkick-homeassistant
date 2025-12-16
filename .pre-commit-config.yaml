@@ -56,7 +56,11 @@ repos:
     hooks:
       - id: pylint
         args:
-          - --disable=C0111,C0103,W0212,W0223,W0613,W0718,R0913,R0902,R0914,R0801
+          # W0223: abstract-method - HA entities use async methods pylint doesn't see
+          # R0913: too-many-arguments - Entity constructors need many params
+          # R0902: too-many-instance-attributes - Entity classes have many attrs
+          # R0801: duplicate-code - Structural similarity in entities is expected
+          - --disable=W0223,R0913,R0902,R0801
           - --max-line-length=88
         additional_dependencies:
           - homeassistant>=2025.12.0
