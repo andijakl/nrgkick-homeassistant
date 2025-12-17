@@ -37,7 +37,7 @@
                     "username": "Optional. Leave empty if authentication is disabled.",
                     "password": "Optional. Leave empty if authentication is disabled."
                 },
-                "description": "Discovered {name} at {device_ip}. Add credentials if authentication is enabled."
+                "description": "Do you want to add the NRGkick device ({name}) at {device_ip} to Home Assistant?"
             },
             "reauth_confirm": {
                 "data": {

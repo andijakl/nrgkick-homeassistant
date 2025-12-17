@@ -37,7 +37,7 @@
           "username": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",
           "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist."
         },
-        "description": "{name} wurde unter {device_ip} gefunden. F\u00fcgen Sie Anmeldedaten hinzu, wenn Authentifizierung aktiviert ist."
+        "description": "M\u00f6chten Sie das NRGkick-Ger\u00e4t ({name}) unter {device_ip} zu Home Assistant hinzuf\u00fcgen?"
       },
       "reauth_confirm": {
         "data": {
