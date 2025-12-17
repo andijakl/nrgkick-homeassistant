@@ -2,7 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+      "json_api_disabled": "JSON API ist auf dem Ger\u00e4t deaktiviert",
+      "no_serial_number": "Das Ger\u00e4t hat keine Seriennummer bereitgestellt",
+      "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen",
       "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+      "reconfigure_failed": "Die Neukonfiguration ist fehlgeschlagen",
       "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
     },
     "error": {
@@ -17,12 +21,32 @@
           "password": "Passwort",
           "username": "Benutzername"
         },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname (z. B. 192.168.1.50 oder nrgkick.local).",
+          "username": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",
+          "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist."
+        },
         "description": "Richten Sie Ihr NRGkick-Ger\u00e4t ein. Stellen Sie sicher, dass das Ger\u00e4t eingeschaltet und im Netzwerk erreichbar ist."
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "password": "Passwort",
+          "username": "Benutzername"
+        },
+        "data_description": {
+          "username": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",
+          "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist."
+        },
+        "description": "{name} wurde unter {device_ip} gefunden. F\u00fcgen Sie Anmeldedaten hinzu, wenn Authentifizierung aktiviert ist."
       },
       "reauth_confirm": {
         "data": {
           "password": "Passwort",
           "username": "Benutzername"
+        },
+        "data_description": {
+          "username": "Geben Sie den aktualisierten Benutzernamen ein.",
+          "password": "Geben Sie das aktualisierte Passwort ein."
         },
         "description": "Bitte aktualisieren Sie Ihre Anmeldedaten f\u00fcr {host}."
       },
@@ -32,7 +56,25 @@
           "password": "Passwort",
           "username": "Benutzername"
         },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname (z. B. 192.168.1.50 oder nrgkick.local).",
+          "username": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",
+          "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist."
+        },
         "description": "Konfiguration f\u00fcr {host} aktualisieren."
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Abfrageintervall"
+        },
+        "data_description": {
+          "scan_interval": "Abfrageintervall in Sekunden (10-300)."
+        },
+        "description": "Legen Sie fest, wie oft Home Assistant das NRGkick-Ger\u00e4t abfragt."
       }
     }
   },

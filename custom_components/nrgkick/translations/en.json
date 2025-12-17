@@ -2,7 +2,11 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
+            "json_api_disabled": "JSON API is disabled on the device",
+            "no_serial_number": "Device did not provide a serial number",
+            "reauth_failed": "Re-authentication failed",
             "reauth_successful": "Re-authentication was successful",
+            "reconfigure_failed": "Reconfiguration failed",
             "reconfigure_successful": "Reconfiguration was successful"
         },
         "error": {
@@ -17,12 +21,32 @@
                     "password": "Password",
                     "username": "Username"
                 },
+                "data_description": {
+                    "host": "IP address or hostname (e.g., 192.168.1.50 or nrgkick.local).",
+                    "username": "Optional. Leave empty if authentication is disabled.",
+                    "password": "Optional. Leave empty if authentication is disabled."
+                },
                 "description": "Set up your NRGkick device. Ensure the device is powered on and reachable on the network."
+            },
+            "zeroconf_confirm": {
+                "data": {
+                    "password": "Password",
+                    "username": "Username"
+                },
+                "data_description": {
+                    "username": "Optional. Leave empty if authentication is disabled.",
+                    "password": "Optional. Leave empty if authentication is disabled."
+                },
+                "description": "Discovered {name} at {device_ip}. Add credentials if authentication is enabled."
             },
             "reauth_confirm": {
                 "data": {
                     "password": "Password",
                     "username": "Username"
+                },
+                "data_description": {
+                    "username": "Enter the updated username.",
+                    "password": "Enter the updated password."
                 },
                 "description": "Please update your credentials for {host}."
             },
@@ -32,7 +56,25 @@
                     "password": "Password",
                     "username": "Username"
                 },
+                "data_description": {
+                    "host": "IP address or hostname (e.g., 192.168.1.50 or nrgkick.local).",
+                    "username": "Optional. Leave empty if authentication is disabled.",
+                    "password": "Optional. Leave empty if authentication is disabled."
+                },
                 "description": "Update configuration for {host}."
+            }
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Scan interval"
+                },
+                "data_description": {
+                    "scan_interval": "Polling interval in seconds (10-300)."
+                },
+                "description": "Adjust how often Home Assistant polls the NRGkick device."
             }
         }
     },

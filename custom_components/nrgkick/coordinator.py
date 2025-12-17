@@ -63,12 +63,6 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             info = await self.api.get_info()
             control = await self.api.get_control()
             values = await self.api.get_values()
-
-            return {
-                "info": info,
-                "control": control,
-                "values": values,
-            }
         except NRGkickApiClientAuthenticationError as err:
             raise ConfigEntryAuthFailed from err
         except NRGkickApiClientCommunicationError as err:
@@ -77,6 +71,12 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key=err.translation_key,
                 translation_placeholders=err.translation_placeholders,
             ) from err
+
+        return {
+            "info": info,
+            "control": control,
+            "values": values,
+        }
 
     async def _async_execute_command_with_verification(
         self,
