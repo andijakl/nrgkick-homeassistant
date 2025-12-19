@@ -1,15 +1,15 @@
-"""Platform for sensor integration."""
+"""Sensor platform for NRGkick."""
 
 from __future__ import annotations
 
-from typing import Any
+from collections.abc import Callable
+from typing import Any, cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -25,19 +25,28 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import NRGkickDataUpdateCoordinator, NRGkickEntity
-from .const import STATUS_MAP
+from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
+from .const import (
+    CELLULAR_MODE_MAP,
+    CONNECTOR_TYPE_MAP,
+    ERROR_CODE_MAP,
+    GRID_PHASES_MAP,
+    RCD_TRIGGER_MAP,
+    RELAY_STATE_MAP,
+    STATUS_MAP,
+    WARNING_CODE_MAP,
+)
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # pylint: disable=unused-argument
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    _hass: HomeAssistant,
+    entry: NRGkickConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick sensors based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
@@ -78,6 +87,11 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["info", "connector", "type"],
+            value_fn=lambda x: (
+                CONNECTOR_TYPE_MAP.get(x, "unknown")
+                if isinstance(x, int)
+                else str(x).lower()
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
@@ -115,6 +129,11 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["info", "grid", "phases"],
+            value_fn=lambda x: (
+                GRID_PHASES_MAP.get(x, "unknown")
+                if isinstance(x, int)
+                else str(x).lower().replace(", ", "_").replace(" ", "_")
+            ),
         ),
         # INFO - Network
         NRGkickSensor(
@@ -151,6 +170,87 @@ async def async_setup_entry(
             device_class=SensorDeviceClass.SIGNAL_STRENGTH,
             state_class=SensorStateClass.MEASUREMENT,
             value_path=["info", "network", "rssi"],
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        # INFO - Cellular (optional, only if cellular module is available)
+        NRGkickSensor(
+            coordinator,
+            key="cellular_mode",
+            unit=None,
+            device_class=None,
+            state_class=None,
+            value_path=["info", "cellular", "mode"],
+            value_fn=lambda x: (
+                CELLULAR_MODE_MAP.get(x, "unknown")
+                if isinstance(x, int)
+                else str(x).lower()
+            ),
+            enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        NRGkickSensor(
+            coordinator,
+            key="cellular_rssi",
+            unit=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+            device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_path=["info", "cellular", "rssi"],
+            enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        NRGkickSensor(
+            coordinator,
+            key="cellular_operator",
+            unit=None,
+            device_class=None,
+            state_class=None,
+            value_path=["info", "cellular", "operator"],
+            enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        # INFO - GPS (optional, only if GPS module is available)
+        NRGkickSensor(
+            coordinator,
+            key="gps_latitude",
+            unit="°",
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_path=["info", "gps", "latitude"],
+            precision=6,
+            enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        NRGkickSensor(
+            coordinator,
+            key="gps_longitude",
+            unit="°",
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_path=["info", "gps", "longitude"],
+            precision=6,
+            enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        NRGkickSensor(
+            coordinator,
+            key="gps_altitude",
+            unit="m",
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_path=["info", "gps", "altitude"],
+            precision=2,
+            enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        ),
+        NRGkickSensor(
+            coordinator,
+            key="gps_accuracy",
+            unit="m",
+            device_class=None,
+            state_class=SensorStateClass.MEASUREMENT,
+            value_path=["info", "gps", "accuracy"],
+            precision=2,
+            enabled_default=False,
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         # INFO - Versions
@@ -500,12 +600,7 @@ async def async_setup_entry(
             state_class=None,
             value_path=["values", "general", "status"],
             value_fn=lambda x: (
-                STATUS_MAP.get(
-                    x,
-                    "Unknown",
-                )
-                if isinstance(x, int)
-                else x
+                STATUS_MAP.get(x, "unknown") if isinstance(x, int) else str(x).lower()
             ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
@@ -524,6 +619,11 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "relay_state"],
+            value_fn=lambda x: (
+                RELAY_STATE_MAP.get(x, "unknown")
+                if isinstance(x, int)
+                else str(x).lower().replace(", ", "_").replace(" ", "_")
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
@@ -541,6 +641,11 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "rcd_trigger"],
+            value_fn=lambda x: (
+                RCD_TRIGGER_MAP.get(x, "unknown")
+                if isinstance(x, int)
+                else str(x).lower()
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
@@ -550,6 +655,11 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "warning_code"],
+            value_fn=lambda x: (
+                WARNING_CODE_MAP.get(x, "unknown")
+                if isinstance(x, int)
+                else str(x).lower()
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         NRGkickSensor(
@@ -559,6 +669,11 @@ async def async_setup_entry(
             device_class=None,
             state_class=None,
             value_path=["values", "general", "error_code"],
+            value_fn=lambda x: (
+                ERROR_CODE_MAP.get(x, "unknown")
+                if isinstance(x, int)
+                else str(x).lower()
+            ),
             entity_category=EntityCategory.DIAGNOSTIC,
         ),
         # VALUES - Temperatures
@@ -628,7 +743,7 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
         state_class: SensorStateClass | None,
         value_path: list[str],
         entity_category: EntityCategory | None = None,
-        value_fn: Any = None,
+        value_fn: Callable[[Any], Any] | None = None,
         precision: int | None = None,
         suggested_unit: str | None = None,
         enabled_default: bool = True,
@@ -658,5 +773,5 @@ class NRGkickSensor(NRGkickEntity, SensorEntity):
             data = data.get(key)
 
         if self._value_fn and data is not None:
-            return self._value_fn(data)
-        return data
+            return cast(StateType, self._value_fn(data))
+        return cast(StateType, data)

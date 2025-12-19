@@ -17,27 +17,14 @@ Comprehensive test suite for the NRGkick Home Assistant integration with full do
 
 ## Quick Start
 
-### Run All Tests (Recommended)
-
-```bash
-# Using the convenient script (default behavior)
-./run-tests.sh
-
-# Or explicitly
-./run-tests.sh all
-
-# Or manually
-pytest tests/ -v
-```
-
-### Run Only Non-Integration Tests (Fast CI-Compatible)
+### Run All Tests
 
 ```bash
 # Using the convenient script
-./run-tests.sh ci
+./run-tests.sh
 
 # Or manually
-pytest tests/ -v -m "not requires_integration"
+pytest tests/ -v
 ```
 
 ### Generate Coverage Report
@@ -52,7 +39,20 @@ pytest tests/ -v -m "not requires_integration"
 
 ### Overview
 
-This project uses **pytest-homeassistant-custom-component** which provides a full Home Assistant test environment. All tests, including integration tests marked with `@pytest.mark.requires_integration`, now run successfully in both CI and local environments.
+This project uses **pytest-homeassistant-custom-component** which provides a full Home Assistant test environment. All tests, including integration tests marked with `@pytest.mark.requires_integration`, run successfully in both CI and local environments.
+
+### Architecture
+
+The integration uses a **two-layer architecture**:
+
+1. **nrgkick-api** - Standalone PyPI library for device communication
+   - Has its own test suite in a separate repository
+   - Tests HTTP communication, retries, authentication
+   - See: https://github.com/andijakl/nrgkick-api
+
+2. **Home Assistant Integration** - This repository
+   - Tests the HA wrapper, config flows, coordinator, entities
+   - Uses mocked library responses (doesn't test actual HTTP calls)
 
 ### Test Categories
 
@@ -60,11 +60,10 @@ This project uses **pytest-homeassistant-custom-component** which provides a ful
 
 These tests validate individual components in isolation using mocks:
 
-- **API Tests** (`test_api.py`): 17 tests
-  - All API client methods
-  - HTTP error handling
-  - Authentication flows
-  - Timeout behavior
+- **API Wrapper Tests** (`test_api.py`): 19 tests
+  - Wrapper initialization and delegation to library
+  - Exception translation (library → Home Assistant)
+  - All wrapper methods pass-through correctly
 
 **Execution**: Run everywhere (CI and local).
 
@@ -72,21 +71,18 @@ These tests validate individual components in isolation using mocks:
 
 These tests use Home Assistant's integration loader and test environment, powered by `pytest-homeassistant-custom-component`:
 
-- **Config Flow Tests** (`test_config_flow.py`): 15 tests
+- **Config Flow Tests** (`test_config_flow.py`): 19 tests
   - User setup flow
-  - Reauthentication
-  - Options/reconfiguration
+  - Reauthentication and reconfiguration
   - Zeroconf discovery
   - Error handling
 
-- **Coordinator Tests** (`test_init.py`): 7 tests
+- **Coordinator Tests** (`test_init.py`): 13 tests
   - Entry setup/unload/reload
   - Coordinator updates
   - Error recovery
 
 **Execution**: These run successfully in both CI (GitHub Actions) and local environments thanks to the pytest-homeassistant-custom-component package.
-
-**CI Strategy**: For faster CI runs, GitHub Actions currently skips integration tests using the marker filter. However, these tests work in CI if needed.
 
 ### Do Tests Connect to Real Devices?
 
@@ -118,140 +114,129 @@ def mock_session():
 
 ### Current Status Summary
 
-| Test Suite             | Count  | CI Status      | Local Status | Pass Rate |
-| ---------------------- | ------ | -------------- | ------------ | --------- |
-| API Tests              | 26     | ✅ PASS        | ✅ PASS      | 100%      |
-| Config Flow Tests      | 19     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Config Flow Additional | 5      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Coordinator Tests      | 13     | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Naming Tests           | 2      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| Platform Tests         | 8      | ⏭️ SKIP (fast) | ✅ PASS      | 100%      |
-| **Total**              | **73** | **26 pass**    | **73 pass**  | **100%**  |
+| Test Suite             | Count  | Status  | Pass Rate |
+| ---------------------- | ------ | ------- | --------- |
+| API Wrapper Tests      | 19     | ✅ PASS | 100%      |
+| Config Flow Tests      | 19     | ✅ PASS | 100%      |
+| Config Flow Additional | 5      | ✅ PASS | 100%      |
+| Coordinator Tests      | 13     | ✅ PASS | 100%      |
+| Naming Tests           | 2      | ✅ PASS | 100%      |
+| Platform Tests         | 8      | ✅ PASS | 100%      |
+| **Total**              | **66** | ✅ PASS | **100%**  |
 
-**Note**: All 73 tests work in both environments. CI skips 47 integration tests for faster builds (runs in ~2s instead of ~5s).
+**Note**: All 66 tests run in both CI and local environments. The `nrgkick-api` library has its own separate test suite.
 
-### GitHub Actions (CI)
-
-```
-✅ 26 tests pass (non-integration only for speed)
-⏭️ 47 tests skipped (integration tests - work but skipped for fast CI)
-❌ 0 tests fail
-```
-
-### Local Development (Full Suite)
+### Expected Results (CI & Local)
 
 ```
-✅ 73 tests pass (all tests including integration)
+✅ 66 tests pass
 ❌ 0 tests fail
 ⏭️ 0 tests skipped
 ```
 
 ### Detailed Test Breakdown
 
-#### API Tests (`test_api.py`) - 26/26 ✅ PASSING
+#### API Wrapper Tests (`test_api.py`) - 19/19 ✅ PASSING
 
-| Test                            | Status | What It Tests                     |
-| ------------------------------- | ------ | --------------------------------- |
-| `test_api_init`                 | ✅     | API object creation               |
-| `test_get_info`                 | ✅     | GET /info endpoint                |
-| `test_get_info_with_sections`   | ✅     | GET /info with query params       |
-| `test_get_control`              | ✅     | GET /control endpoint             |
-| `test_get_values`               | ✅     | GET /values endpoint              |
-| `test_get_values_with_sections` | ✅     | GET /values with query params     |
-| `test_set_current`              | ✅     | POST current setting              |
-| `test_set_charge_pause`         | ✅     | POST pause/resume                 |
-| `test_set_energy_limit`         | ✅     | POST energy limit                 |
-| `test_set_phase_count`          | ✅     | POST phase count                  |
-| `test_set_phase_count_invalid`  | ✅     | Error handling for invalid phases |
-| `test_api_with_auth`            | ✅     | BasicAuth authentication          |
-| `test_test_connection_success`  | ✅     | Connection test success           |
-| `test_test_connection_failure`  | ✅     | Connection test failure           |
-| `test_api_timeout`              | ✅     | Timeout handling                  |
-| `test_api_client_error`         | ✅     | Client error handling             |
-| `test_api_auth_error`           | ✅     | Authentication error handling     |
-| `test_api_http_error_with_json` | ✅     | HTTP error with JSON response     |
-| `test_api_http_error_no_json`   | ✅     | HTTP error without JSON response  |
-| `test_api_retry_on_timeout`     | ✅     | Retry logic for timeouts          |
-| `test_api_retry_on_http_error`  | ✅     | Retry logic for 5xx errors        |
-| `test_api_retry_exhausted`      | ✅     | Retry exhaustion handling         |
-| `test_api_retry_connection`     | ✅     | Retry logic for connection errors |
-| `test_api_no_retry_auth`        | ✅     | No retry for auth errors          |
-| `test_api_no_retry_client`      | ✅     | No retry for 4xx errors           |
-| `test_api_retry_backoff`        | ✅     | Exponential backoff timing        |
+These tests verify the Home Assistant wrapper around the `nrgkick-api` library:
+
+| Test                                     | Status | What It Tests                           |
+| ---------------------------------------- | ------ | --------------------------------------- |
+| `test_api_init`                          | ✅     | Wrapper initialization                  |
+| `test_wrapper_converts_auth_error`       | ✅     | Library auth error → HA exception       |
+| `test_wrapper_converts_connection_error` | ✅     | Library connection error → HA exception |
+| `test_get_info_passes_through`           | ✅     | get_info delegates to library           |
+| `test_get_info_with_sections`            | ✅     | get_info with sections parameter        |
+| `test_get_control`                       | ✅     | get_control delegates to library        |
+| `test_get_values`                        | ✅     | get_values delegates to library         |
+| `test_set_current`                       | ✅     | set_current delegates to library        |
+| `test_set_charge_pause`                  | ✅     | set_charge_pause delegates to library   |
+| `test_set_energy_limit`                  | ✅     | set_energy_limit delegates to library   |
+| `test_set_phase_count`                   | ✅     | set_phase_count delegates to library    |
+| `test_set_phase_count_invalid`           | ✅     | Invalid phase count error handling      |
+| `test_api_with_auth`                     | ✅     | Wrapper passes auth to library          |
+| `test_test_connection_success`           | ✅     | test_connection success path            |
+| `test_test_connection_failure`           | ✅     | test_connection failure path            |
+| `test_api_timeout`                       | ✅     | Timeout converted to HA exception       |
+| `test_api_auth_error`                    | ✅     | Auth error converted to HA exception    |
+| `test_exception_inheritance`             | ✅     | Exception class hierarchy correct       |
+| `test_exception_translation_keys`        | ✅     | Exceptions have translation keys        |
+
+**Note**: HTTP-level tests (retries, backoff, actual requests) are covered by the `nrgkick-api` library's test suite.
 
 #### Config Flow Tests (`test_config_flow.py`) - 19/19 ✅ PASSING
 
-| Test                                    | CI   | What It Tests                  |
-| --------------------------------------- | ---- | ------------------------------ |
-| `test_form`                             | SKIP | User setup flow                |
-| `test_form_without_credentials`         | SKIP | Setup without auth             |
-| `test_form_cannot_connect`              | SKIP | Connection error handling      |
-| `test_form_invalid_auth`                | PASS | Authentication error handling  |
-| `test_form_unknown_exception`           | SKIP | Unknown exception handling     |
-| `test_form_already_configured`          | SKIP | Duplicate detection            |
-| `test_reauth_flow`                      | SKIP | Reauthentication flow          |
-| `test_reauth_flow_cannot_connect`       | SKIP | Reauth connection errors       |
-| `test_options_flow_success`             | SKIP | Options/reconfiguration        |
-| `test_options_flow_cannot_connect`      | SKIP | Options flow connection errors |
-| `test_options_flow_invalid_auth`        | SKIP | Options flow auth errors       |
-| `test_zeroconf_discovery`               | SKIP | Zeroconf device discovery      |
-| `test_zeroconf_discovery_without_creds` | SKIP | Zeroconf setup flow            |
-| `test_zeroconf_already_configured`      | SKIP | Zeroconf duplicate detection   |
-| `test_zeroconf_json_api_disabled`       | SKIP | Device without JSON API        |
-| `test_zeroconf_no_serial_number`        | SKIP | Device missing serial          |
-| `test_zeroconf_cannot_connect`          | SKIP | Zeroconf connection errors     |
-| `test_zeroconf_fallback_to_model_type`  | SKIP | Fallback naming logic          |
+| Test                                    | What It Tests                 |
+| --------------------------------------- | ----------------------------- |
+| `test_form`                             | User setup flow               |
+| `test_form_without_credentials`         | Setup without auth            |
+| `test_form_cannot_connect`              | Connection error handling     |
+| `test_form_invalid_auth`                | Authentication error handling |
+| `test_form_unknown_exception`           | Unknown exception handling    |
+| `test_form_already_configured`          | Duplicate detection           |
+| `test_reauth_flow`                      | Reauthentication flow         |
+| `test_reauth_flow_cannot_connect`       | Reauth connection errors      |
+| `test_options_flow_success`             | Options flow success          |
+| `test_reconfigure_flow`                 | Reconfiguration flow          |
+| `test_reconfigure_flow_cannot_connect`  | Reconfigure connection errors |
+| `test_reconfigure_flow_invalid_auth`    | Reconfigure auth errors       |
+| `test_zeroconf_discovery`               | Zeroconf device discovery     |
+| `test_zeroconf_discovery_without_creds` | Zeroconf setup flow           |
+| `test_zeroconf_already_configured`      | Zeroconf duplicate detection  |
+| `test_zeroconf_json_api_disabled`       | Device without JSON API       |
+| `test_zeroconf_no_serial_number`        | Device missing serial         |
+| `test_zeroconf_cannot_connect`          | Zeroconf connection errors    |
+| `test_zeroconf_fallback_to_model_type`  | Fallback naming logic         |
 
 #### Config Flow Additional Tests (`test_config_flow_additional.py`) - 5/5 ✅ PASSING
 
 Tests covering edge cases and error scenarios:
 
-| Test                                     | CI   | What It Tests                            |
-| ---------------------------------------- | ---- | ---------------------------------------- |
-| `test_reauth_flow_invalid_auth`          | SKIP | Reauth with wrong credentials            |
-| `test_reauth_flow_unknown_exception`     | SKIP | Reauth unexpected error handling         |
-| `test_options_flow_unknown_exception`    | SKIP | Options flow unexpected error handling   |
-| `test_options_flow_scan_interval_only`   | SKIP | Update only scan_interval                |
-| `test_zeroconf_discovery_invalid_auth`   | SKIP | Zeroconf auth error during confirmation  |
-| `test_zeroconf_fallback_to_default_name` | SKIP | Fallback to "NRGkick" when names missing |
+| Test                                        | What It Tests                            |
+| ------------------------------------------- | ---------------------------------------- |
+| `test_reauth_flow_invalid_auth`             | Reauth with wrong credentials            |
+| `test_reauth_flow_unknown_exception`        | Reauth unexpected error handling         |
+| `test_zeroconf_discovery_invalid_auth`      | Zeroconf auth error during confirmation  |
+| `test_zeroconf_discovery_unknown_exception` | Zeroconf unexpected error handling       |
+| `test_zeroconf_fallback_to_default_name`    | Fallback to "NRGkick" when names missing |
 
-#### Integration Tests (`test_init.py`) - 13/13 ✅ PASSING
+#### Coordinator Tests (`test_init.py`) - 13/13 ✅ PASSING
 
-| Test                                      | CI Status | What It Tests                       |
-| ----------------------------------------- | --------- | ----------------------------------- |
-| `test_setup_entry`                        | SKIP      | Entry setup                         |
-| `test_setup_entry_failed_connection`      | PASS      | Setup with connection failure       |
-| `test_unload_entry`                       | SKIP      | Entry unload                        |
-| `test_reload_entry`                       | SKIP      | Entry reload                        |
-| `test_coordinator_update_success`         | SKIP      | Coordinator updates                 |
-| `test_coordinator_update_failed`          | PASS      | Coordinator update failure          |
-| `test_coordinator_auth_failed`            | PASS      | Coordinator auth failure            |
-| `test_coordinator_async_set_current`      | SKIP      | Coordinator set current method      |
-| `test_coordinator_async_set_charge_pause` | SKIP      | Coordinator set charge pause method |
-| `test_coordinator_async_set_energy_limit` | SKIP      | Coordinator set energy limit method |
-| `test_coordinator_async_set_phase_count`  | SKIP      | Coordinator set phase count method  |
-| `test_coordinator_blocked_by_solar`       | SKIP      | Command blocked by solar logic      |
-| `test_coordinator_unexpected_value`       | SKIP      | Command verification failure        |
+| Test                                        | What It Tests                       |
+| ------------------------------------------- | ----------------------------------- |
+| `test_setup_entry`                          | Entry setup                         |
+| `test_setup_entry_failed_connection`        | Setup with connection failure       |
+| `test_unload_entry`                         | Entry unload                        |
+| `test_reload_entry`                         | Entry reload                        |
+| `test_coordinator_update_success`           | Coordinator updates                 |
+| `test_coordinator_update_failed`            | Coordinator update failure          |
+| `test_coordinator_auth_failed`              | Coordinator auth failure            |
+| `test_coordinator_async_set_current`        | Coordinator set current method      |
+| `test_coordinator_async_set_charge_pause`   | Coordinator set charge pause method |
+| `test_coordinator_async_set_energy_limit`   | Coordinator set energy limit method |
+| `test_coordinator_async_set_phase_count`    | Coordinator set phase count method  |
+| `test_coordinator_command_blocked_by_solar` | Command blocked by solar logic      |
+| `test_coordinator_command_unexpected_value` | Command verification failure        |
 
 #### Naming Tests (`test_naming.py`) - 2/2 ✅ PASSING
 
-| Test                        | CI Status | What It Tests                                |
-| --------------------------- | --------- | -------------------------------------------- |
-| `test_device_name_fallback` | SKIP      | Fallback to "NRGkick" when API name is empty |
-| `test_device_name_custom`   | SKIP      | Custom device name usage                     |
+| Test                        | What It Tests                                |
+| --------------------------- | -------------------------------------------- |
+| `test_device_name_fallback` | Fallback to "NRGkick" when API name is empty |
+| `test_device_name_custom`   | Custom device name usage                     |
 
 #### Platform Tests (Various Files) - 8/8 ✅ PASSING
 
-| Test                          | CI Status | What It Tests                   |
-| ----------------------------- | --------- | ------------------------------- |
-| `test_binary_sensors`         | SKIP      | Binary sensor state mapping     |
-| `test_number_entities`        | SKIP      | Number entity values & limits   |
-| `test_number_set_value_error` | SKIP      | Number error handling           |
-| `test_sensor_entities`        | SKIP      | Sensor value paths & attributes |
-| `test_switch_entities`        | SKIP      | Switch state & toggle commands  |
-| `test_switch_error`           | SKIP      | Switch turn on error handling   |
-| `test_switch_turn_off_error`  | SKIP      | Switch turn off error handling  |
-| `test_diagnostics`            | SKIP      | Diagnostics data generation     |
+| Test                          | What It Tests                   |
+| ----------------------------- | ------------------------------- |
+| `test_binary_sensors`         | Binary sensor state mapping     |
+| `test_number_entities`        | Number entity values & limits   |
+| `test_number_set_value_error` | Number error handling           |
+| `test_sensor_entities`        | Sensor value paths & attributes |
+| `test_switch_entities`        | Switch state & toggle commands  |
+| `test_switch_error`           | Switch turn on error handling   |
+| `test_switch_turn_off_error`  | Switch turn off error handling  |
+| `test_diagnostics`            | Diagnostics data generation     |
 
 ---
 
@@ -283,14 +268,8 @@ pip install -r requirements_dev.txt
 The `run-tests.sh` script provides convenient access to different test configurations:
 
 ```bash
-# Run CI-compatible tests (same as GitHub Actions)
-./run-tests.sh ci
-
-# Run all tests (requires HA environment)
-./run-tests.sh all
-
-# Run only integration tests
-./run-tests.sh integration
+# Run all tests
+./run-tests.sh
 
 # Run only API tests
 ./run-tests.sh api
@@ -304,22 +283,10 @@ The `run-tests.sh` script provides convenient access to different test configura
 
 ### Manual Test Execution
 
-#### Run Only CI-Compatible Tests
-
-```bash
-pytest tests/ -v -m "not requires_integration"
-```
-
 #### Run All Tests
 
 ```bash
 pytest tests/ -v
-```
-
-#### Run Only Integration Tests
-
-```bash
-pytest tests/ -v -m "requires_integration"
 ```
 
 #### Run Specific Test File
@@ -340,13 +307,6 @@ pytest tests/test_config_flow.py::test_form -v
 #### Run with Coverage
 
 ```bash
-# CI tests with coverage
-pytest tests/ -v -m "not requires_integration" \
-  --cov=custom_components.nrgkick \
-  --cov-report=html \
-  --cov-report=term
-
-# All tests with coverage
 pytest tests/ -v \
   --cov=custom_components.nrgkick \
   --cov-report=html \
@@ -361,7 +321,7 @@ start htmlcov/index.html  # Windows
 #### Run with Coverage in Terminal
 
 ```bash
-pytest tests/ -v -m "not requires_integration" \
+pytest tests/ -v \
   --cov=custom_components.nrgkick \
   --cov-report=term-missing
 ```
@@ -377,18 +337,20 @@ tests/
 ├── __init__.py                       # Test package initialization
 ├── conftest.py                       # Shared pytest fixtures
 ├── pytest.ini                        # pytest configuration (in root)
-├── test_api.py                       # API client tests (17 tests)
+├── test_api.py                       # API wrapper tests (19 tests)
 ├── test_binary_sensor.py             # Binary sensor platform tests
-├── test_config_flow.py               # Config flow tests (18 tests)
-├── test_config_flow_additional.py    # Config flow edge cases (8 tests)
+├── test_config_flow.py               # Config flow tests (19 tests)
+├── test_config_flow_additional.py    # Config flow edge cases (5 tests)
 ├── test_diagnostics.py               # Diagnostics tests
-├── test_init.py                      # Integration setup tests (11 tests)
+├── test_init.py                      # Integration setup tests (13 tests)
 ├── test_naming.py                    # Device naming & fallback tests (2 tests)
 ├── test_number.py                    # Number platform tests
 ├── test_sensor.py                    # Sensor platform tests
 ├── test_switch.py                    # Switch platform tests
 └── README.md                         # This file
 ```
+
+**Note**: The `nrgkick-api` library has its own test suite at https://github.com/andijakl/nrgkick-api
 
 ### Fixtures (`conftest.py`)
 
@@ -612,7 +574,7 @@ Tests run automatically via `.github/workflows/test.yml` on:
 ```yaml
 - name: Run tests with pytest
   run: |
-    pytest tests/ -v -m "not requires_integration" \
+    pytest tests/ -v \
       --cov=custom_components.nrgkick \
       --cov-report=xml \
       --cov-report=term
@@ -620,9 +582,8 @@ Tests run automatically via `.github/workflows/test.yml` on:
 
 This ensures:
 
-- ✅ Only unit tests run in CI
-- ✅ No false failures from integration tests
-- ✅ Fast test execution
+- ✅ All 66 tests run in CI
+- ✅ Full test coverage
 - ✅ Reliable results
 
 ### Coverage Reporting
@@ -677,28 +638,20 @@ This ensures compatibility with the latest Home Assistant versions that require 
    ./run-tests.sh
    ```
 
-2. **Pre-Push Check**: Ensure CI tests will pass
-
-   ```bash
-   ./run-tests.sh ci
-   ```
-
-3. **Coverage**: Maintain or improve coverage with new tests
+2. **Coverage**: Maintain or improve coverage with new tests
 
    ```bash
    ./run-tests.sh coverage
    ```
 
-4. **New Tests**: Add `@pytest.mark.requires_integration` marker if test needs full HA environment
-   - But remember: these tests work everywhere thanks to pytest-homeassistant-custom-component!
+3. **New Tests**: Add `@pytest.mark.requires_integration` marker if test needs full HA environment
+   - All tests run everywhere thanks to pytest-homeassistant-custom-component
 
 ### For Maintainers
 
-1. **CI Strategy**: Currently skips integration tests for speed (2s vs 3s)
-   - Can run all tests in CI if needed (just remove the marker filter)
-2. **Monitor Both**: Check CI results and local test runs
-3. **Document Changes**: Update this README when adding new test categories
-4. **Review Coverage**: Ensure new features include adequate tests
+1. **All Tests in CI**: All 66 tests run in GitHub Actions
+2. **Document Changes**: Update this README when adding new test categories
+3. **Review Coverage**: Ensure new features include adequate tests
 
 ---
 
@@ -725,16 +678,14 @@ This ensures compatibility with the latest Home Assistant versions that require 
 
 Potential enhancements to the testing strategy:
 
-1. **Run All Tests in CI**: Remove marker filter for complete CI coverage
-2. **Parallel Testing**: Use pytest-xdist for faster execution
-3. **E2E Tests**: Add optional end-to-end tests with real device (manual/optional)
-4. **Performance Tests**: Add benchmarks for API response handling
-5. **Mutation Testing**: Use mutmut to verify test quality
+1. **Parallel Testing**: Use pytest-xdist for faster execution
+2. **E2E Tests**: Add optional end-to-end tests with real device (manual/optional)
+3. **Performance Tests**: Add benchmarks for API response handling
+4. **Mutation Testing**: Use mutmut to verify test quality
 
 ---
 
-**Last Updated**: November 26, 2025
-**Test Suite Version**: 3.5.0
-**Python Version**: 3.13
+**Test Suite Version**: 4.0.0
+**Python Version**: 3.13+
 **Maintainer**: @andijakl
-**Status**: All 73 Tests Passing (96% Coverage)
+**Status**: All 66 Tests Passing (see `nrgkick-api` library for additional API-level tests)

@@ -5,11 +5,11 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import patch
 
-import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+import pytest
 
 from custom_components.nrgkick.api import NRGkickApiClientAuthenticationError
 

@@ -35,8 +35,8 @@ jobs:
       - name: Run pre-commit hooks
         run: pre-commit run --all-files --show-diff-on-failure
 
-  black:
-    name: Check code formatting (Black)
+  ruff:
+    name: Linting & Formatting (Ruff)
     runs-on: ubuntu-latest
 
     steps:
@@ -48,51 +48,14 @@ jobs:
         with:
           python-version: "3.13"
 
-      - name: Install Black
-        run: pip install black>=23.0.0
+      - name: Install Ruff
+        run: pip install ruff>=0.14.0
 
-      - name: Run Black
-        run: black --check --diff custom_components/ tests/
+      - name: Run Ruff linter
+        run: ruff check custom_components/ tests/
 
-  isort:
-    name: Check import sorting (isort)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install isort
-        run: pip install isort>=5.12.0
-
-      - name: Run isort
-        run: isort --profile=black --line-length=88 --multi-line=3 --trailing-comma --check-only --diff custom_components/ tests/
-
-  flake8:
-    name: Linting (Flake8)
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v6
-
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-
-      - name: Install Flake8
-        run: |
-          pip install flake8>=6.0.0
-          pip install flake8-bugbear flake8-comprehensions
-
-      - name: Run Flake8
-        run: flake8 custom_components/ tests/ --max-line-length=88 --extend-ignore=E203,E266,E501,W503 --max-complexity=18 --statistics
+      - name: Run Ruff formatter
+        run: ruff format --check --diff custom_components/ tests/
 
   pylint:
     name: Linting (Pylint)
@@ -113,7 +76,7 @@ jobs:
           pip install -r requirements_dev.txt
 
       - name: Run Pylint
-        run: pylint custom_components/nrgkick/ --disable=C0111,C0103,W0212,W0223,R0913,R0902,R0914,R0801 --max-line-length=88
+        run: pylint custom_components/nrgkick/ --disable=C0111,C0103,W0212,W0223,W0613,R0913,R0902,R0914,R0801 --max-line-length=88
 
   mypy:
     name: Type checking (MyPy)
@@ -132,7 +95,7 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements_dev.txt
-          pip install types-aiofiles
+          pip install types-aiofiles  # Temp workaround for dependency incompatibility
 
       - name: Run MyPy
-        run: mypy custom_components/nrgkick/ --ignore-missing-imports --check-untyped-defs
+        run: mypy custom_components/nrgkick/

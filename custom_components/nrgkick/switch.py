@@ -6,13 +6,13 @@ import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NRGkickDataUpdateCoordinator, NRGkickEntity
+from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .api import NRGkickApiClientError
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,9 +21,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # pylint: disable=unused-argument
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    _hass: HomeAssistant,
+    entry: NRGkickConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick switches based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
@@ -68,11 +68,25 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
         try:
             await self.coordinator.async_set_charge_pause(True)
         except NRGkickApiClientError as err:
-            raise HomeAssistantError(f"Unable to pause charging: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": "charge_pause",
+                    "value": "on",
+                },
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.coordinator.async_set_charge_pause(False)
         except NRGkickApiClientError as err:
-            raise HomeAssistantError(f"Unable to resume charging: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": "charge_pause",
+                    "value": "off",
+                },
+            ) from err

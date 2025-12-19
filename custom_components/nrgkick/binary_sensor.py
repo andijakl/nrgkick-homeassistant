@@ -2,27 +2,27 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NRGkickDataUpdateCoordinator, NRGkickEntity
+from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import STATUS_CHARGING
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # pylint: disable=unused-argument
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    _hass: HomeAssistant,
+    entry: NRGkickConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick binary sensors based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
@@ -66,7 +66,7 @@ class NRGkickBinarySensor(NRGkickEntity, BinarySensorEntity):
         device_class: BinarySensorDeviceClass | None,
         value_path: list[str],
         entity_category: EntityCategory | None = None,
-        value_fn: Any = None,
+        value_fn: Callable[[Any], bool] | None = None,
     ) -> None:
         """Initialize the binary sensor."""
         super().__init__(coordinator, key)

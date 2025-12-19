@@ -2,22 +2,34 @@
 
 Quick reference for NRGkick Home Assistant integration internals. For architecture details, see [ARCHITECTURE.md](ARCHITECTURE.md). For user documentation, see [README.md](README.md).
 
+## Architecture Overview
+
+The integration uses a **two-layer architecture**:
+
+1. **nrgkick-api** - Standalone Python library on [PyPI](https://pypi.org/project/nrgkick-api/) for device communication ([separate repository](https://github.com/andijakl/nrgkick-api))
+2. **Home Assistant Integration** - This repository: thin wrapper with HA-specific patterns
+
+This separation enables potential Home Assistant core integration and allows the API library to be used independently.
+
 ## File Structure
 
 ```
 custom_components/nrgkick/
 ├── __init__.py           # Coordinator, setup/teardown
-├── api.py                # REST client, custom exceptions
+├── api.py                # Wrapper around nrgkick-api library
 ├── binary_sensor.py      # 3 binary sensors
 ├── config_flow.py        # UI flows (user, zeroconf, reauth, reconfigure, options)
 ├── const.py              # Constants, STATUS_MAP, entity definitions
 ├── diagnostics.py        # Diagnostics provider
-├── manifest.json         # Integration metadata
+├── icons.json            # Default icon mapping
+├── manifest.json         # Integration metadata (requires nrgkick-api)
 ├── number.py             # 3 number controls
 ├── sensor.py             # 80+ sensors
 ├── switch.py             # 1 switch
 └── translations/         # en.json, de.json
 ```
+
+**External Dependency**: [nrgkick-api](https://github.com/andijakl/nrgkick-api) library on PyPI handles device communication.
 
 ## Core Classes
 
@@ -32,19 +44,29 @@ custom_components/nrgkick/
 **`NRGkickEntity`** (`__init__.py`)
 
 - Base class for all entity types
-- Provides common device info setup
+- Provides common device info setup using `DeviceInfo` dataclass
 - Sets `_attr_has_entity_name = True` for modern naming
-- Type annotation: `coordinator: NRGkickDataUpdateCoordinator`
+- Implements `suggested_object_id` for consistent English-based entity IDs
+- Uses `translation_key` for localized display names
+- Generic typing: `CoordinatorEntity[NRGkickDataUpdateCoordinator]`
 
-**`NRGkickAPI`** (`api.py`)
+**`NRGkickAPI`** ([nrgkick-api](https://github.com/andijakl/nrgkick-api) library - external)
 
+- Standalone Python package on PyPI (no Home Assistant dependencies)
 - aiohttp client with 10s timeout
 - Optional BasicAuth
 - Automatic retry with exponential backoff (3 attempts, 1.5s base)
 - Retries: Timeouts, HTTP 500-504, connection errors
 - No retry: Authentication errors (401/403), client errors (4xx)
-- Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError` (translatable)
+- Library exceptions: `NRGkickError`, `NRGkickConnectionError`, `NRGkickAuthenticationError`
 - Methods: `get_info()`, `get_control()`, `get_values()`, `set_current()`, `set_charge_pause()`, `set_energy_limit()`, `set_phase_count()`, `test_connection()`
+
+**`NRGkickApiClient`** (`api.py` - integration wrapper)
+
+- Thin wrapper around `NRGkickAPI` from `nrgkick-api` library
+- Converts library exceptions to HA-specific exceptions with translation support
+- Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError`
+- Uses `async_get_clientsession(hass)` for HA session management
 
 **`ConfigFlow`** (`config_flow.py`)
 
@@ -55,10 +77,12 @@ custom_components/nrgkick/
 
 ## Entity Distribution
 
-- **Sensors**: 80+ (power, energy, voltage, current, temperatures, status, network, versions)
+- **Sensors**: 80+ (power, energy, voltage, current, temperatures, status, network, cellular, GPS, versions)
 - **Binary Sensors**: 3 (charging, charge_permitted, charge_pause)
 - **Switch**: 1 (charge_pause toggle)
 - **Numbers**: 3 (charging_current 6-32A, energy_limit 0-100kWh, phase_count 1-3)
+
+Cellular and GPS sensors are only available on NRGkick Gen2 SIM models and are disabled by default.
 
 All entities use value_path arrays for data extraction. Control commands verify responses immediately.
 
@@ -154,9 +178,19 @@ Control responses from device:
 
 ### Exception Hierarchy
 
-- **`NRGkickApiClientError`**: Base exception
+**Library exceptions** (`nrgkick-api`):
+
+- **`NRGkickError`**: Base exception
+- **`NRGkickConnectionError`**: Network/timeout errors
+- **`NRGkickAuthenticationError`**: 401/403 errors
+
+**Integration exceptions** (`api.py` wrapper):
+
+- **`NRGkickApiClientError`**: Base exception (wraps `NRGkickError`)
 - **`NRGkickApiClientCommunicationError`**: Network/timeout → entities unavailable
 - **`NRGkickApiClientAuthenticationError`**: 401/403 → triggers reauth flow
+
+The wrapper translates library exceptions to HA exceptions with translation support for user-friendly error messages.
 
 ## Key Implementation Details
 

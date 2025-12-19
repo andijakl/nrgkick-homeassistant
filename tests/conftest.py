@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-import pytest
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+import pytest
 
 from custom_components.nrgkick.const import DOMAIN
 
@@ -18,11 +18,11 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable custom integrations defined in the test dir."""
-    yield
+    return
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "custom_components.nrgkick.async_setup_entry", return_value=True
@@ -102,10 +102,15 @@ def mock_info_data():
             "json_api_version": "v1",
         },
         "connector": {
-            "type": "Type2",
+            "type": "TYPE2",
             "serial_number": "CONN123",
             "max_current": 32.0,
             "phase_count": 3,
+        },
+        "grid": {
+            "voltage": 230,
+            "frequency": 50.0,
+            "phases": "L1, L2, L3",
         },
         "network": {
             "ip_address": "192.168.1.100",
@@ -151,7 +156,7 @@ def mock_values_data():
         },
         "status": {
             "charging_status": 3,
-            "relay_state": True,
+            "relay_state": "N, L1, L2, L3",
             "charge_permitted": True,
         },
         "temperatures": {

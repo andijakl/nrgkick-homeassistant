@@ -27,4 +27,4 @@ def create_mock_config_entry(
     )
 
 
-__all__ = ["create_mock_config_entry", "async_setup_entry_with_return"]
+__all__ = ["async_setup_entry_with_return", "create_mock_config_entry"]

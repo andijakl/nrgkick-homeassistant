@@ -31,6 +31,22 @@ The NRGkick integration is a local polling-based Home Assistant custom component
 
 ## System Architecture
 
+### Two-Layer Design
+
+The integration uses a **two-layer architecture** for better separation of concerns:
+
+1. **nrgkick-api** - Standalone Python library (PyPI) for device communication
+   - No Home Assistant dependencies
+   - Handles HTTP requests, retries, authentication
+   - Library exceptions: `NRGkickError`, `NRGkickConnectionError`, `NRGkickAuthenticationError`
+
+2. **Home Assistant Integration** - Thin wrapper with HA-specific patterns
+   - Wraps library with HA session management
+   - Translates exceptions to HA types with localization
+   - Implements DataUpdateCoordinator, Config Flow, Entity Platforms
+
+This separation enables potential Home Assistant core integration and allows the API library to be used independently in other projects.
+
 ### High-Level Component Diagram
 
 ```mermaid
@@ -45,7 +61,7 @@ graph TB
     subgraph "NRGkick Integration"
         CF[Config Flow]
         CO[NRGkickDataUpdateCoordinator]
-        API[NRGkickAPI]
+        WRAP[NRGkickApiClient Wrapper]
 
         subgraph "Entity Platforms"
             SE[Sensors ~80]
@@ -53,6 +69,11 @@ graph TB
             SW[Switches ~1]
             NU[Numbers ~3]
         end
+    end
+
+    subgraph "nrgkick-api Library"
+        API[NRGkickAPI]
+        EXC[Exception Hierarchy]
     end
 
     subgraph "NRGkick Device"
@@ -65,22 +86,24 @@ graph TB
     end
 
     HA -->|1. Install/Configure| CF
-    CF -->|2. Validate Connection| API
-    CF -->|3. Create Entry| CE
-    CE -->|4. Setup| CO
-    CO -->|5. Poll Every N Seconds| API
-    API -->|6. HTTP Requests| REST
+    CF -->|2. Validate Connection| WRAP
+    WRAP -->|3. Delegate to Library| API
+    CF -->|4. Create Entry| CE
+    CE -->|5. Setup| CO
+    CO -->|6. Poll Every N Seconds| WRAP
+    WRAP -->|7. Delegate to Library| API
+    API -->|8. HTTP Requests| REST
     REST --> INFO
     REST --> CTRL
     REST --> VALS
-    CO -->|7. Distribute Data| SE
-    CO -->|7. Distribute Data| BS
-    CO -->|7. Distribute Data| SW
-    CO -->|7. Distribute Data| NU
-    SE -->|8. Control Commands| API
-    SW -->|8. Control Commands| API
-    NU -->|8. Control Commands| API
-    UL -->|9. Options Changed| CO
+    CO -->|9. Distribute Data| SE
+    CO -->|9. Distribute Data| BS
+    CO -->|9. Distribute Data| SW
+    CO -->|9. Distribute Data| NU
+    SE -->|10. Control Commands| WRAP
+    SW -->|10. Control Commands| WRAP
+    NU -->|10. Control Commands| WRAP
+    UL -->|11. Options Changed| CO
 ```
 
 ### Data Flow Architecture
@@ -151,7 +174,7 @@ Home Assistant discovers integrations through the `manifest.json` file:
   "name": "NRGkick",
   "config_flow": true,
   "zeroconf": ["_nrgkick._tcp.local."],
-  "requirements": ["aiohttp>=3.8.0"],
+  "requirements": ["nrgkick-api==1.0.0"],
   "iot_class": "local_polling"
 }
 ```
@@ -161,7 +184,7 @@ Home Assistant discovers integrations through the `manifest.json` file:
 - `domain`: Unique identifier for the integration (`"nrgkick"`)
 - `config_flow`: Enables UI-based configuration (no manual YAML editing)
 - `zeroconf`: Enables automatic discovery via mDNS service `_nrgkick._tcp.local.`
-- `requirements`: Python package dependencies (only `aiohttp`)
+- `requirements`: Python package dependencies - the `nrgkick-api` library handles device communication
 - `iot_class`: `local_polling` indicates local network polling (no cloud)
 
 ### 2. Integration Lifecycle Flow
@@ -201,6 +224,10 @@ stateDiagram-v2
     Running --> Reauth: 401 Auth Error
     Reauth --> ReauthFlow: Update credentials
     ReauthFlow --> Running: async_reload_entry()
+
+    Running --> Reconfigure: User reconfigures
+    Reconfigure --> ReconfigureFlow: Update host/auth
+    ReconfigureFlow --> Running: async_reload_entry()
 ```
 
 ### 3. Setup Entry (`__init__.py::async_setup_entry`)
@@ -326,6 +353,8 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
         "connector": {"phase_count", "max_current", "type", "serial"},
         "grid": {"voltage", "frequency", "phases"},
         "network": {"ip_address", "mac_address", "ssid", "rssi"},
+        "cellular": {"imei", "imsi", "operator", "rssi", "mode"},  # SIM models only
+        "gps": {"latitude", "longitude", "altitude", "accuracy"},  # SIM models only
         "versions": {"sw_sm", "hw_sm"}
     },
     "control": {
@@ -343,15 +372,51 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 }
 ```
 
-### 2. API Client (`api.py::NRGkickAPI`)
+### 2. API Client Architecture
 
-The API client encapsulates all HTTP communication with the device. It uses a custom exception hierarchy for proper error handling:
+The integration uses a two-layer design for the API client:
+
+#### Library Layer (`nrgkick-api` PyPI package)
+
+The standalone `NRGkickAPI` class encapsulates all HTTP communication with the device:
 
 ```python
+# nrgkick-api library (nrgkick_api.api)
+from nrgkick_api import NRGkickAPI, NRGkickError, NRGkickConnectionError, NRGkickAuthenticationError
+
+class NRGkickAPI:
+    def __init__(self, host: str, username: str | None = None,
+                 password: str | None = None,
+                 session: aiohttp.ClientSession | None = None):
+        self.host = host
+        self._session = session or aiohttp.ClientSession()
+        # ...
+
+    async def _request(self, endpoint: str, params: dict | None = None) -> dict:
+        """Make a request with automatic retry and optional BasicAuth."""
+        # Retry loop for transient errors (max 3 attempts)
+        # Exponential backoff (1.5^attempt)
+        # Raises library-specific exceptions
+        ...
+```
+
+**Library Exceptions:**
+
+- `NRGkickError` - Base exception
+- `NRGkickConnectionError` - Network issues, timeouts
+- `NRGkickAuthenticationError` - Invalid credentials (401/403)
+
+#### Integration Wrapper (`api.py`)
+
+The integration provides a thin wrapper that translates library exceptions to Home Assistant exceptions with localization support:
+
+```python
+# custom_components/nrgkick/api.py
+from nrgkick_api import NRGkickAPI as LibraryAPI
+from nrgkick_api import NRGkickConnectionError, NRGkickAuthenticationError
+
 class NRGkickApiClientError(HomeAssistantError):
     """Base exception for NRGkick API client errors."""
-    def __init__(self, translation_domain=None, translation_key=None, translation_placeholders=None):
-        super().__init__(translation_domain=translation_domain, translation_key=translation_key, translation_placeholders=translation_placeholders)
 
 class NRGkickApiClientCommunicationError(NRGkickApiClientError):
     """Exception to indicate communication errors."""
@@ -359,91 +424,56 @@ class NRGkickApiClientCommunicationError(NRGkickApiClientError):
 class NRGkickApiClientAuthenticationError(NRGkickApiClientError):
     """Exception to indicate authentication errors."""
 
-class NRGkickAPI:
+class NRGkickApiClient:
+    """Wrapper around nrgkick-api library for Home Assistant."""
+
     def __init__(self, host: str, username: str | None, password: str | None,
-                 session: aiohttp.ClientSession | None):
-        self.host = host
-        self.username = username
-        self.password = password
-        self._session = session
-        self._base_url = f"http://{host}"
+                 session: aiohttp.ClientSession):
+        self._api = LibraryAPI(host, username, password, session)
 
-    async def _request(self, endpoint: str, params: dict | None = None) -> dict:
-        """Make a request with automatic retry and optional BasicAuth."""
-        url = f"{self._base_url}{endpoint}"
-        auth = aiohttp.BasicAuth(self.username, self.password) if self.username else None
-
-        # Retry loop for transient errors (max 3 attempts)
-        for attempt in range(3):
-            try:
-                async with asyncio.timeout(10):  # 10-second timeout per attempt
-                    async with self._session.get(url, auth=auth, params=params) as response:
-                        if response.status in (401, 403):
-                            # Auth errors: don't retry, raise immediately
-                            raise NRGkickApiClientAuthenticationError(
-                                "Authentication failed"
-                            )
-
-                        # Transient HTTP errors (500-504): retry with backoff
-                        if response.status in {500, 502, 503, 504} and attempt < 2:
-                            await asyncio.sleep(1.5 ** attempt)  # Exponential backoff
-                            continue
-
-                        # Read JSON response first (even on HTTP errors)
-                        # Device returns error details in JSON body
-                        data = await response.json()
-
-                        # Check HTTP status after reading JSON
-                        if response.status >= 400 and "Response" not in data:
-                            response.raise_for_status()
-
-                        return data
-
-            except asyncio.TimeoutError:
-                if attempt < 2:
-                    await asyncio.sleep(1.5 ** attempt)  # Retry on timeout
-                    continue
-                raise NRGkickApiClientCommunicationError("Connection timeout after 3 attempts")
-
-            except (aiohttp.ClientConnectorError, aiohttp.ClientOSError):
-                if attempt < 2:
-                    await asyncio.sleep(1.5 ** attempt)  # Retry on connection error
-                    continue
-                raise NRGkickApiClientCommunicationError("Connection failed after 3 attempts")
+    async def get_info(self) -> dict:
+        """Get device info with HA exception translation."""
+        try:
+            return await self._api.get_info()
+        except NRGkickAuthenticationError as err:
+            raise NRGkickApiClientAuthenticationError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
+        except NRGkickConnectionError as err:
+            raise NRGkickApiClientCommunicationError(
+                translation_domain=DOMAIN,
+                translation_key="connection_failed",
+            ) from err
 ```
+
+````
 
 **Design Considerations:**
 
-- **Automatic Retry Logic**: The API client implements intelligent retry behavior for transient errors:
+- **Two-Layer Architecture**: The API client is split into a standalone library (`nrgkick-api`) and a Home Assistant wrapper (`api.py`). This enables:
+  - Potential Home Assistant core integration (requires PyPI library)
+  - Independent use of the library in other projects
+  - Clean separation between device communication and HA-specific concerns
+
+- **Automatic Retry Logic**: The library implements intelligent retry behavior for transient errors:
   - **Retries up to 3 times** with exponential backoff (base 1.5s: delays of 0s → 1.5s → 2.25s)
-  - **Retries on**: Timeouts, HTTP 500-504 (server errors), connection errors (`ClientConnectorError`, `ClientOSError`)
+  - **Retries on**: Timeouts, HTTP 500-504 (server errors), connection errors
   - **No retry on**: Authentication errors (401/403), client errors (4xx), successful responses
   - **Smart detection**: Distinguishes between transient issues (network glitches) and permanent failures (bad credentials)
 
-- **Exponential Backoff**: Wait time increases exponentially (1.5^attempt) to avoid overwhelming a struggling device while still recovering quickly from brief network hiccups. This prevents rapid-fire retry attempts that could worsen network congestion.
+- **Exponential Backoff**: Wait time increases exponentially (1.5^attempt) to avoid overwhelming a struggling device while still recovering quickly from brief network hiccups.
 
-- **Refactored Architecture**: The retry logic is split into helper methods for maintainability:
-  - `_make_request_attempt()` - Handles single HTTP request, detects transient HTTP errors (500-504)
-  - `_handle_retry_exception()` - Centralizes retry decision logic for timeouts, connection errors, etc.
-  - `_request()` - Main orchestration with clean retry loop, minimal complexity
-  - Error handlers (`_handle_auth_error()`, `_handle_timeout_error()`, etc.) - Provide detailed troubleshooting messages
+- **Exception Translation**: The wrapper translates library exceptions to HA exceptions:
+  - `NRGkickAuthenticationError` → `NRGkickApiClientAuthenticationError` (triggers reauth flow)
+  - `NRGkickConnectionError` → `NRGkickApiClientCommunicationError` (entities unavailable)
+  - All HA exceptions support translation keys for localized error messages
 
-  This separation reduces method complexity, improves testability (each component can be tested independently), and makes the retry behavior easier to understand and modify.
+- **Session Management**: The wrapper uses `async_get_clientsession(hass)` to leverage Home Assistant's connection pooling. The library accepts the session as a parameter.
 
-- **Custom Exception Hierarchy**: Three exception types provide clear error semantics and localization support:
-  - `NRGkickApiClientError` (base) - Inherits from `HomeAssistantError` for translation support
-  - `NRGkickApiClientCommunicationError` - Network issues, timeouts (triggers retry and entity unavailability)
-  - `NRGkickApiClientAuthenticationError` - Invalid credentials (triggers re-auth flow)
+- **Timeout Handling**: The library uses 10-second timeouts per request. If the timeout expires, it's caught and converted to `NRGkickConnectionError`.
 
-  This typed approach allows the coordinator to handle authentication errors differently versus communication errors, while ensuring all error messages are fully translatable via `en.json`/`de.json`.
-
-- **Session Management**: The session is passed in from Home Assistant rather than created internally. This allows the integration to leverage Home Assistant's connection pooling and SSL context.
-
-- **Timeout Handling**: The 10-second timeout prevents hung connections from blocking the coordinator indefinitely. If the timeout expires, `asyncio.timeout` raises `TimeoutError`, which is caught and converted to `NRGkickApiClientCommunicationError`.
-
-- **Response-First Error Handling**: The API reads JSON response before checking HTTP status. This allows extraction of device error messages from HTTP error responses (e.g., 405 with `{"Response": "blocked by solar-charging"}`). If the response contains a `"Response"` key, it's returned for the caller to handle. If JSON parsing fails, the system falls back to HTTP status checking.
-
-- **Query Parameters**: Both read operations (filtering sections) and write operations (control commands) use GET requests with query parameters. While this isn't RESTful best practice, it matches the device's API design.
+- **Response-First Error Handling**: The library reads JSON response before checking HTTP status. This allows extraction of device error messages from HTTP error responses.
 
 **Read Operations:**
 
@@ -478,7 +508,7 @@ gantt
     Receive Update   :b1, 5, 1s
     State Update     :b2, after b1, 1s
     HA UI Refresh    :b3, after b2, 1s
-```
+````
 
 **Polling Cycle Breakdown:**
 
@@ -604,27 +634,27 @@ graph LR
     end
 
     subgraph "Sensors (80+)"
-        S1[Total Power]
-        S2[L1 Voltage]
-        S3[Charging Status]
-        S4[Energy Total]
-        S5[Temperature]
+        S1[total_active_power]
+        S2[l1_voltage]
+        S3[charging_status]
+        S4[total_energy]
+        S5[housing_temperature]
     end
 
     subgraph "Binary Sensors (3)"
-        B1[Charging Active]
-        B2[Charge Permitted]
-        B3[Pause State]
+        B1[charging]
+        B2[charge_permitted]
+        B3[charge_pause]
     end
 
     subgraph "Switches (1)"
-        SW1[Charge Pause]
+        SW1[charge_pause]
     end
 
     subgraph "Numbers (3)"
-        N1[Charging Current]
-        N2[Energy Limit]
-        N3[Phase Count]
+        N1[charging_current]
+        N2[energy_limit]
+        N3[phase_count]
     end
 
     CD --> S1
@@ -671,44 +701,51 @@ Home Assistant's device registry groups entities by device. The `NRGkickEntity` 
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities."""
 
-    coordinator: NRGkickDataUpdateCoordinator
     _attr_has_entity_name = True
 
     def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
         """Initialize NRGkick entity."""
         super().__init__(coordinator)
         self._key = key
-        self._attr_has_entity_name = True
         self._attr_translation_key = key
         self._setup_device_info()
 
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Return the suggested object ID for this entity.
+
+        Ensures entity_ids are always English-based regardless of
+        user language, while translation_key provides localized names.
+        """
+        return self._key
+
     def _setup_device_info(self) -> None:
         """Set up device info and unique ID."""
-        device_info = self.coordinator.data.get("info", {}).get("general", {})
-        serial = device_info.get("serial_number", "unknown")
+        data = self.coordinator.data
+        info_data: dict[str, Any] = data.get("info", {}) if data else {}
+        device_info: dict[str, Any] = info_data.get("general", {})
+        serial: str = device_info.get("serial_number", "unknown")
 
-        # Get device name with fallback to "NRGkick"
-        device_name = device_info.get("device_name")
+        device_name: str | None = device_info.get("device_name")
         if not device_name:
             device_name = "NRGkick"
 
+        versions: dict[str, Any] = info_data.get("versions", {})
         self._attr_unique_id = f"{serial}_{self._key}"
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, serial)},
-            "name": device_name,
-            "manufacturer": "DiniTech",
-            "model": device_info.get("model_type", "NRGkick Gen2"),
-            "sw_version": self.coordinator.data.get("info", {})
-            .get("versions", {})
-            .get("sw_sm"),
-        }
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            name=device_name,
+            manufacturer="DiniTech",
+            model=device_info.get("model_type", "NRGkick Gen2"),
+            sw_version=versions.get("sw_sm"),
+        )
 ```
 
 **Device Registry Behavior:**
 
 - **Base Class Pattern**: All entity types (sensor, binary_sensor, switch, number) inherit from `NRGkickEntity`, eliminating duplicate device info setup.
 
-- **Modern Entity Naming (`has_entity_name = True`)**: Modern Home Assistant integrations use `has_entity_name = True`, which enables automatic device-based entity naming. Entity IDs are formed as `{device_name}_{entity_key}` (e.g., `sensor.garage_total_active_power` if device is named "Garage"). The `translation_key` provides localized entity names via the `translations/` directory.
+- **Modern Entity Naming (`has_entity_name = True`)**: Modern Home Assistant integrations use `has_entity_name = True`, which enables automatic device-based entity naming. The `translation_key` provides localized display names via the `translations/` directory, while `suggested_object_id` ensures entity IDs remain English-based regardless of user language (e.g., `sensor.nrgkick_total_active_power` with German display name "Gesamte Wirkleistung").
 
 - **Type Annotation**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference throughout the entity hierarchy.
 
@@ -1384,10 +1421,12 @@ entities:
 
 ```
 custom_components/nrgkick/
-├── __init__.py                 # Entry point, coordinator, setup/teardown
+├── __init__.py                 # Entry point, setup/teardown
+├── coordinator.py              # DataUpdateCoordinator, base entity class
 ├── api.py                      # HTTP client, API methods
 ├── config_flow.py              # UI configuration, validation, options
 ├── const.py                    # Constants (domain, status map, intervals)
+├── icons.json                  # Default icon mapping
 ├── manifest.json               # Integration metadata
 │
 ├── sensor.py                   # 80+ sensor entities
@@ -1403,16 +1442,17 @@ custom_components/nrgkick/
 
 ### Responsibility Matrix
 
-| File               | Responsibilities                                             | Dependencies                        |
-| ------------------ | ------------------------------------------------------------ | ----------------------------------- |
-| `__init__.py`      | Integration setup/teardown, coordinator, platform forwarding | `api.py`, `const.py`                |
-| `api.py`           | HTTP client, REST API calls, connection testing              | `aiohttp`                           |
-| `config_flow.py`   | UI configuration, validation, discovery, reauth              | `api.py`, `const.py`                |
-| `const.py`         | Constants, status map, configuration keys                    | None                                |
-| `sensor.py`        | 80+ sensor entity definitions, value mapping                 | `__init__.py`, `const.py`           |
-| `binary_sensor.py` | 3 binary sensor entities                                     | `__init__.py`, `const.py`           |
-| `switch.py`        | 1 switch entity (charge pause control)                       | `__init__.py`, `const.py`, `api.py` |
-| `number.py`        | 3 number entities (control inputs)                           | `__init__.py`, `const.py`, `api.py` |
+| File               | Responsibilities                                | Dependencies                           |
+| ------------------ | ----------------------------------------------- | -------------------------------------- |
+| `__init__.py`      | Integration setup/teardown, platform forwarding | `api.py`, `coordinator.py`             |
+| `coordinator.py`   | DataUpdateCoordinator, NRGkickEntity base class | `api.py`, `const.py`                   |
+| `api.py`           | HTTP client, REST API calls, connection testing | `aiohttp`                              |
+| `config_flow.py`   | UI configuration, validation, discovery, reauth | `api.py`, `const.py`                   |
+| `const.py`         | Constants, status map, configuration keys       | None                                   |
+| `sensor.py`        | 80+ sensor entity definitions, value mapping    | `coordinator.py`, `const.py`           |
+| `binary_sensor.py` | 3 binary sensor entities                        | `coordinator.py`, `const.py`           |
+| `switch.py`        | 1 switch entity (charge pause control)          | `coordinator.py`, `const.py`, `api.py` |
+| `number.py`        | 3 number entities (control inputs)              | `coordinator.py`, `const.py`, `api.py` |
 
 ### Key Constants (`const.py`)
 
@@ -1474,17 +1514,20 @@ tests/
 └── conftest.py                    # Shared fixtures and mocks
 ```
 
-**Total: 73 tests, 100% pass rate**
+**Total:**
+
+- API tests: `test_api.py`
+- Config flow tests: `test_config_flow.py`, `test_config_flow_additional.py`
+- Coordinator tests: `test_init.py`
+- Platform tests: `test_sensor.py`, `test_switch.py`, `test_number.py`, `test_binary_sensor.py`
+- Naming tests: `test_naming.py`
+- Diagnostics tests: `test_diagnostics.py`
 
 ### Config Flow Test Coverage
 
 The config flow tests cover all four flow types with comprehensive error handling:
 
 **User Flow (Manual Setup):**
-
-- Successful setup with/without credentials
-- Connection failures, authentication errors, unknown exceptions
-- Duplicate device detection (unique ID system)
 
 **Zeroconf Flow (mDNS Discovery):**
 
@@ -1609,19 +1652,32 @@ The `NRGkickEntity` base class provides common functionality for all entity type
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
     """Base class for NRGkick entities."""
 
-    coordinator: NRGkickDataUpdateCoordinator
+    _attr_has_entity_name = True
 
-    def __init__(self, coordinator: NRGkickDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: NRGkickDataUpdateCoordinator, key: str) -> None:
         """Initialize NRGkick entity."""
         super().__init__(coordinator)
-        self._attr_device_info = DeviceInfo(...)
+        self._key = key
+        self._attr_translation_key = key
+        self._setup_device_info()
+
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Ensure entity IDs are English-based regardless of user language."""
+        return self._key
+
+    def _setup_device_info(self) -> None:
+        """Set up device info and unique ID."""
+        # ... device info setup with DeviceInfo dataclass
 ```
 
 **Why This Pattern:**
 
 - **Single Source of Truth**: Device info setup is defined once instead of duplicated across 4 entity files.
 
-- **Type Safety**: The `coordinator: NRGkickDataUpdateCoordinator` annotation enables proper type inference without type ignores.
+- **Type Safety**: Generic typing with `CoordinatorEntity[NRGkickDataUpdateCoordinator]` enables proper type inference throughout the entity hierarchy.
+
+- **Consistent Entity IDs**: The `suggested_object_id` property ensures entity IDs remain English-based (e.g., `sensor.nrgkick_total_active_power`) regardless of user language settings, while `translation_key` provides localized display names.
 
 - **Maintainability**: Changes to device info logic only need to be made in one place.
 

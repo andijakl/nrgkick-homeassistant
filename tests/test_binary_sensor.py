@@ -2,10 +2,10 @@
 
 from unittest.mock import patch
 
-import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+import pytest
 
 from custom_components.nrgkick.const import STATUS_CHARGING
 
@@ -39,9 +39,10 @@ async def test_binary_sensors(
     mock_nrgkick_api.get_values.return_value = mock_values_data_binary_sensor
 
     # Setup entry
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api
-    ), patch("custom_components.nrgkick.async_get_clientsession"):
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
@@ -65,10 +66,20 @@ async def test_binary_sensors(
     assert state
     assert state.state == STATE_OFF
 
-    # Test state change
-    mock_values_data_binary_sensor["general"]["status"] = 0  # Not charging
-    mock_values_data_binary_sensor["general"]["charge_permitted"] = False
-    mock_control_data["charge_pause"] = 1  # Paused -> True -> ON
+    # Test state change - use new dict values to ensure coordinator detects change
+    # (required because always_update=False compares data dicts)
+    mock_nrgkick_api.get_values.return_value = {
+        "general": {
+            "status": 0,  # Not charging
+            "charge_permitted": False,
+        }
+    }
+    mock_nrgkick_api.get_control.return_value = {
+        "current_set": 16.0,
+        "charge_pause": 1,  # Paused -> True -> ON
+        "energy_limit": 0,
+        "phase_count": 3,
+    }
 
     # Trigger update
     coordinator = mock_config_entry.runtime_data

@@ -1,30 +1,30 @@
 {
   "config": {
     "abort": {
-      "already_configured": "Ger\u00e4t ist bereits konfiguriert",
+      "already_configured": "Gerät ist bereits konfiguriert",
+      "json_api_disabled": "JSON API ist auf dem Gerät deaktiviert",
+      "no_serial_number": "Das Gerät hat keine Seriennummer bereitgestellt",
+      "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen",
       "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+      "reconfigure_failed": "Die Neukonfiguration ist fehlgeschlagen",
       "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
     },
     "error": {
-      "cannot_connect": "Verbindung zum NRGkick-Ger\u00e4t fehlgeschlagen. Testen Sie die Verbindung im Browser: http://{device_ip}/info",
-      "invalid_auth": "Ung\u00fcltige Authentifizierung",
+      "cannot_connect": "Verbindung zum NRGkick-Gerät fehlgeschlagen. Testen Sie die Verbindung im Browser: http://{device_ip}/info",
+      "invalid_auth": "Ungültige Authentifizierung",
       "unknown": "Unerwarteter Fehler"
     },
     "step": {
-      "user": {
-        "data": {
-          "host": "Host",
-          "password": "Passwort",
-          "username": "Benutzername"
-        },
-        "description": "Richten Sie Ihr NRGkick-Ger\u00e4t ein. Stellen Sie sicher, dass das Ger\u00e4t eingeschaltet und im Netzwerk erreichbar ist."
-      },
       "reauth_confirm": {
         "data": {
           "password": "Passwort",
           "username": "Benutzername"
         },
-        "description": "Bitte aktualisieren Sie Ihre Anmeldedaten f\u00fcr {host}."
+        "data_description": {
+          "password": "Geben Sie das aktualisierte Passwort ein.",
+          "username": "Geben Sie den aktualisierten Benutzernamen ein."
+        },
+        "description": "Bitte aktualisieren Sie Ihre Anmeldedaten für {host}."
       },
       "reconfigure_confirm": {
         "data": {
@@ -32,216 +32,49 @@
           "password": "Passwort",
           "username": "Benutzername"
         },
-        "description": "Konfiguration f\u00fcr {host} aktualisieren."
+        "data_description": {
+          "host": "IP-Adresse oder Hostname (z. B. 192.168.1.50 oder nrgkick.local).",
+          "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",
+          "username": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist."
+        },
+        "description": "Konfiguration für {host} aktualisieren."
+      },
+      "user": {
+        "data": {
+          "host": "Host",
+          "password": "Passwort",
+          "username": "Benutzername"
+        },
+        "data_description": {
+          "host": "IP-Adresse oder Hostname (z. B. 192.168.1.50 oder nrgkick.local).",
+          "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",
+          "username": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist."
+        },
+        "description": "Richten Sie Ihr NRGkick-Gerät ein. Stellen Sie sicher, dass das Gerät eingeschaltet und im Netzwerk erreichbar ist."
+      },
+      "zeroconf_confirm": {
+        "data": {
+          "password": "Passwort",
+          "username": "Benutzername"
+        },
+        "data_description": {
+          "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",
+          "username": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist."
+        },
+        "description": "Möchten Sie das NRGkick-Gerät ({name}) unter {device_ip} zu Home Assistant hinzufügen?"
       }
     }
   },
   "entity": {
-    "sensor": {
-      "rated_current": {
-        "name": "Nennstrom"
-      },
-      "connector_phase_count": {
-        "name": "Steckerphasenanzahl"
-      },
-      "connector_max_current": {
-        "name": "Stecker Max-Strom"
-      },
-      "connector_type": {
-        "name": "Steckertyp"
-      },
-      "connector_serial": {
-        "name": "Steckerseriennummer"
-      },
-      "grid_voltage": {
-        "name": "Netzspannung"
-      },
-      "grid_frequency": {
-        "name": "Netzfrequenz"
-      },
-      "grid_phases": {
-        "name": "Netzphasen"
-      },
-      "network_ip_address": {
-        "name": "IP-Adresse"
-      },
-      "network_mac_address": {
-        "name": "MAC-Adresse"
-      },
-      "network_ssid": {
-        "name": "SSID"
-      },
-      "network_rssi": {
-        "name": "Signalst\u00e4rke"
-      },
-      "versions_sw_sm": {
-        "name": "Softwareversion"
-      },
-      "versions_hw_sm": {
-        "name": "Hardwareversion"
-      },
-      "current_set": {
-        "name": "Ladestrom Sollwert"
-      },
-      "charge_pause": {
-        "name": "Ladepause"
-      },
-      "energy_limit": {
-        "name": "Energielimit"
-      },
-      "phase_count": {
-        "name": "Phasenanzahl"
-      },
-      "total_charged_energy": {
-        "name": "Gesamt geladene Energie"
-      },
-      "charged_energy": {
-        "name": "Geladene Energie"
-      },
-      "charging_voltage": {
-        "name": "Ladespannung"
-      },
-      "charging_current": {
-        "name": "Ladestrom"
-      },
-      "powerflow_grid_frequency": {
-        "name": "Netzfrequenz (Powerflow)"
-      },
-      "peak_power": {
-        "name": "Spitzenleistung"
-      },
-      "total_active_power": {
-        "name": "Gesamtwirkleistung"
-      },
-      "total_reactive_power": {
-        "name": "Gesamtblindleistung"
-      },
-      "total_apparent_power": {
-        "name": "Gesamtscheinleistung"
-      },
-      "total_power_factor": {
-        "name": "Gesamtleistungsfaktor"
-      },
-      "l1_voltage": {
-        "name": "L1 Spannung"
-      },
-      "l1_current": {
-        "name": "L1 Strom"
-      },
-      "l1_active_power": {
-        "name": "L1 Wirkleistung"
-      },
-      "l1_reactive_power": {
-        "name": "L1 Blindleistung"
-      },
-      "l1_apparent_power": {
-        "name": "L1 Scheinleistung"
-      },
-      "l1_power_factor": {
-        "name": "L1 Leistungsfaktor"
-      },
-      "l2_voltage": {
-        "name": "L2 Spannung"
-      },
-      "l2_current": {
-        "name": "L2 Strom"
-      },
-      "l2_active_power": {
-        "name": "L2 Wirkleistung"
-      },
-      "l2_reactive_power": {
-        "name": "L2 Blindleistung"
-      },
-      "l2_apparent_power": {
-        "name": "L2 Scheinleistung"
-      },
-      "l2_power_factor": {
-        "name": "L2 Leistungsfaktor"
-      },
-      "l3_voltage": {
-        "name": "L3 Spannung"
-      },
-      "l3_current": {
-        "name": "L3 Strom"
-      },
-      "l3_active_power": {
-        "name": "L3 Wirkleistung"
-      },
-      "l3_reactive_power": {
-        "name": "L3 Blindleistung"
-      },
-      "l3_apparent_power": {
-        "name": "L3 Scheinleistung"
-      },
-      "l3_power_factor": {
-        "name": "L3 Leistungsfaktor"
-      },
-      "n_current": {
-        "name": "Neutralleiterstrom"
-      },
-      "charging_rate": {
-        "name": "Laderate"
-      },
-      "vehicle_connect_time": {
-        "name": "Fahrzeug verbunden seit"
-      },
-      "vehicle_charging_time": {
-        "name": "Fahrzeug l\u00e4dt seit"
-      },
-      "status": {
-        "name": "Status"
-      },
-      "charge_permitted": {
-        "name": "Laden erlaubt"
-      },
-      "relay_state": {
-        "name": "Relaisstatus"
-      },
-      "charge_count": {
-        "name": "Ladezyklen"
-      },
-      "rcd_trigger": {
-        "name": "RCD-Ausl\u00f6sung"
-      },
-      "warning_code": {
-        "name": "Warncode"
-      },
-      "error_code": {
-        "name": "Fehlercode"
-      },
-      "housing_temperature": {
-        "name": "Geh\u00e4usetemperatur"
-      },
-      "connector_l1_temperature": {
-        "name": "Steckertemperatur L1"
-      },
-      "connector_l2_temperature": {
-        "name": "Steckertemperatur L2"
-      },
-      "connector_l3_temperature": {
-        "name": "Steckertemperatur L3"
-      },
-      "domestic_plug_1_temperature": {
-        "name": "Haushaltsstecker 1 Temperatur"
-      },
-      "domestic_plug_2_temperature": {
-        "name": "Haushaltsstecker 2 Temperatur"
-      }
-    },
     "binary_sensor": {
-      "charging": {
-        "name": "L\u00e4dt"
+      "charge_pause": {
+        "name": "Ladepause"
       },
       "charge_permitted": {
         "name": "Laden erlaubt"
       },
-      "charge_pause": {
-        "name": "Ladepause"
-      }
-    },
-    "switch": {
-      "charge_pause": {
-        "name": "Ladepause"
+      "charging": {
+        "name": "Lädt"
       }
     },
     "number": {
@@ -254,35 +87,374 @@
       "phase_count": {
         "name": "Phasenanzahl"
       }
+    },
+    "sensor": {
+      "cellular_mode": {
+        "name": "Mobilfunkmodus",
+        "state": {
+          "gsm": "GSM",
+          "lte_cat_m1": "LTE Cat-M1",
+          "lte_nb_iot": "LTE NB-IoT",
+          "no_service": "Kein Dienst",
+          "unknown": "Unbekannt"
+        }
+      },
+      "cellular_operator": {
+        "name": "Mobilfunkanbieter"
+      },
+      "cellular_rssi": {
+        "name": "Mobilfunk-Signalstärke"
+      },
+      "charge_count": {
+        "name": "Ladezyklen"
+      },
+      "charge_pause": {
+        "name": "Ladepause"
+      },
+      "charge_permitted": {
+        "name": "Laden erlaubt"
+      },
+      "charged_energy": {
+        "name": "Geladene Energie"
+      },
+      "charging_current": {
+        "name": "Ladestrom"
+      },
+      "charging_rate": {
+        "name": "Laderate"
+      },
+      "charging_voltage": {
+        "name": "Ladespannung"
+      },
+      "connector_l1_temperature": {
+        "name": "Steckertemperatur L1"
+      },
+      "connector_l2_temperature": {
+        "name": "Steckertemperatur L2"
+      },
+      "connector_l3_temperature": {
+        "name": "Steckertemperatur L3"
+      },
+      "connector_max_current": {
+        "name": "Stecker Max-Strom"
+      },
+      "connector_phase_count": {
+        "name": "Steckerphasenanzahl"
+      },
+      "connector_serial": {
+        "name": "Steckerseriennummer"
+      },
+      "connector_type": {
+        "name": "Steckertyp",
+        "state": {
+          "aus": "Australisch (32A 5-polig)",
+          "cee": "CEE",
+          "domestic": "Haushaltsstecker",
+          "type2": "Typ 2",
+          "unknown": "Unbekannt",
+          "wall": "Wandsteckdose"
+        }
+      },
+      "current_set": {
+        "name": "Ladestrom Sollwert"
+      },
+      "domestic_plug_1_temperature": {
+        "name": "Haushaltsstecker 1 Temperatur"
+      },
+      "domestic_plug_2_temperature": {
+        "name": "Haushaltsstecker 2 Temperatur"
+      },
+      "energy_limit": {
+        "name": "Energielimit"
+      },
+      "error_code": {
+        "name": "Fehlercode",
+        "state": {
+          "32a_attachment_on_16a_unit": "32A-Aufsatz an 16A-Gerät",
+          "attachment_overtemperature": "Aufsatz-Übertemperatur",
+          "cp_signal_impermissible": "CP-Signal unzulässig",
+          "cp_signal_voltage_error": "CP-Signal Spannungsfehler",
+          "domestic_plug_overtemperature": "Haushaltsstecker-Übertemperatur",
+          "ev_diode_fault": "Fahrzeug-Diodenfehler",
+          "general_error": "Allgemeiner Fehler",
+          "general_overtemperature": "Allgemeine Übertemperatur",
+          "housing_overtemperature": "Gehäuse-Übertemperatur",
+          "no_error": "Kein Fehler",
+          "overfrequency_detected": "Überfrequenz erkannt",
+          "overvoltage_detected": "Überspannung erkannt",
+          "overvoltage_without_pe_detected": "Überspannung ohne PE erkannt",
+          "pe_and_rcd_and_relay_self_test_failed": "PE-, RCD- und Relais-Selbsttest fehlgeschlagen",
+          "pe_and_rcd_self_test_failed": "PE- und RCD-Selbsttest fehlgeschlagen",
+          "pe_and_relay_self_test_failed": "PE- und Relais-Selbsttest fehlgeschlagen",
+          "pe_self_test_failed": "PE-Selbsttest fehlgeschlagen",
+          "phase_shift_error": "Phasenverschiebungsfehler",
+          "rcd_and_relay_self_test_failed": "RCD- und Relais-Selbsttest fehlgeschlagen",
+          "rcd_self_test_failed": "RCD-Selbsttest fehlgeschlagen",
+          "relay_self_test_failed": "Relais-Selbsttest fehlgeschlagen",
+          "residual_current_detected": "Fehlerstrom erkannt",
+          "supply_voltage_error": "Versorgungsspannungsfehler",
+          "type2_not_authorized": "Typ 2 nicht autorisiert",
+          "underfrequency_detected": "Unterfrequenz erkannt",
+          "undervoltage_detected": "Unterspannung erkannt",
+          "undervoltage_without_pe_detected": "Unterspannung ohne PE erkannt",
+          "unknown": "Unbekannt",
+          "unknown_frequency_type": "Unbekannter Frequenztyp",
+          "unknown_grid_type": "Unbekannter Netztyp",
+          "unplug_detection_triggered": "Absteckerkennung ausgelöst",
+          "voltage_drop_detected": "Spannungsabfall erkannt"
+        }
+      },
+      "gps_accuracy": {
+        "name": "GPS Genauigkeit"
+      },
+      "gps_altitude": {
+        "name": "GPS Höhe"
+      },
+      "gps_latitude": {
+        "name": "GPS Breitengrad"
+      },
+      "gps_longitude": {
+        "name": "GPS Längengrad"
+      },
+      "grid_frequency": {
+        "name": "Netzfrequenz"
+      },
+      "grid_phases": {
+        "name": "Netzphasen",
+        "state": {
+          "l1": "L1",
+          "l1_l2": "L1, L2",
+          "l1_l2_l3": "L1, L2, L3",
+          "l1_l3": "L1, L3",
+          "l2": "L2",
+          "l2_l3": "L2, L3",
+          "l3": "L3",
+          "unknown": "Unbekannt"
+        }
+      },
+      "grid_voltage": {
+        "name": "Netzspannung"
+      },
+      "housing_temperature": {
+        "name": "Gehäusetemperatur"
+      },
+      "l1_active_power": {
+        "name": "L1 Wirkleistung"
+      },
+      "l1_apparent_power": {
+        "name": "L1 Scheinleistung"
+      },
+      "l1_current": {
+        "name": "L1 Strom"
+      },
+      "l1_power_factor": {
+        "name": "L1 Leistungsfaktor"
+      },
+      "l1_reactive_power": {
+        "name": "L1 Blindleistung"
+      },
+      "l1_voltage": {
+        "name": "L1 Spannung"
+      },
+      "l2_active_power": {
+        "name": "L2 Wirkleistung"
+      },
+      "l2_apparent_power": {
+        "name": "L2 Scheinleistung"
+      },
+      "l2_current": {
+        "name": "L2 Strom"
+      },
+      "l2_power_factor": {
+        "name": "L2 Leistungsfaktor"
+      },
+      "l2_reactive_power": {
+        "name": "L2 Blindleistung"
+      },
+      "l2_voltage": {
+        "name": "L2 Spannung"
+      },
+      "l3_active_power": {
+        "name": "L3 Wirkleistung"
+      },
+      "l3_apparent_power": {
+        "name": "L3 Scheinleistung"
+      },
+      "l3_current": {
+        "name": "L3 Strom"
+      },
+      "l3_power_factor": {
+        "name": "L3 Leistungsfaktor"
+      },
+      "l3_reactive_power": {
+        "name": "L3 Blindleistung"
+      },
+      "l3_voltage": {
+        "name": "L3 Spannung"
+      },
+      "n_current": {
+        "name": "Neutralleiterstrom"
+      },
+      "network_ip_address": {
+        "name": "IP-Adresse"
+      },
+      "network_mac_address": {
+        "name": "MAC-Adresse"
+      },
+      "network_rssi": {
+        "name": "Signalstärke"
+      },
+      "network_ssid": {
+        "name": "SSID"
+      },
+      "peak_power": {
+        "name": "Spitzenleistung"
+      },
+      "phase_count": {
+        "name": "Phasenanzahl"
+      },
+      "powerflow_grid_frequency": {
+        "name": "Netzfrequenz (Powerflow)"
+      },
+      "rated_current": {
+        "name": "Nennstrom"
+      },
+      "rcd_trigger": {
+        "name": "RCD-Auslösung",
+        "state": {
+          "ac_150ma_fault": "AC 150mA Fehler",
+          "ac_30ma_fault": "AC 30mA Fehler",
+          "ac_60ma_fault": "AC 60mA Fehler",
+          "dc_negative_6ma_fault": "DC -6mA Fehler",
+          "dc_positive_6ma_fault": "DC +6mA Fehler",
+          "no_fault": "Kein Fehler",
+          "unknown": "Unbekannt"
+        }
+      },
+      "relay_state": {
+        "name": "Relaisstatus",
+        "state": {
+          "l1": "L1",
+          "l1_l2": "L1, L2",
+          "l1_l2_l3": "L1, L2, L3",
+          "l1_l3": "L1, L3",
+          "l2": "L2",
+          "l2_l3": "L2, L3",
+          "l3": "L3",
+          "n": "N",
+          "n_l1": "N, L1",
+          "n_l1_l2": "N, L1, L2",
+          "n_l1_l2_l3": "N, L1, L2, L3",
+          "n_l1_l3": "N, L1, L3",
+          "n_l2": "N, L2",
+          "n_l2_l3": "N, L2, L3",
+          "n_l3": "N, L3",
+          "no_relay": "Kein Relais",
+          "unknown": "Unbekannt"
+        }
+      },
+      "status": {
+        "name": "Status",
+        "state": {
+          "charging": "Lädt",
+          "connected": "Verbunden",
+          "error": "Fehler",
+          "standby": "Bereitschaft",
+          "unknown": "Unbekannt",
+          "wakeup": "Aufwachen"
+        }
+      },
+      "total_active_power": {
+        "name": "Gesamtwirkleistung"
+      },
+      "total_apparent_power": {
+        "name": "Gesamtscheinleistung"
+      },
+      "total_charged_energy": {
+        "name": "Gesamt geladene Energie"
+      },
+      "total_power_factor": {
+        "name": "Gesamtleistungsfaktor"
+      },
+      "total_reactive_power": {
+        "name": "Gesamtblindleistung"
+      },
+      "vehicle_charging_time": {
+        "name": "Fahrzeug lädt seit"
+      },
+      "vehicle_connect_time": {
+        "name": "Fahrzeug verbunden seit"
+      },
+      "versions_hw_sm": {
+        "name": "Hardwareversion"
+      },
+      "versions_sw_sm": {
+        "name": "Softwareversion"
+      },
+      "warning_code": {
+        "name": "Warncode",
+        "state": {
+          "blackout_protection": "Blackout-Schutz",
+          "energy_limit_reached": "Energielimit erreicht",
+          "ev_does_not_comply_standard": "Fahrzeug entspricht nicht dem Standard",
+          "increased_attachment_temperature": "Erhöhte Aufsatztemperatur",
+          "increased_domestic_plug_temperature": "Erhöhte Haushaltsstecker-Temperatur",
+          "increased_housing_temperature": "Erhöhte Gehäusetemperatur",
+          "increased_temperature": "Erhöhte Temperatur",
+          "no_attachment_detected": "Kein Aufsatz erkannt",
+          "no_comm_with_type2_attachment": "Keine Kommunikation mit Typ-2-Aufsatz",
+          "no_pe": "Kein Schutzleiter",
+          "no_warning": "Keine Warnung",
+          "unknown": "Unbekannt",
+          "unsupported_charging_mode": "Nicht unterstützter Lademodus"
+        }
+      }
+    },
+    "switch": {
+      "charge_pause": {
+        "name": "Ladepause"
+      }
     }
   },
   "exceptions": {
-    "unknown_error": {
-      "message": "Ein unbekannter Fehler ist aufgetreten."
-    },
-    "communication_error": {
-      "message": "Kommunikationsfehler mit NRGkick-Ger\u00e4t: {error}"
+    "auth_failure": {
+      "message": "Authentifizierung fehlgeschlagen (HTTP {status_code}). Überprüfen Sie die BasicAuth-Einstellungen. Ziel: {url}"
     },
     "authentication_error": {
-      "message": "Authentifizierung fehlgeschlagen. Bitte \u00fcberpr\u00fcfen Sie Ihre Anmeldedaten."
+      "message": "Authentifizierung fehlgeschlagen. Bitte überprüfen Sie Ihre Anmeldedaten."
     },
-    "auth_failure": {
-      "message": "Authentifizierung fehlgeschlagen (HTTP {status_code}). \u00dcberpr\u00fcfen Sie die BasicAuth-Einstellungen. Ziel: {url}"
-    },
-    "connection_timeout": {
-      "message": "Zeit\u00fcberschreitung der Verbindung nach {attempts} Versuchen. Stromversorgung und Netzwerk pr\u00fcfen. Ziel: {url}"
-    },
-    "http_error": {
-      "message": "Ger\u00e4t meldet HTTP-Fehler {status_code} ({status_message}). URL: {url}"
+    "communication_error": {
+      "message": "Kommunikationsfehler mit NRGkick-Gerät: {error}"
     },
     "connection_failed": {
       "message": "Netzwerkverbindung fehlgeschlagen: {error_details}. Ziel: {url}"
     },
+    "connection_timeout": {
+      "message": "Zeitüberschreitung der Verbindung nach {attempts} Versuchen. Stromversorgung und Netzwerk prüfen. Ziel: {url}"
+    },
     "generic_error": {
       "message": "Verbindung fehlgeschlagen: {error_details}. Ziel: {url}"
     },
+    "http_error": {
+      "message": "Gerät meldet HTTP-Fehler {status_code} ({status_message}). URL: {url}"
+    },
     "set_failed": {
       "message": "Fehler beim Setzen von {target} auf {value}."
+    },
+    "unknown_error": {
+      "message": "Ein unbekannter Fehler ist aufgetreten."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "scan_interval": "Abfrageintervall"
+        },
+        "data_description": {
+          "scan_interval": "Abfrageintervall in Sekunden (10-300)."
+        }
+      }
     }
   }
 }

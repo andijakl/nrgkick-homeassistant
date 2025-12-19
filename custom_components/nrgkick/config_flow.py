@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Mapping
+import logging
 from typing import Any
 
-import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+import voluptuous as vol
 
 from .api import (
     NRGkickAPI,
@@ -62,7 +62,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
 
 # pylint: disable=abstract-method  # is_matching is not required for HA config flows
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NRGkick."""
 
     VERSION = 1
@@ -109,13 +109,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
         """Handle zeroconf discovery."""
         _LOGGER.debug("Discovered NRGkick device: %s", discovery_info)
 
-        # Extract device information from mDNS metadata
+        # Extract device information from mDNS metadata.
         serial = discovery_info.properties.get("serial_number")
         device_name = discovery_info.properties.get("device_name")
         model_type = discovery_info.properties.get("model_type")
         json_api_enabled = discovery_info.properties.get("json_api_enabled", "0")
 
-        # Verify JSON API is enabled
+        # Verify JSON API is enabled.
         if json_api_enabled != "1":
             _LOGGER.debug("NRGkick device %s does not have JSON API enabled", serial)
             return self.async_abort(reason="json_api_disabled")
@@ -124,18 +124,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
             _LOGGER.debug("NRGkick device discovered without serial number")
             return self.async_abort(reason="no_serial_number")
 
-        # Set unique ID to prevent duplicate entries
+        # Set unique ID to prevent duplicate entries.
         await self.async_set_unique_id(serial)
-        # Update the host if the device is already configured (IP might have changed)
+        # Update the host if the device is already configured (IP might have changed).
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.host})
 
-        # Store discovery info for the confirmation step
+        # Store discovery info for the confirmation step.
         self._discovered_host = discovery_info.host
-        # Fallback: device_name -> model_type -> "NRGkick"
+        # Fallback: device_name -> model_type -> "NRGkick".
         self._discovered_name = device_name or model_type or "NRGkick"
         self.context["title_placeholders"] = {"name": self._discovered_name}
 
-        # Proceed to confirmation step
+        # Proceed to confirmation step.
         return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
@@ -145,7 +145,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Build the connection data
+            # Build the connection data.
             data = {
                 CONF_HOST: self._discovered_host,
                 CONF_USERNAME: user_input.get(CONF_USERNAME),
@@ -162,11 +162,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):  # type: ignore[call
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                # Create entry directly - HA will show device/area assignment UI
-                # This is the final step, so "Skip and finish" is appropriate
+                # Create entry directly - HA will show device/area assignment UI.
+                # This is the final step, so "Skip and finish" is appropriate.
                 return self.async_create_entry(title=info["title"], data=data)
 
-        # Show confirmation form with optional authentication
+        # Show confirmation form with optional authentication.
         return self.async_show_form(
             step_id="zeroconf_confirm",
             data_schema=vol.Schema(

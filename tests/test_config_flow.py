@@ -5,11 +5,11 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import patch
 
-import pytest
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+import pytest
 
 from custom_components.nrgkick.api import (
     NRGkickApiClientAuthenticationError,
@@ -29,13 +29,16 @@ async def test_form(hass: HomeAssistant, mock_nrgkick_api) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), patch(
-        "custom_components.nrgkick.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "custom_components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch(
+            "custom_components.nrgkick.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -63,12 +66,15 @@ async def test_form_without_credentials(hass: HomeAssistant, mock_nrgkick_api) -
         "nrgkick", context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), patch(
-        "custom_components.nrgkick.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "custom_components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch(
+            "custom_components.nrgkick.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -285,10 +291,13 @@ async def test_options_flow_success(hass: HomeAssistant, mock_nrgkick_api) -> No
     entry.add_to_hass(hass)
 
     # Set up the entry to register the update listener
-    with patch(
-        "custom_components.nrgkick.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), patch("homeassistant.config_entries.ConfigEntries.async_reload"):
+    with (
+        patch(
+            "custom_components.nrgkick.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload"),
+    ):
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
@@ -296,10 +305,13 @@ async def test_options_flow_success(hass: HomeAssistant, mock_nrgkick_api) -> No
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch(
-        "custom_components.nrgkick.config_flow.validate_input",
-        return_value={"title": "NRGkick Test", "serial": "TEST123456"},
-    ), patch("homeassistant.config_entries.ConfigEntries.async_reload") as mock_reload:
+    with (
+        patch(
+            "custom_components.nrgkick.config_flow.validate_input",
+            return_value={"title": "NRGkick Test", "serial": "TEST123456"},
+        ),
+        patch("homeassistant.config_entries.ConfigEntries.async_reload") as mock_reload,
+    ):
         result2 = await hass.config_entries.options.async_configure(
             result["flow_id"],
             user_input={
@@ -344,10 +356,13 @@ async def test_reconfigure_flow(hass: HomeAssistant, mock_nrgkick_api) -> None:
     assert result["type"] == data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reconfigure_confirm"
 
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), patch("custom_components.nrgkick.async_setup_entry", return_value=True):
+    with (
+        patch(
+            "custom_components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch("custom_components.nrgkick.async_setup_entry", return_value=True),
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -472,13 +487,16 @@ async def test_zeroconf_discovery(hass: HomeAssistant, mock_nrgkick_api) -> None
         "device_ip": "192.168.1.100",
     }
 
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), patch(
-        "custom_components.nrgkick.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch(
+            "custom_components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch(
+            "custom_components.nrgkick.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -524,12 +542,15 @@ async def test_zeroconf_discovery_without_credentials(
         data=discovery_info,
     )
 
-    with patch(
-        "custom_components.nrgkick.config_flow.NRGkickAPI",
-        return_value=mock_nrgkick_api,
-    ), patch(
-        "custom_components.nrgkick.async_setup_entry",
-        return_value=True,
+    with (
+        patch(
+            "custom_components.nrgkick.config_flow.NRGkickAPI",
+            return_value=mock_nrgkick_api,
+        ),
+        patch(
+            "custom_components.nrgkick.async_setup_entry",
+            return_value=True,
+        ),
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
