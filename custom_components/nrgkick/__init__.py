@@ -7,7 +7,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import NRGkickAPI
-from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
+from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
+from .entity import NRGkickEntity
 
 # Re-export for backward compatibility with other modules.
 __all__ = [

@@ -107,7 +107,10 @@ async def test_switch_error(
     # Mock error
     mock_nrgkick_api.set_charge_pause.side_effect = NRGkickApiClientError("API Error")
 
-    with pytest.raises(HomeAssistantError, match="Unable to pause charging"):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Failed to set charge_pause to on\.?$",
+    ):
         await hass.services.async_call(
             "switch",
             SERVICE_TURN_ON,
@@ -142,7 +145,10 @@ async def test_switch_turn_off_error(
     # Mock error
     mock_nrgkick_api.set_charge_pause.side_effect = NRGkickApiClientError("API Error")
 
-    with pytest.raises(HomeAssistantError, match="Unable to resume charging"):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Failed to set charge_pause to off\.?$",
+    ):
         await hass.services.async_call(
             "switch",
             SERVICE_TURN_OFF,

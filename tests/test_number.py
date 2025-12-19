@@ -150,7 +150,10 @@ async def test_number_set_value_error(
     entity_id = entity_registry.async_get_entity_id("number", "nrgkick", unique_id)
     assert entity_id
 
-    with pytest.raises(HomeAssistantError, match="Unable to update"):
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Failed to set current_set to 10\.0\.?$",
+    ):
         await hass.services.async_call(
             "number",
             SERVICE_SET_VALUE,

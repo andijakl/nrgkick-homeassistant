@@ -9,10 +9,11 @@ from homeassistant.components.number import NumberEntity, NumberMode
 from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .api import NRGkickApiClientError
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: NRGkickConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick number entities based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
@@ -116,5 +117,10 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
                 await self.coordinator.async_set_phase_count(int(value))
         except NRGkickApiClientError as err:
             raise HomeAssistantError(
-                f"Unable to update {self._attr_translation_key}: {err}"
+                translation_domain=DOMAIN,
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": self._attr_translation_key or self._key,
+                    "value": str(value),
+                },
             ) from err

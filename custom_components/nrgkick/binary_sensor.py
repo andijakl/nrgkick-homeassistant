@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .const import STATUS_CHARGING
@@ -22,7 +22,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: NRGkickConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick binary sensors based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data

@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
@@ -46,7 +46,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: NRGkickConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NRGkick sensors based on a config entry."""
     coordinator: NRGkickDataUpdateCoordinator = entry.runtime_data
