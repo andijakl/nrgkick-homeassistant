@@ -12,7 +12,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .api import NRGkickApiClientError
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,25 +67,13 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
         try:
             await self.coordinator.async_set_charge_pause(True)
         except NRGkickApiClientError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={
-                    "target": "charge_pause",
-                    "value": "on",
-                },
-            ) from err
+            # Surface the device error message directly to the user.
+            raise HomeAssistantError(str(err)) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.coordinator.async_set_charge_pause(False)
         except NRGkickApiClientError as err:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="set_failed",
-                translation_placeholders={
-                    "target": "charge_pause",
-                    "value": "off",
-                },
-            ) from err
+            # Surface the device error message directly to the user.
+            raise HomeAssistantError(str(err)) from err

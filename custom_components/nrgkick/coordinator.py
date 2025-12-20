@@ -94,9 +94,8 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Check if response contains an error message.
         if "Response" in response:
-            raise NRGkickApiClientCommunicationError(
-                f"{error_message} {response['Response']}"
-            )
+            device_error = response["Response"]
+            raise NRGkickApiClientCommunicationError(f"{error_message} {device_error}")
 
         # Check if response contains the expected key with the new value.
         if control_key in response:

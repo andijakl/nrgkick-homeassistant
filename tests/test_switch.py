@@ -109,7 +109,7 @@ async def test_switch_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Failed to set charge_pause to on\.?$",
+        match=r"API Error",
     ):
         await hass.services.async_call(
             "switch",
@@ -147,7 +147,7 @@ async def test_switch_turn_off_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Failed to set charge_pause to off\.?$",
+        match=r"API Error",
     ):
         await hass.services.async_call(
             "switch",
