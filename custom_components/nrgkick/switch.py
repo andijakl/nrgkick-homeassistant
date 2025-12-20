@@ -12,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .api import NRGkickApiClientError
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -68,7 +69,7 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
             await self.coordinator.async_set_charge_pause(True)
         except NRGkickApiClientError as err:
             raise HomeAssistantError(
-                translation_domain="nrgkick",
+                translation_domain=DOMAIN,
                 translation_key="set_failed",
                 translation_placeholders={
                     "target": "charge_pause",
@@ -83,7 +84,7 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
             await self.coordinator.async_set_charge_pause(False)
         except NRGkickApiClientError as err:
             raise HomeAssistantError(
-                translation_domain="nrgkick",
+                translation_domain=DOMAIN,
                 translation_key="set_failed",
                 translation_placeholders={
                     "target": "charge_pause",

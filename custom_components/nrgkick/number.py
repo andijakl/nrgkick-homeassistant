@@ -13,6 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NRGkickConfigEntry, NRGkickDataUpdateCoordinator, NRGkickEntity
 from .api import NRGkickApiClientError
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -116,7 +117,7 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
                 await self.coordinator.async_set_phase_count(int(value))
         except NRGkickApiClientError as err:
             raise HomeAssistantError(
-                translation_domain="nrgkick",
+                translation_domain=DOMAIN,
                 translation_key="set_failed",
                 translation_placeholders={
                     "target": self._attr_translation_key or self._key,
