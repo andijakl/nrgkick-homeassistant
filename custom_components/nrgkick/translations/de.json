@@ -439,7 +439,7 @@
       "message": "Gerät meldet HTTP-Fehler {status_code} ({status_message}). URL: {url}"
     },
     "set_failed": {
-      "message": "Fehler beim Setzen von {target} auf {value}."
+      "message": "Fehler beim Setzen von {target} auf {value}. {error}"
     },
     "unknown_error": {
       "message": "Ein unbekannter Fehler ist aufgetreten."

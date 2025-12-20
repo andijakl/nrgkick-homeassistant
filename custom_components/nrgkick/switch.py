@@ -67,13 +67,27 @@ class NRGkickSwitch(NRGkickEntity, SwitchEntity):
         try:
             await self.coordinator.async_set_charge_pause(True)
         except NRGkickApiClientError as err:
-            # Surface the device error message directly to the user.
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain="nrgkick",
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": "charge_pause",
+                    "value": "on",
+                    "error": str(err),
+                },
+            ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
             await self.coordinator.async_set_charge_pause(False)
         except NRGkickApiClientError as err:
-            # Surface the device error message directly to the user.
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain="nrgkick",
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": "charge_pause",
+                    "value": "off",
+                    "error": str(err),
+                },
+            ) from err

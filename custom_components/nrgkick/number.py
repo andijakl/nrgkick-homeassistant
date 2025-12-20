@@ -115,5 +115,12 @@ class NRGkickNumber(NRGkickEntity, NumberEntity):
             elif self._key == "phase_count":
                 await self.coordinator.async_set_phase_count(int(value))
         except NRGkickApiClientError as err:
-            # Surface the device error message directly to the user.
-            raise HomeAssistantError(str(err)) from err
+            raise HomeAssistantError(
+                translation_domain="nrgkick",
+                translation_key="set_failed",
+                translation_placeholders={
+                    "target": self._attr_translation_key or self._key,
+                    "value": str(value),
+                    "error": str(err),
+                },
+            ) from err

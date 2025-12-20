@@ -152,7 +152,7 @@ async def test_number_set_value_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"API Error",
+        match=r"Failed to set current_set to 10\.0\. API Error",
     ):
         await hass.services.async_call(
             "number",
