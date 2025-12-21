@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "already_in_progress": "Die Konfiguration wird bereits durchgeführt",
       "already_configured": "Gerät ist bereits konfiguriert",
       "json_api_disabled": "JSON API ist auf dem Gerät deaktiviert",
       "no_serial_number": "Das Gerät hat keine Seriennummer bereitgestellt",
