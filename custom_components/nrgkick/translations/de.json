@@ -441,6 +441,21 @@
     "set_failed": {
       "message": "Fehler beim Setzen von {target} auf {value}. {error}"
     },
+    "set_failed_unexpected_value": {
+      "message": "Fehler beim Setzen von {target} auf {value}. Gerät meldet unerwarteten Wert: {actual} (erwartet {expected})."
+    },
+    "set_failed_invalid_value": {
+      "message": "Fehler beim Setzen von {target} auf {value}. Gerät meldet einen ungültigen Wert."
+    },
+    "device_error": {
+      "message": "{error}"
+    },
+    "device_unexpected_value": {
+      "message": "Gerät meldet unerwarteten Wert: {actual} (erwartet {expected})."
+    },
+    "device_invalid_value": {
+      "message": "Gerät meldet einen ungültigen Wert."
+    },
     "unknown_error": {
       "message": "Ein unbekannter Fehler ist aufgetreten."
     }

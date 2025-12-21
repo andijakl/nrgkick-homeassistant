@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
 import pytest
 
 from custom_components.nrgkick import NRGkickEntity
 from custom_components.nrgkick.const import DOMAIN
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
 @pytest.mark.requires_integration

@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+import pytest
+
+from custom_components.nrgkick.api import NRGkickApiClientError
 from homeassistant.components.number.const import SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import pytest
-
-from custom_components.nrgkick.api import NRGkickApiClientError
 
 
 @pytest.mark.requires_integration

@@ -2,9 +2,10 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import pytest
 
 
 @pytest.mark.requires_integration

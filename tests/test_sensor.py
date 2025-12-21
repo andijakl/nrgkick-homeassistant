@@ -2,10 +2,11 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-import pytest
 
 
 @pytest.fixture

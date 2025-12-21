@@ -10,7 +10,6 @@ import logging
 from typing import Any, TypeVar, cast
 
 import aiohttp
-from homeassistant.exceptions import HomeAssistantError
 
 # pylint: disable=import-error
 from nrgkick_api import (
@@ -18,6 +17,8 @@ from nrgkick_api import (
     NRGkickAuthenticationError,
     NRGkickConnectionError,
 )
+
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN
 
