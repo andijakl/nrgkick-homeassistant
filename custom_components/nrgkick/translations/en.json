@@ -447,15 +447,6 @@
         "set_failed_invalid_value": {
             "message": "Failed to set {target} to {value}. Device returned invalid value."
         },
-        "device_error": {
-            "message": "{error}"
-        },
-        "device_unexpected_value": {
-            "message": "Device returned unexpected value: {actual} (expected {expected})."
-        },
-        "device_invalid_value": {
-            "message": "Device returned invalid value."
-        },
         "unknown_error": {
             "message": "An unknown error occurred."
         }
