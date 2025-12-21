@@ -2,12 +2,12 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.const import STATE_OFF, STATE_ON
-from homeassistant.core import HomeAssistant
 import pytest
 
 from custom_components.nrgkick.const import STATUS_CHARGING
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture

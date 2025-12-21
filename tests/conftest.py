@@ -5,10 +5,10 @@ from __future__ import annotations
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 import pytest
 
 from custom_components.nrgkick.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 # This fixture is used by the pytest-homeassistant-custom-component
 # package to enable custom component loading in integration tests

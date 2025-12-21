@@ -439,7 +439,13 @@
       "message": "Gerät meldet HTTP-Fehler {status_code} ({status_message}). URL: {url}"
     },
     "set_failed": {
-      "message": "Fehler beim Setzen von {target} auf {value}."
+      "message": "Fehler beim Setzen von {target} auf {value}. {error}"
+    },
+    "set_failed_unexpected_value": {
+      "message": "Fehler beim Setzen von {target} auf {value}. Gerät meldet unerwarteten Wert: {actual} (erwartet {expected})."
+    },
+    "set_failed_invalid_value": {
+      "message": "Fehler beim Setzen von {target} auf {value}. Gerät meldet einen ungültigen Wert."
     },
     "unknown_error": {
       "message": "Ein unbekannter Fehler ist aufgetreten."

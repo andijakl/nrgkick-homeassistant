@@ -2,6 +2,9 @@
 
 from unittest.mock import patch
 
+import pytest
+
+from custom_components.nrgkick.api import NRGkickApiClientError
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -11,9 +14,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import pytest
-
-from custom_components.nrgkick.api import NRGkickApiClientError
 
 
 @pytest.mark.requires_integration
@@ -109,7 +109,7 @@ async def test_switch_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Failed to set charge_pause to on\.?$",
+        match=r"Failed to set charge_pause to on\. API Error",
     ):
         await hass.services.async_call(
             "switch",
@@ -147,7 +147,7 @@ async def test_switch_turn_off_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Failed to set charge_pause to off\.?$",
+        match=r"Failed to set charge_pause to off\. API Error",
     ):
         await hass.services.async_call(
             "switch",

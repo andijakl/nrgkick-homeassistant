@@ -2,13 +2,13 @@
 
 from unittest.mock import patch
 
+import pytest
+
+from custom_components.nrgkick.api import NRGkickApiClientError
 from homeassistant.components.number.const import SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import pytest
-
-from custom_components.nrgkick.api import NRGkickApiClientError
 
 
 @pytest.mark.requires_integration
@@ -152,11 +152,61 @@ async def test_number_set_value_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match=r"Failed to set current_set to 10\.0\.?$",
+        match=r"Failed to set current_set to 10\.0\. API Error",
     ):
         await hass.services.async_call(
             "number",
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: entity_id, "value": 10.0},
+            blocking=True,
+        )
+
+
+@pytest.mark.requires_integration
+async def test_number_device_error_message(
+    hass: HomeAssistant,
+    mock_config_entry,
+    mock_nrgkick_api,
+    mock_info_data,
+    mock_control_data,
+    mock_values_data,
+) -> None:
+    """Test that device error messages are surfaced to user."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_nrgkick_api.get_info.return_value = mock_info_data
+    mock_nrgkick_api.get_control.return_value = mock_control_data
+    mock_nrgkick_api.get_values.return_value = mock_values_data
+
+    with (
+        patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
+        patch("custom_components.nrgkick.async_get_clientsession"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Simulate API returning error with "Response" field
+    # (e.g., "Phase count change is blocked by solar-charging")
+    mock_nrgkick_api.set_phase_count.return_value = {
+        "Response": "Phase count change is blocked by solar-charging"
+    }
+
+    # Helper to get entity_id by unique ID
+    from homeassistant.helpers import entity_registry as er
+
+    entity_registry = er.async_get(hass)
+    unique_id = "TEST123456_phase_count"
+    entity_id = entity_registry.async_get_entity_id("number", "nrgkick", unique_id)
+    assert entity_id
+
+    # The error message from the device should be included in the exception
+    with pytest.raises(
+        HomeAssistantError,
+        match=r"Phase count change is blocked by solar-charging",
+    ):
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: entity_id, "value": 1},
             blocking=True,
         )

@@ -6,13 +6,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-import voluptuous as vol
 
 from .api import (
     NRGkickAPI,
@@ -275,8 +276,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 )
 
         host = entry.data.get(CONF_HOST, "")
-        username = entry.data.get(CONF_USERNAME, "")
-        password = entry.data.get(CONF_PASSWORD, "")
+        username = entry.data.get(CONF_USERNAME) or ""
+        password = entry.data.get(CONF_PASSWORD) or ""
 
         return self.async_show_form(
             step_id="reconfigure_confirm",

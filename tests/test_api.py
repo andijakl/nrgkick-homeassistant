@@ -268,13 +268,12 @@ class TestExceptionHierarchy:
 
     def test_exception_inheritance(self):
         """Test HA exceptions inherit from HomeAssistantError."""
-        from homeassistant.exceptions import HomeAssistantError
-
         from custom_components.nrgkick.api import (
             NRGkickApiClientAuthenticationError,
             NRGkickApiClientCommunicationError,
             NRGkickApiClientError,
         )
+        from homeassistant.exceptions import HomeAssistantError
 
         assert issubclass(NRGkickApiClientError, HomeAssistantError)
         assert issubclass(NRGkickApiClientCommunicationError, NRGkickApiClientError)
