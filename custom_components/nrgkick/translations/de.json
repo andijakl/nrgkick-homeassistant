@@ -1,25 +1,24 @@
 {
   "config": {
     "abort": {
-      "already_in_progress": "Die Konfiguration wird bereits durchgeführt",
-      "already_configured": "Gerät ist bereits konfiguriert",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "json_api_disabled": "JSON API ist auf dem Gerät deaktiviert",
       "no_serial_number": "Das Gerät hat keine Seriennummer bereitgestellt",
       "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen",
-      "reauth_successful": "Die erneute Authentifizierung war erfolgreich",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_failed": "Die Neukonfiguration ist fehlgeschlagen",
-      "reconfigure_successful": "Die Neukonfiguration war erfolgreich"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Verbindung zum NRGkick-Gerät fehlgeschlagen. Testen Sie die Verbindung im Browser: http://{device_ip}/info",
-      "invalid_auth": "Ungültige Authentifizierung",
-      "unknown": "Unerwarteter Fehler"
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "reauth_confirm": {
         "data": {
-          "password": "Passwort",
-          "username": "Benutzername"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "password": "Geben Sie das aktualisierte Passwort ein.",
@@ -29,9 +28,9 @@
       },
       "reconfigure_confirm": {
         "data": {
-          "host": "Host",
-          "password": "Passwort",
-          "username": "Benutzername"
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "IP-Adresse oder Hostname (z. B. 192.168.1.50 oder nrgkick.local).",
@@ -42,9 +41,9 @@
       },
       "user": {
         "data": {
-          "host": "Host",
-          "password": "Passwort",
-          "username": "Benutzername"
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "host": "IP-Adresse oder Hostname (z. B. 192.168.1.50 oder nrgkick.local).",
@@ -55,8 +54,8 @@
       },
       "zeroconf_confirm": {
         "data": {
-          "password": "Passwort",
-          "username": "Benutzername"
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
           "password": "Optional. Leer lassen, wenn Authentifizierung deaktiviert ist.",

@@ -5,20 +5,20 @@
 # pytest version managed by pytest-homeassistant-custom-component
 # pytest>=8.4.0
 # pytest-asyncio version managed by pytest-homeassistant-custom-component
-pytest-homeassistant-custom-component>=0.13.300
+pytest-homeassistant-custom-component>=0.13.301
 pytest-cov>=7.0.0
 pytest-timeout>=2.4.0
 
 # Code Quality
-ruff>=0.14.0
+ruff>=0.14.10
 pylint>=4.0.4
-mypy>=1.19.0
+mypy>=1.19.1
 
 # Type Stubs
 types-aiofiles>=25.1.0.20251011
 
 # Home Assistant (for development/testing)
-homeassistant>=2025.12.0
+homeassistant>=2025.12.4
 
 # API Dependencies
 aiohttp>=3.13.2
@@ -27,6 +27,7 @@ zeroconf>=0.148.0
 # Fix aiodns/pycares compatibility: pycares 5.0.0 removed ares_query_a_result
 # which aiodns 3.5.0 (pinned by Home Assistant) uses in its type hints
 pycares>=4.4.0,<5.0.0
+#pycares>=5.0.0
 
 
 # NRGkick API Library
