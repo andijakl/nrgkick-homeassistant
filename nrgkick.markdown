@@ -165,7 +165,7 @@ automation:
 
 ## Data updates
 
-The integration {% term polling %} the device for updates.
+The integration polls the device for updates.
 
 - Default scan interval: 30 seconds.
 - Minimum scan interval: 10 seconds.
