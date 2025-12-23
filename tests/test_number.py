@@ -5,10 +5,11 @@ from unittest.mock import patch
 import pytest
 
 from custom_components.nrgkick.api import NRGkickApiClientError
-from homeassistant.components.number.const import SERVICE_SET_VALUE
+from homeassistant.components.number import SERVICE_SET_VALUE
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 
 @pytest.mark.requires_integration
@@ -37,8 +38,6 @@ async def test_number_entities(
         await hass.async_block_till_done()
 
     # Helper to get entity_id by unique ID
-    from homeassistant.helpers import entity_registry as er
-
     entity_registry = er.async_get(hass)
 
     def get_entity_id_by_key(key):
@@ -141,8 +140,6 @@ async def test_current_set_dynamic_max_value(
         await hass.async_block_till_done()
 
     # Helper to get entity_id by unique ID
-    from homeassistant.helpers import entity_registry as er
-
     entity_registry = er.async_get(hass)
     unique_id = "TEST123456_current_set"
     entity_id = entity_registry.async_get_entity_id("number", "nrgkick", unique_id)
@@ -219,8 +216,6 @@ async def test_number_set_value_error(
     mock_nrgkick_api.set_current.side_effect = NRGkickApiClientError("API Error")
 
     # Helper to get entity_id by unique ID
-    from homeassistant.helpers import entity_registry as er
-
     entity_registry = er.async_get(hass)
     unique_id = "TEST123456_current_set"
     entity_id = entity_registry.async_get_entity_id("number", "nrgkick", unique_id)
@@ -266,9 +261,6 @@ async def test_number_device_error_message(
     mock_nrgkick_api.set_phase_count.return_value = {
         "Response": "Phase count change is blocked by solar-charging"
     }
-
-    # Helper to get entity_id by unique ID
-    from homeassistant.helpers import entity_registry as er
 
     entity_registry = er.async_get(hass)
     unique_id = "TEST123456_phase_count"
