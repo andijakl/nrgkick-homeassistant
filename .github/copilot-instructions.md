@@ -15,7 +15,8 @@
 ```
 custom_components/nrgkick/
 ├── __init__.py      # Entry point, setup/teardown
-├── coordinator.py   # NRGkickDataUpdateCoordinator + NRGkickEntity base class
+├── coordinator.py   # NRGkickDataUpdateCoordinator
+├── entity.py        # NRGkickEntity base class
 ├── api.py           # Thin wrapper translating library exceptions to HA types
 ├── sensor.py        # 80+ sensors using value_path pattern
 ├── number.py        # Controls: current_set, energy_limit, phase_count
@@ -54,7 +55,8 @@ for key in self._value_path:
 ### New Control (Number/Switch)
 
 1. Add entity to [number.py](custom_components/nrgkick/number.py) or [switch.py](custom_components/nrgkick/switch.py)
-2. Add coordinator method in `__init__.py` using `_async_execute_command_with_verification`
+2. Add coordinator method in `coordinator.py` using
+   `_async_execute_command_with_verification`
 3. Add translations to both language files
 
 ## Code Style Examples
@@ -81,6 +83,9 @@ raise ConfigEntryAuthFailed from err
 
 ## Testing & Validation
 
+When executing scripts, ensure your virtual environment is activated.
+Activate it with: ./venv/bin/activate
+
 ```bash
 ./validate.sh           # Full validation (pre-commit + tests) - RUN BEFORE COMMIT
 ./run-tests.sh          # Tests only
@@ -93,12 +98,9 @@ Tests use `pytest-homeassistant-custom-component`. See [tests/conftest.py](tests
 
 ```python
 # In api.py - translate library exceptions
-NRGkickApiClientAuthenticationError  # → triggers reauth flow
-NRGkickApiClientCommunicationError   # → entities show unavailable
-
-# In coordinator - handle appropriately
-except NRGkickApiClientAuthenticationError as err:
-    raise ConfigEntryAuthFailed from err
+NRGkickApiClientError       # → Base exception for NRGkick API client errors
+NRGkickApiClientAuthenticationError  # → Exception for NRGkick API client authentication errors
+NRGkickApiClientCommunicationError   # → Exception for NRGkick API client communication errors
 ```
 
 ## Key Constants

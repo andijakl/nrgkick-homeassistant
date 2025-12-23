@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import pytest
 
-from custom_components.nrgkick import async_setup_entry
 from custom_components.nrgkick.api import (
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
@@ -44,14 +43,16 @@ async def test_setup_entry_failed_connection(
     """Test setup entry with failed connection."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_nrgkick_api.get_info.side_effect = Exception("Connection failed")
+    mock_nrgkick_api.get_info.side_effect = NRGkickApiClientCommunicationError
 
     with (
         patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
         patch("custom_components.nrgkick.async_get_clientsession"),
-        pytest.raises(Exception, match="Connection failed"),
     ):
-        await async_setup_entry(hass, mock_config_entry)
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.requires_integration
@@ -133,7 +134,7 @@ async def test_coordinator_update_success(
 
 
 async def test_coordinator_update_failed(
-    hass: HomeAssistant, mock_nrgkick_api, caplog
+    hass: HomeAssistant, mock_nrgkick_api, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test coordinator update failed."""
     entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
@@ -151,7 +152,7 @@ async def test_coordinator_update_failed(
 
 
 async def test_coordinator_auth_failed(
-    hass: HomeAssistant, mock_nrgkick_api, caplog
+    hass: HomeAssistant, mock_nrgkick_api, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test coordinator auth failed."""
     entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})

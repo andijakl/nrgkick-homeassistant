@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "Die Konfiguration wird bereits durchgeführt",
       "json_api_disabled": "JSON API ist auf dem Gerät deaktiviert",
       "no_serial_number": "Das Gerät hat keine Seriennummer bereitgestellt",
       "reauth_failed": "Die erneute Authentifizierung ist fehlgeschlagen",

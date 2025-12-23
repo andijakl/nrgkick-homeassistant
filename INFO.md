@@ -15,12 +15,14 @@ This separation enables potential Home Assistant core integration and allows the
 
 ```
 custom_components/nrgkick/
-├── __init__.py           # Coordinator, setup/teardown
-├── api.py                # Wrapper around nrgkick-api library
+├── __init__.py           # Setup/teardown (re-exports coordinator/entity)
+├── api.py                # HA wrapper around nrgkick-api library
 ├── binary_sensor.py      # 3 binary sensors
 ├── config_flow.py        # UI flows (user, zeroconf, reauth, reconfigure, options)
+├── coordinator.py        # NRGkickDataUpdateCoordinator + typed config entry
 ├── const.py              # Constants, STATUS_MAP, entity definitions
 ├── diagnostics.py        # Diagnostics provider
+├── entity.py             # NRGkickEntity base class
 ├── icons.json            # Default icon mapping
 ├── manifest.json         # Integration metadata (requires nrgkick-api)
 ├── number.py             # 3 number controls
@@ -33,7 +35,7 @@ custom_components/nrgkick/
 
 ## Core Classes
 
-**`NRGkickDataUpdateCoordinator`** (`__init__.py`)
+**`NRGkickDataUpdateCoordinator`** (`coordinator.py`)
 
 - Polls device every 10-300s (default: 30s)
 - Fetches `/info`, `/control`, `/values`
@@ -41,7 +43,7 @@ custom_components/nrgkick/
 - Handles `ConfigEntryAuthFailed` for reauth flow
 - Public methods: `async_set_current()`, `async_set_charge_pause()`, `async_set_energy_limit()`, `async_set_phase_count()`
 
-**`NRGkickEntity`** (`__init__.py`)
+**`NRGkickEntity`** (`entity.py`)
 
 - Base class for all entity types
 - Provides common device info setup using `DeviceInfo` dataclass
@@ -61,12 +63,15 @@ custom_components/nrgkick/
 - Library exceptions: `NRGkickError`, `NRGkickConnectionError`, `NRGkickAuthenticationError`
 - Methods: `get_info()`, `get_control()`, `get_values()`, `set_current()`, `set_charge_pause()`, `set_energy_limit()`, `set_phase_count()`, `test_connection()`
 
-**`NRGkickApiClient`** (`api.py` - integration wrapper)
+**`NRGkickAPI`** (`api.py` - integration wrapper)
 
-- Thin wrapper around `NRGkickAPI` from `nrgkick-api` library
+- Thin wrapper around the library API (`nrgkick_api.NRGkickAPI`)
 - Converts library exceptions to HA-specific exceptions with translation support
 - Custom exceptions: `NRGkickApiClientAuthenticationError`, `NRGkickApiClientCommunicationError`
 - Uses `async_get_clientsession(hass)` for HA session management
+- Uses `raw=True` by default for `get_info()` and `get_values()` so enum-like
+  fields stay numeric and can be mapped to translation keys in this
+  integration (see “Value Path System”).
 
 **`ConfigFlow`** (`config_flow.py`)
 
@@ -123,8 +128,7 @@ Responses:
 **Retrieval pattern** (with fallbacks):
 
 ```python
-entry.options.get(CONF_SCAN_INTERVAL,
-    entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
+entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 ```
 
 ## Constants (`const.py`)
@@ -140,9 +144,11 @@ MAX_SCAN_INTERVAL = 300
 
 # Status codes
 STATUS_MAP = {
-    0: "Unknown", 1: "Standby", 2: "Connected",
-    3: "Charging", 6: "Error", 7: "Wakeup"
+    0: "unknown", 1: "standby", 2: "connected",
+    3: "charging", 6: "error", 7: "wakeup"
 }
+
+# Note: mapping values are translation keys (translations/<lang>.json)
 ```
 
 ## Value Path System
@@ -157,8 +163,12 @@ value_path = ["values", "powerflow", "l1", "voltage"]
 Optional transformation via `value_fn`:
 
 ```python
-value_fn = lambda x: STATUS_MAP.get(x, "Unknown")  # Convert 3 → "Charging"
+value_fn = lambda x: STATUS_MAP.get(x, "unknown")  # Convert 3 → "charging"
 ```
+
+This integration prefers raw numeric values from the device/library (via
+`raw=True`) and maps them to translation keys (like `"charging"`). Home
+Assistant then translates those keys for display.
 
 ## Control Flow Patterns
 
@@ -186,9 +196,12 @@ Control responses from device:
 
 **Integration exceptions** (`api.py` wrapper):
 
-- **`NRGkickApiClientError`**: Base exception (wraps `NRGkickError`)
-- **`NRGkickApiClientCommunicationError`**: Network/timeout → entities unavailable
-- **`NRGkickApiClientAuthenticationError`**: 401/403 → triggers reauth flow
+- **`NRGkickApiClientError`**: Base exception (Home Assistant error with
+  translation metadata)
+- **`NRGkickApiClientCommunicationError`**: Network/timeout → coordinator raises
+  `UpdateFailed` (entities become unavailable until the next successful poll)
+- **`NRGkickApiClientAuthenticationError`**: 401/403 → coordinator raises
+  `ConfigEntryAuthFailed` (triggers reauth flow)
 
 The wrapper translates library exceptions to HA exceptions with translation support for user-friendly error messages.
 

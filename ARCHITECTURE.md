@@ -61,7 +61,7 @@ graph TB
     subgraph "NRGkick Integration"
         CF[Config Flow]
         CO[NRGkickDataUpdateCoordinator]
-        WRAP[NRGkickApiClient Wrapper]
+        WRAP[NRGkickAPI (HA wrapper)]
 
         subgraph "Entity Platforms"
             SE[Sensors ~80]
@@ -72,7 +72,7 @@ graph TB
     end
 
     subgraph "nrgkick-api Library"
-        API[NRGkickAPI]
+        API[NRGkickAPI (library)]
         EXC[Exception Hierarchy]
     end
 
@@ -100,7 +100,6 @@ graph TB
     CO -->|9. Distribute Data| BS
     CO -->|9. Distribute Data| SW
     CO -->|9. Distribute Data| NU
-    SE -->|10. Control Commands| WRAP
     SW -->|10. Control Commands| WRAP
     NU -->|10. Control Commands| WRAP
     UL -->|11. Options Changed| CO
@@ -112,35 +111,42 @@ graph TB
 sequenceDiagram
     participant HA as Home Assistant
     participant Coord as Coordinator
-    participant API as NRGkickAPI
+    participant Wrap as NRGkickAPI (HA wrapper)
+    participant Lib as NRGkickAPI (library)
     participant Device as NRGkick Device
     participant Entity as Entity Platform
 
     Note over Coord: Every scan_interval (default 30s)
 
-    Coord->>API: _async_update_data()
-    API->>Device: GET /info
-    Device-->>API: {general, connector, grid, network, versions}
-    API->>Device: GET /control
-    Device-->>API: {current_set, charge_pause, energy_limit, phase_count}
-    API->>Device: GET /values
-    Device-->>API: {energy, powerflow, temperatures, general}
+    Coord->>Wrap: _async_update_data()
+    Wrap->>Lib: get_info(raw=True)
+    Lib->>Device: GET /info
+    Device-->>Lib: {general, connector, grid, network, versions, ...}
+    Wrap->>Lib: get_control()
+    Lib->>Device: GET /control
+    Device-->>Lib: {current_set, charge_pause, energy_limit, phase_count}
+    Wrap->>Lib: get_values(raw=True)
+    Lib->>Device: GET /values
+    Device-->>Lib: {energy, powerflow, temperatures, general, ...}
 
-    API-->>Coord: Merged Data Dictionary
+    Wrap-->>Coord: Merged Data Dictionary
 
     Note over Coord: Data stored in coordinator.data
 
     Coord->>Entity: Data Update Event
     Entity->>Entity: Extract value via value_path
+    Entity->>Entity: Optional value_fn maps raw numbers to translation keys
     Entity->>HA: State Update
 
     Note over Entity,Device: User Control Action
     HA->>Entity: User sets value
     Entity->>Coord: async_set_current() / async_set_charge_pause() / etc.
-    Coord->>API: set_current() / set_charge_pause() / etc.
-    API->>Device: GET /control?param=value
-    Device-->>API: HTTP 200 + {"param": confirmed_value}
-    API-->>Coord: Response data
+    Coord->>Wrap: set_current() / set_charge_pause() / etc.
+    Wrap->>Lib: set_current() / set_charge_pause() / etc.
+    Lib->>Device: GET /control?param=value
+    Device-->>Lib: HTTP 200 + {"param": confirmed_value}
+    Lib-->>Wrap: Response data
+    Wrap-->>Coord: Response data
     Coord->>Coord: Parse response, check for error key
     alt Response contains error
         Coord-->>Entity: Raise HomeAssistantError
@@ -174,7 +180,7 @@ Home Assistant discovers integrations through the `manifest.json` file:
   "name": "NRGkick",
   "config_flow": true,
   "zeroconf": ["_nrgkick._tcp.local."],
-  "requirements": ["nrgkick-api==1.0.0"],
+  "requirements": ["nrgkick-api==1.3.0"],
   "iot_class": "local_polling"
 }
 ```
@@ -218,7 +224,7 @@ stateDiagram-v2
 
     Running --> Unload: User removes integration
     Unload --> PlatformUnload: async_unload_platforms()
-    PlatformUnload --> Cleanup: Remove from hass.data
+    PlatformUnload --> Cleanup: HA clears entry.runtime_data
     Cleanup --> [*]
 
     Running --> Reauth: 401 Auth Error
@@ -235,12 +241,8 @@ stateDiagram-v2
 This function is Home Assistant's entry point for setting up the integration after a config entry has been created (either through user configuration or discovery).
 
 ```python
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
     """Set up NRGkick from a config entry."""
-    # 1. Initialize the domain storage
-    hass.data.setdefault(DOMAIN, {})
-
-    # 2. Create API client with stored credentials
     api = NRGkickAPI(
         host=entry.data["host"],
         username=entry.data.get("username"),
@@ -248,7 +250,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         session=async_get_clientsession(hass),  # Reuse HA's aiohttp session
     )
 
-    # 3. Create coordinator with configurable scan interval
     coordinator = NRGkickDataUpdateCoordinator(hass, api, entry)
 
     # 4. Perform first data fetch (raises exception if device unavailable)
@@ -274,7 +275,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 3. **First Refresh Validation**: `async_config_entry_first_refresh()` is a DataUpdateCoordinator method that performs the initial data fetch. If this fails, Home Assistant prevents entity creation and marks the integration as failed setup, avoiding the creation of unavailable entities.
 
-4. **Platform Forwarding**: `async_forward_entry_setups()` delegates setup to each entity platform file (sensor.py, switch.py, etc.). Each platform's `async_setup_entry()` function receives the config entry and can retrieve the coordinator from `hass.data`.
+4. **Platform Forwarding**: `async_forward_entry_setups()` delegates setup to each entity platform file (sensor.py, switch.py, etc.). Each platform's `async_setup_entry()` function receives the config entry and retrieves the coordinator from `entry.runtime_data`.
 
 5. **Update Listener**: The update listener is called when the user modifies options (like scan interval). `entry.async_on_unload()` ensures the listener is removed when the integration is unloaded, preventing memory leaks.
 
@@ -290,18 +291,19 @@ The `NRGkickDataUpdateCoordinator` inherits from Home Assistant's `DataUpdateCoo
 class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching NRGkick data from the API."""
 
-    def __init__(self, hass: HomeAssistant, api: NRGkickAPI, entry: ConfigEntry) -> None:
-        # Get scan interval from options (user-configured) or fallback to default
-        scan_interval = entry.options.get(
-            CONF_SCAN_INTERVAL,
-            entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
-        )
+    def __init__(
+        self, hass: HomeAssistant, api: NRGkickAPI, entry: NRGkickConfigEntry
+    ) -> None:
+        # Get scan interval from options (user-configured) or fallback to default.
+        scan_interval = entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
 
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=scan_interval),  # Configurable polling
+            config_entry=entry,
+            always_update=False,
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -325,9 +327,13 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
             # User sees notification to reconfigure credentials
             raise ConfigEntryAuthFailed from err
         except NRGkickApiClientCommunicationError as err:
-            # UpdateFailed logs the error and schedules retry
-            # Entities become unavailable until next successful update
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            # UpdateFailed logs the error and schedules retry.
+            # Entities become unavailable until next successful update.
+            raise UpdateFailed(
+                translation_domain=err.translation_domain,
+                translation_key=err.translation_key,
+                translation_placeholders=err.translation_placeholders,
+            ) from err
 ```
 
 **How the Coordinator Integrates:**
@@ -338,7 +344,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator):
 
 - **Error Handling**: The coordinator catches two types of custom exceptions:
   - `NRGkickApiClientAuthenticationError` → Raises `ConfigEntryAuthFailed` to trigger Home Assistant's re-authentication flow
-  - `NRGkickApiClientCommunicationError` → Raises `UpdateFailed` to log the error and retry later
+    - `NRGkickApiClientCommunicationError` → Raises translation-aware `UpdateFailed`
 
   When errors occur, entities become unavailable until the next successful update.
 
@@ -424,26 +430,36 @@ class NRGkickApiClientCommunicationError(NRGkickApiClientError):
 class NRGkickApiClientAuthenticationError(NRGkickApiClientError):
     """Exception to indicate authentication errors."""
 
-class NRGkickApiClient:
-    """Wrapper around nrgkick-api library for Home Assistant."""
+class NRGkickAPI:
+    """Home Assistant wrapper around nrgkick-api library."""
 
     def __init__(self, host: str, username: str | None, password: str | None,
                  session: aiohttp.ClientSession):
         self._api = LibraryAPI(host, username, password, session)
 
-    async def get_info(self) -> dict:
-        """Get device info with HA exception translation."""
+    async def get_info(
+        self,
+        sections: list[str] | None = None,
+        *,
+        raw: bool = True,
+    ) -> dict:
+        """Get device info with HA exception translation.
+
+        raw=True keeps enum-like fields numeric so the integration can map them
+        to translation keys (e.g., status codes).
+
+        """
         try:
-            return await self._api.get_info()
+            return await self._api.get_info(sections, raw=raw)
         except NRGkickAuthenticationError as err:
             raise NRGkickApiClientAuthenticationError(
                 translation_domain=DOMAIN,
-                translation_key="authentication_failed",
+                translation_key="authentication_error",
             ) from err
         except NRGkickConnectionError as err:
             raise NRGkickApiClientCommunicationError(
                 translation_domain=DOMAIN,
-                translation_key="connection_failed",
+                translation_key="communication_error",
             ) from err
 ```
 
@@ -612,7 +628,7 @@ def native_value(self) -> float | int | str | None:
 
 3. **Null Safety**: If any intermediate value is None or missing, the function returns None early, causing the entity to report as unavailable in Home Assistant.
 
-4. **Value Transformation**: The optional `_value_fn` lambda allows post-processing, such as mapping status codes to human-readable strings using `STATUS_MAP`.
+4. **Value Transformation**: The optional `_value_fn` lambda allows post-processing, such as mapping raw numeric enum values (from `raw=True`) to translation keys using `STATUS_MAP`.
 
 **Example with Transformation:**
 
@@ -621,7 +637,7 @@ NRGkickSensor(
     coordinator,
     key="status",
     value_path=["values", "general", "status"],
-    value_fn=lambda x: STATUS_MAP.get(x, "Unknown"),  # Convert 3 → "Charging"
+    value_fn=lambda x: STATUS_MAP.get(x, "unknown"),  # Convert 3 → "charging"
 )
 ```
 
@@ -1031,35 +1047,29 @@ sequenceDiagram
     participant Listener as UpdateListener
     participant Setup as async_setup_entry
 
-    User->>HA: Change settings (host/scan_interval)
+    User->>HA: Change options (scan_interval)
     HA->>Options: async_step_init()
     Options->>User: Show form (current values)
     User->>Options: Submit (new values)
-    Options->>Options: validate_input() - test connection
 
-    alt Validation Success
-        Options->>HA: async_update_entry(data={host, user, pass})
-        Options->>HA: async_create_entry(data={scan_interval})
+    Options->>HA: async_create_entry(data={scan_interval})
 
-        Note over HA,Listener: Entry modification detected
+    Note over HA,Listener: Entry modification detected
 
-        HA->>Listener: Trigger update_listener
-        Listener->>HA: async_reload_entry(entry_id)
+    HA->>Listener: Trigger update_listener
+    Listener->>HA: async_reload_entry(entry_id)
 
-        HA->>Setup: async_unload_entry()
-        Setup->>Setup: Unload platforms
-        Setup->>Setup: Destroy old coordinator
-        Setup->>Setup: Remove from hass.data
+    HA->>Setup: async_unload_entry()
+    Setup->>Setup: Unload platforms
+    Setup->>Setup: Destroy old coordinator
+    Setup->>Setup: HA clears entry.runtime_data
 
-        HA->>Setup: async_setup_entry()
-        Setup->>Setup: Create new coordinator (new settings)
-        Setup->>Setup: Setup platforms with new coordinator
-        Setup-->>HA: Success
+    HA->>Setup: async_setup_entry()
+    Setup->>Setup: Create new coordinator (new settings)
+    Setup->>Setup: Setup platforms with new coordinator
+    Setup-->>HA: Success
 
-        HA->>User: Settings applied
-    else Validation Failed
-        Options->>User: Show errors, retry
-    end
+    HA->>User: Options applied
 ```
 
 **Update Listener Mechanism:**
@@ -1422,8 +1432,9 @@ entities:
 ```
 custom_components/nrgkick/
 ├── __init__.py                 # Entry point, setup/teardown
-├── coordinator.py              # DataUpdateCoordinator, base entity class
-├── api.py                      # HTTP client, API methods
+├── api.py                      # HA wrapper around nrgkick-api library
+├── coordinator.py              # DataUpdateCoordinator + control helpers
+├── entity.py                   # NRGkickEntity base class
 ├── config_flow.py              # UI configuration, validation, options
 ├── const.py                    # Constants (domain, status map, intervals)
 ├── icons.json                  # Default icon mapping
@@ -1442,17 +1453,18 @@ custom_components/nrgkick/
 
 ### Responsibility Matrix
 
-| File               | Responsibilities                                | Dependencies                           |
-| ------------------ | ----------------------------------------------- | -------------------------------------- |
-| `__init__.py`      | Integration setup/teardown, platform forwarding | `api.py`, `coordinator.py`             |
-| `coordinator.py`   | DataUpdateCoordinator, NRGkickEntity base class | `api.py`, `const.py`                   |
-| `api.py`           | HTTP client, REST API calls, connection testing | `aiohttp`                              |
-| `config_flow.py`   | UI configuration, validation, discovery, reauth | `api.py`, `const.py`                   |
-| `const.py`         | Constants, status map, configuration keys       | None                                   |
-| `sensor.py`        | 80+ sensor entity definitions, value mapping    | `coordinator.py`, `const.py`           |
-| `binary_sensor.py` | 3 binary sensor entities                        | `coordinator.py`, `const.py`           |
-| `switch.py`        | 1 switch entity (charge pause control)          | `coordinator.py`, `const.py`, `api.py` |
-| `number.py`        | 3 number entities (control inputs)              | `coordinator.py`, `const.py`, `api.py` |
+| File               | Responsibilities                                | Dependencies                              |
+| ------------------ | ----------------------------------------------- | ----------------------------------------- |
+| `__init__.py`      | Integration setup/teardown, platform forwarding | `api.py`, `coordinator.py`, `entity.py`   |
+| `api.py`           | Wraps nrgkick-api, translates exceptions        | `aiohttp`, `nrgkick-api`                  |
+| `coordinator.py`   | DataUpdateCoordinator, verified control writes  | `api.py`, `const.py`                      |
+| `entity.py`        | Common device info + naming                     | `coordinator.py`, `const.py`              |
+| `config_flow.py`   | UI configuration, validation, discovery, reauth | `api.py`, `const.py`                      |
+| `const.py`         | Constants, status map, configuration keys       | None                                      |
+| `sensor.py`        | 80+ sensor entity definitions, value mapping    | `entity.py`, `const.py`                   |
+| `binary_sensor.py` | 3 binary sensor entities                        | `entity.py`, `const.py`                   |
+| `switch.py`        | 1 switch entity (charge pause control)          | `entity.py`, `coordinator.py`, `const.py` |
+| `number.py`        | 3 number entities (control inputs)              | `entity.py`, `coordinator.py`, `const.py` |
 
 ### Key Constants (`const.py`)
 
@@ -1468,10 +1480,7 @@ DEFAULT_SCAN_INTERVAL: Final = 30
 MIN_SCAN_INTERVAL: Final = 10
 MAX_SCAN_INTERVAL: Final = 300
 
-# API endpoints
-ENDPOINT_INFO: Final = "/info"
-ENDPOINT_CONTROL: Final = "/control"
-ENDPOINT_VALUES: Final = "/values"
+# Note: API endpoint constants live in the nrgkick-api library.
 
 # Device status codes
 STATUS_UNKNOWN: Final = 0
@@ -1482,12 +1491,12 @@ STATUS_ERROR: Final = 6
 STATUS_WAKEUP: Final = 7
 
 STATUS_MAP: Final = {
-    0: "Unknown",
-    1: "Standby",
-    2: "Connected",
-    3: "Charging",
-    6: "Error",
-    7: "Wakeup",
+    0: "unknown",
+    1: "standby",
+    2: "connected",
+    3: "charging",
+    6: "error",
+    7: "wakeup",
 }
 ```
 
@@ -1700,7 +1709,7 @@ value_path = ["values", "powerflow", "l1", "voltage"]
 
 - **Null Safety**: The path traversal loop handles missing keys gracefully. If the device doesn't support a particular sensor (e.g., L3 on a single-phase device), the entity reports as unavailable rather than crashing.
 
-- **Transformation Layer**: The optional `value_fn` parameter allows converting raw API values (like status code 3) into user-friendly strings ("Charging") without cluttering the path definition.
+- **Transformation Layer**: The optional `value_fn` parameter allows converting raw API values (like status code 3) into translation keys ("charging"), which Home Assistant then localizes.
 
 ### 4. CoordinatorEntity Pattern (Automatic Updates)
 

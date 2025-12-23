@@ -44,7 +44,7 @@ repos:
         args:
           - --config-file=mypy.ini
         additional_dependencies:
-          - homeassistant>=2025.12.0
+          - homeassistant>=2025.12.4
           - voluptuous>=0.15.0
           - aiohttp>=3.10.0
           - nrgkick-api>=1.3.0
