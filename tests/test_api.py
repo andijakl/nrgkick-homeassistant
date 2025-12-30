@@ -16,7 +16,9 @@ from custom_components.nrgkick.api import (
     NRGkickAPI,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
+    NRGkickApiClientError,
 )
+from homeassistant.exceptions import HomeAssistantError
 
 
 @pytest.fixture
@@ -268,25 +270,12 @@ class TestExceptionHierarchy:
 
     def test_exception_inheritance(self):
         """Test HA exceptions inherit from HomeAssistantError."""
-        from custom_components.nrgkick.api import (
-            NRGkickApiClientAuthenticationError,
-            NRGkickApiClientCommunicationError,
-            NRGkickApiClientError,
-        )
-        from homeassistant.exceptions import HomeAssistantError
-
         assert issubclass(NRGkickApiClientError, HomeAssistantError)
         assert issubclass(NRGkickApiClientCommunicationError, NRGkickApiClientError)
         assert issubclass(NRGkickApiClientAuthenticationError, NRGkickApiClientError)
 
     def test_exception_translation_keys(self):
         """Test exceptions have translation keys."""
-        from custom_components.nrgkick.api import (
-            NRGkickApiClientAuthenticationError,
-            NRGkickApiClientCommunicationError,
-            NRGkickApiClientError,
-        )
-
         assert NRGkickApiClientError.translation_domain == "nrgkick"
         assert (
             NRGkickApiClientCommunicationError.translation_key == "communication_error"

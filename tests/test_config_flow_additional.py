@@ -5,20 +5,17 @@ from __future__ import annotations
 from ipaddress import ip_address
 from unittest.mock import patch
 
-import pytest
-
 from custom_components.nrgkick.api import NRGkickApiClientAuthenticationError
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import create_mock_config_entry
 
 # Reauth Flow Additional Tests
 
 
-@pytest.mark.requires_integration
 async def test_reauth_flow_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -> None:
     """Test reauth flow with invalid authentication."""
     entry = create_mock_config_entry(
@@ -61,7 +58,6 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant, mock_nrgkick_api) -
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-@pytest.mark.requires_integration
 async def test_reauth_flow_unknown_exception(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
@@ -108,7 +104,6 @@ async def test_reauth_flow_unknown_exception(
 # Zeroconf Additional Tests
 
 
-@pytest.mark.requires_integration
 async def test_zeroconf_discovery_invalid_auth(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
@@ -151,7 +146,6 @@ async def test_zeroconf_discovery_invalid_auth(
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-@pytest.mark.requires_integration
 async def test_zeroconf_discovery_unknown_exception(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:
@@ -191,7 +185,6 @@ async def test_zeroconf_discovery_unknown_exception(
     assert result2["errors"] == {"base": "unknown"}
 
 
-@pytest.mark.requires_integration
 async def test_zeroconf_fallback_to_default_name(
     hass: HomeAssistant, mock_nrgkick_api
 ) -> None:

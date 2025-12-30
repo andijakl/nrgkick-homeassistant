@@ -18,7 +18,6 @@ from homeassistant.exceptions import HomeAssistantError
 from . import async_setup_entry_with_return, create_mock_config_entry
 
 
-@pytest.mark.requires_integration
 async def test_setup_entry(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -55,7 +54,6 @@ async def test_setup_entry_failed_connection(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-@pytest.mark.requires_integration
 async def test_unload_entry(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -77,7 +75,6 @@ async def test_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.requires_integration
 async def test_reload_entry(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -101,7 +98,6 @@ async def test_reload_entry(
         await hass.async_block_till_done()
 
 
-@pytest.mark.requires_integration
 async def test_coordinator_update_success(
     hass: HomeAssistant,
     mock_config_entry: ConfigEntry,
@@ -169,7 +165,6 @@ async def test_coordinator_auth_failed(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-@pytest.mark.requires_integration
 async def test_coordinator_async_set_current(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -194,7 +189,6 @@ async def test_coordinator_async_set_current(
         assert coordinator.data["control"]["current_set"] == 6.7
 
 
-@pytest.mark.requires_integration
 async def test_coordinator_async_set_charge_pause(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -219,7 +213,6 @@ async def test_coordinator_async_set_charge_pause(
         assert coordinator.data["control"]["charge_pause"] == 1
 
 
-@pytest.mark.requires_integration
 async def test_coordinator_async_set_energy_limit(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -244,7 +237,6 @@ async def test_coordinator_async_set_energy_limit(
         assert coordinator.data["control"]["energy_limit"] == 50000
 
 
-@pytest.mark.requires_integration
 async def test_coordinator_async_set_phase_count(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -269,7 +261,6 @@ async def test_coordinator_async_set_phase_count(
         assert coordinator.data["control"]["phase_count"] == 1
 
 
-@pytest.mark.requires_integration
 async def test_coordinator_command_blocked_by_solar(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:
@@ -298,7 +289,6 @@ async def test_coordinator_command_blocked_by_solar(
         assert "blocked by solar-charging" in str(exc_info.value)
 
 
-@pytest.mark.requires_integration
 async def test_coordinator_command_unexpected_value(
     hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
 ) -> None:

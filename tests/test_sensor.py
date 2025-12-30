@@ -7,6 +7,7 @@ import pytest
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import UnitOfPower, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 
 @pytest.fixture
@@ -75,7 +76,6 @@ def mock_values_data_sensor():
     }
 
 
-@pytest.mark.requires_integration
 async def test_sensor_entities(
     hass: HomeAssistant,
     mock_config_entry,
@@ -101,8 +101,6 @@ async def test_sensor_entities(
         await hass.async_block_till_done()
 
     # Helper to get state by unique ID
-    from homeassistant.helpers import entity_registry as er
-
     entity_registry = er.async_get(hass)
 
     def get_state_by_key(key):

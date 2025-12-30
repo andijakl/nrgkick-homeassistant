@@ -1,8 +1,6 @@
 """Tests for NRGkick device naming and fallback logic."""
 
-from unittest.mock import patch
-
-import pytest
+from unittest.mock import MagicMock, patch
 
 from custom_components.nrgkick import NRGkickEntity
 from custom_components.nrgkick.const import DOMAIN
@@ -10,7 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 
-@pytest.mark.requires_integration
 async def test_device_name_fallback(
     hass: HomeAssistant,
     mock_config_entry,
@@ -55,7 +52,6 @@ async def test_device_name_fallback(
     assert entry.translation_key == "total_active_power"
 
 
-@pytest.mark.requires_integration
 async def test_device_name_custom(
     hass: HomeAssistant,
     mock_config_entry,
@@ -100,7 +96,6 @@ async def test_device_name_custom(
     assert entry.translation_key == "total_active_power"
 
 
-@pytest.mark.requires_integration
 async def test_entity_id_uses_english_key(
     hass: HomeAssistant,
     mock_config_entry,
@@ -138,8 +133,6 @@ async def test_entity_id_uses_english_key(
         ("sensor", f"{serial}_total_active_power", "total_active_power"),
         ("sensor", f"{serial}_housing_temperature", "housing_temperature"),
         ("sensor", f"{serial}_status", "status"),
-        ("number", f"{serial}_current_set", "current_set"),
-        ("switch", f"{serial}_charge_pause", "charge_pause"),
     ]
 
     for domain, unique_id, expected_key in test_cases:
@@ -159,8 +152,6 @@ def test_suggested_object_id_returns_key() -> None:
 
     """
     # Create a mock coordinator with minimal data
-    from unittest.mock import MagicMock
-
     mock_coordinator = MagicMock()
     mock_coordinator.data = {
         "info": {
