@@ -1,45 +1,61 @@
 ---
 title: NRGkick
 description: Integrate the NRGkick Gen2 mobile EV charger using the local REST JSON API.
-ha_release: 2026.1
-ha_category: Transport
+ha_category:
+  - Energy
 ha_iot_class: Local Polling
 ha_quality_scale: bronze
-ha_config_flow: true
+ha_release: 2026.1
 ha_codeowners:
   - "@andijakl"
 ha_domain: nrgkick
 ha_integration_type: device
+ha_config_flow: true
+ha_zeroconf: true
+ha_platforms:
+  - binary_sensor
+  - number
+  - sensor
+  - switch
 related:
   - url: https://www.nrgkick.com/en/
-    title: NRGkick
-  - docs: /docs/automation/
-    title: Automations
+    title: NRGkick Website
 ---
 
-The **NRGkick** {% term integration %} integrates the NRGkick Gen2 mobile EV
-charger (Smart Cable) with Home Assistant.
+The **NRGkick** {% term integration %} allows you to monitor and control
+the NRGkick mobile EV charger (Wallbox) by DiniTech with Home Assistant.
+The wallbox is smart home friendly and allows detailed monitoring with
+80+ data points and flexible control of charging behavior.
 
 The integration connects directly to the device on your local network using the
-official REST JSON API. No cloud connection is required.
+local REST JSON API. No cloud connection is required.
 
 ## Supported devices
 
-- NRGkick Gen2 (Smart Cable).
+- NRGkick Gen2 (Smart Cable / Flexible Wallbox)
+
+{% note %}
+The NRGkick is available in different variants, including the 16A and 32A
+models, as well as models with cellular (SIM) and GPS capabilities. All are
+compatible with this integration.
+
+The NRGkick 16A light model needs the "NRGkick App incl. Bluetooth/Wi-FI
+connectivity" as one-time upgrade to use the local API.
+{% endnote %}
 
 ## Unsupported devices
 
-- NRGkick Gen1 (Bluetooth-only).
+- NRGkick Gen1 (Bluetooth-only)
 
 ## Prerequisites
 
-- Home Assistant and the NRGkick device must be on the same local network.
-- Your NRGkick device must have SmartModule firmware 4.0.0.0 or newer.
-- The REST JSON API must be enabled in the NRGkick app.
+- Home Assistant and the NRGkick device need to be on the same local network.
+- Your NRGkick device needs to have SmartModule firmware 4.0.0.0 or newer.
+- The REST JSON API needs to be enabled in the NRGkick app.
 
 To enable the API:
 
-1. Open the NRGkick app.
+1. Open the NRGkick app from the manufacturer on your smartphone.
 2. Go to **Extended** > **Local API**.
 3. Enable **JSON API**.
 4. Optional: Enable authentication and set a username and password.
@@ -61,11 +77,11 @@ password during setup.
 Host:
 description: >
 The hostname or IP address of your NRGkick device, for example,
-nrgkick.local or 192.0.2.10.
+`nrgkick.local` or `192.0.2.10`.
 Username:
-description: Username for HTTP Basic Auth (optional).
+description: Username for HTTP Basic Authentication (optional).
 Password:
-description: Password for HTTP Basic Auth (optional).
+description: Password for HTTP Basic Authentication (optional).
 {% endconfiguration_basic %}
 
 ## Configuration options
@@ -92,9 +108,12 @@ The integration creates sensors for common measurements, including:
 - Temperatures (availability depends on the connected attachment).
 - Network details, such as IP address and Wi-Fi signal strength.
 
-Some sensors are only available on NRGkick Gen2 SIM models (cellular and GPS).
+Some sensors are only available on NRGkick SIM models (cellular and GPS).
 These entities are disabled by default and can be enabled in the entity
 settings.
+
+The integration also provides binary sensors for common on/off states, such as
+whether charging is active.
 
 ### Controls
 
@@ -106,6 +125,19 @@ The integration provides controls to adjust charging behavior:
   unlimited.
 - **Phase count** (number): Set the number of phases, if supported by the
   device and attachment.
+
+### Key entities
+
+Entity IDs depend on your device name in Home Assistant. The examples below
+assume the default device name of `NRGkick`.
+
+- `sensor.nrgkick_charging_current`: Charging current.
+- `sensor.nrgkick_charged_energy`: Charged energy.
+- `sensor.nrgkick_status`: Charging status.
+- `binary_sensor.nrgkick_charging`: On when charging is active.
+- `switch.nrgkick_charge_pause`: Pause or resume charging.
+- `number.nrgkick_current_set`: Charging charging current.
+- `number.nrgkick_energy_limit`: Energy limit for a session (0 means unlimited).
 
 ## Examples
 
@@ -158,7 +190,7 @@ automation:
           entity_id: switch.nrgkick_charge_pause
       - action: number.set_value
         target:
-          entity_id: number.nrgkick_charging_current
+          entity_id: number.nrgkick_current_set
         data:
           value: 16
 ```
