@@ -39,7 +39,7 @@ The NRGkick is available in different variants, including the 16A and 32A
 models, as well as models with cellular (SIM) and GPS capabilities. All are
 compatible with this integration.
 
-The NRGkick 16A light model needs the "NRGkick App incl. Bluetooth/Wi-FI
+The NRGkick 16A light model needs the "NRGkick App incl. Bluetooth/Wi-Fi
 connectivity" as one-time upgrade to use the local API.
 {% endnote %}
 
@@ -136,7 +136,7 @@ assume the default device name of `NRGkick`.
 - `sensor.nrgkick_status`: Charging status.
 - `binary_sensor.nrgkick_charging`: On when charging is active.
 - `switch.nrgkick_charge_pause`: Pause or resume charging.
-- `number.nrgkick_current_set`: Charging charging current.
+- `number.nrgkick_current_set`: Set charging current.
 - `number.nrgkick_energy_limit`: Energy limit for a session (0 means unlimited).
 
 ## Examples
