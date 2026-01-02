@@ -19,6 +19,7 @@ from .api import (
     NRGkickAPI,
     NRGkickApiClientAuthenticationError,
     NRGkickApiClientCommunicationError,
+    NRGkickApiClientError,
 )
 from .const import DOMAIN
 
@@ -50,14 +51,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     if not device_name:
         device_name = "NRGkick"
 
+    serial = info.get("general", {}).get("serial_number")
+    if not serial:
+        raise ValueError
+
     return {
         "title": device_name,
-        "serial": info.get("general", {}).get("serial_number", "Unknown"),
+        "serial": serial,
     }
 
 
-# pylint: disable=abstract-method  # is_matching is not required for HA config flows
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class NRGkickConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NRGkick."""
 
     VERSION = 1
@@ -67,8 +71,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_host: str | None = None
         self._discovered_name: str | None = None
 
-    # pylint: disable=unused-argument
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -77,12 +79,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 info = await validate_input(self.hass, user_input)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(info["serial"])
@@ -110,11 +114,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         model_type = discovery_info.properties.get("model_type")
         json_api_enabled = discovery_info.properties.get("json_api_enabled", "0")
 
-        # Verify JSON API is enabled.
-        if json_api_enabled != "1":
-            _LOGGER.debug("NRGkick device %s does not have JSON API enabled", serial)
-            return self.async_abort(reason="json_api_disabled")
-
         if not serial:
             _LOGGER.debug("NRGkick device discovered without serial number")
             return self.async_abort(reason="no_serial_number")
@@ -128,10 +127,59 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_host = discovery_info.host
         # Fallback: device_name -> model_type -> "NRGkick".
         self._discovered_name = device_name or model_type or "NRGkick"
-        self.context["title_placeholders"] = {"name": self._discovered_name}
+        self.context["title_placeholders"] = {
+            "name": self._discovered_name or "NRGkick"
+        }
+
+        # If JSON API is disabled, guide the user through enabling it.
+        if json_api_enabled != "1":
+            _LOGGER.debug("NRGkick device %s does not have JSON API enabled", serial)
+            return await self.async_step_zeroconf_enable_json_api()
 
         # Proceed to confirmation step.
         return await self.async_step_zeroconf_confirm()
+
+    async def async_step_zeroconf_enable_json_api(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Guide the user to enable JSON API after discovery."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            data = {
+                CONF_HOST: self._discovered_host,
+                CONF_USERNAME: user_input.get(CONF_USERNAME),
+                CONF_PASSWORD: user_input.get(CONF_PASSWORD),
+            }
+
+            try:
+                info = await validate_input(self.hass, data)
+            except ValueError:
+                errors["base"] = "no_serial_number"
+            except NRGkickApiClientAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except NRGkickApiClientCommunicationError:
+                errors["base"] = "cannot_connect"
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error")
+                errors["base"] = "unknown"
+            else:
+                return self.async_create_entry(title=info["title"], data=data)
+
+        return self.async_show_form(
+            step_id="zeroconf_enable_json_api",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_USERNAME): str,
+                    vol.Optional(CONF_PASSWORD): str,
+                }
+            ),
+            description_placeholders={
+                "name": self._discovered_name or "NRGkick",
+                "device_ip": self._discovered_host or "",
+            },
+            errors=errors,
+        )
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -149,12 +197,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 info = await validate_input(self.hass, data)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
                 # Create entry directly - HA will show device/area assignment UI.
@@ -178,7 +228,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
+        self, _entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
         return await self.async_step_reauth_confirm()
@@ -205,12 +255,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception during reauthentication")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error during reauthentication")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -236,14 +288,18 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration."""
-        return await self.async_step_reconfigure_confirm()
+        return await self.async_step_reconfigure_confirm(user_input)
 
     async def async_step_reconfigure_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle reconfiguration confirmation."""
         errors: dict[str, str] = {}
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
+        entry_id = self.context.get("entry_id")
+        if not entry_id:
+            return self.async_abort(reason="reconfigure_failed")
+
+        entry = self.hass.config_entries.async_get_entry(entry_id)
 
         if entry is None:
             return self.async_abort(reason="reconfigure_failed")
@@ -257,12 +313,14 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 await validate_input(self.hass, data)
+            except ValueError:
+                errors["base"] = "no_serial_number"
             except NRGkickApiClientAuthenticationError:
                 errors["base"] = "invalid_auth"
             except NRGkickApiClientCommunicationError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
-                _LOGGER.exception("Unexpected exception during reconfiguration")
+            except NRGkickApiClientError:
+                _LOGGER.exception("Unexpected error during reconfiguration")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(

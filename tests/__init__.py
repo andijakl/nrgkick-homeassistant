@@ -1,13 +1,8 @@
 """Tests for the NRGkick integration."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
-
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-if TYPE_CHECKING:
-    from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant
 
 
 async def async_setup_entry_with_return(

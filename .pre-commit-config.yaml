@@ -47,7 +47,7 @@ repos:
           - homeassistant>=2025.12.4
           - voluptuous>=0.15.0
           - aiohttp>=3.10.0
-          - nrgkick-api>=1.3.0
+          - nrgkick-api>=1.4.0
         exclude: ^tests/
 
   # Python code linting with pylint
@@ -65,6 +65,7 @@ repos:
         additional_dependencies:
           - homeassistant>=2025.12.0
           - aiohttp>=3.8.0
+          - nrgkick-api>=1.4.0
         exclude: ^tests/
 
   # Check manifest.json

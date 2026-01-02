@@ -2,13 +2,10 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 
-@pytest.mark.requires_integration
 async def test_diagnostics(
     hass: HomeAssistant,
     hass_client,

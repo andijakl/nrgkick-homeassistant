@@ -180,7 +180,7 @@ Home Assistant discovers integrations through the `manifest.json` file:
   "name": "NRGkick",
   "config_flow": true,
   "zeroconf": ["_nrgkick._tcp.local."],
-  "requirements": ["nrgkick-api==1.3.0"],
+  "requirements": ["nrgkick-api==1.4.0"],
   "iot_class": "local_polling"
 }
 ```
