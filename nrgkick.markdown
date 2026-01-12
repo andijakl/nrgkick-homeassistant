@@ -13,34 +13,24 @@ ha_integration_type: device
 ha_config_flow: true
 ha_zeroconf: true
 ha_platforms:
-  - binary_sensor
-  - number
   - sensor
-  - switch
 related:
-  - url: https://www.nrgkick.com/en/
+  - url: https://www.nrgkick.com/
     title: NRGkick Website
 ---
 
-The **NRGkick** {% term integration %} allows you to monitor and control
-the NRGkick mobile EV charger (Wallbox) by DiniTech with Home Assistant.
-The wallbox is smart home friendly and allows detailed monitoring with
-80+ data points and flexible control of charging behavior.
+The **NRGkick** {% term integration %} allows you to monitor the NRGkick mobile EV charger (Wallbox) by DiniTech with Home Assistant. The wallbox is smart home friendly and allows detailed monitoring with 80+ data points.
 
-The integration connects directly to the device on your local network using the
-local REST JSON API. No cloud connection is required.
+The integration connects directly to the device on your local network using the local REST JSON API. No cloud connection is required.
 
 ## Supported devices
 
 - NRGkick Gen2 (Smart Cable / Flexible Wallbox)
 
 {% note %}
-The NRGkick is available in different variants, including the 16A and 32A
-models, as well as models with cellular (SIM) and GPS capabilities. All are
-compatible with this integration.
+The NRGkick is available in different variants, including the 16A and 32A models, as well as models with cellular (SIM) and GPS capabilities. All are compatible with this integration.
 
-The NRGkick 16A light model needs the "NRGkick App incl. Bluetooth/Wi-FI
-connectivity" as one-time upgrade to use the local API.
+The NRGkick 16A light model needs the "NRGkick App incl. Bluetooth/Wi-Fi connectivity" as one-time upgrade to use the local API.
 {% endnote %}
 
 ## Unsupported devices
@@ -62,152 +52,195 @@ To enable the API:
 
 {% include integrations/config_flow.md %}
 
-### Discovery and setup
-
-Home Assistant can discover NRGkick devices automatically on your local network.
-
-- If a device is discovered, select the notification, or go to **Settings** >
-  **Devices & services**, and add the discovered **NRGkick** integration.
-- If the device is not discovered, add it manually and enter the device host.
-
-If you enabled authentication in the NRGkick app, enter the username and
-password during setup.
+If you enabled authentication in the NRGkick app, enter the username and password during setup.
 
 {% configuration_basic %}
 Host:
-description: >
-The hostname or IP address of your NRGkick device, for example,
-`nrgkick.local` or `192.0.2.10`.
+description: |
+The hostname or IP address of your NRGkick device, for example, `nrgkick.local` or `192.0.2.10`.
 Username:
 description: Username for HTTP Basic Authentication (optional).
 Password:
 description: Password for HTTP Basic Authentication (optional).
 {% endconfiguration_basic %}
 
-## Configuration options
-
-{% configuration_basic %}
-Scan interval:
-description: >
-How often Home Assistant polls the device for updates.
-The default is 30 seconds.
-The allowed range is 10 to 300 seconds.
-{% endconfiguration_basic %}
-
 ## Supported functionality
 
-The integration provides entities to monitor and control charging.
+The integration provides entities to monitor charging. Charging control will be added in a later release.
 
-### Monitoring
+### Sensors
 
-The integration creates sensors for common measurements, including:
+The integration creates the following sensors:
 
-- Power, energy, voltage, current, and frequency (total and per-phase).
-- Charging status, charge rate, relay state, and session metrics.
-- Warnings and error codes.
-- Temperatures (availability depends on the connected attachment).
-- Network details, such as IP address and Wi-Fi signal strength.
+#### Device information
 
-Some sensors are only available on NRGkick SIM models (cellular and GPS).
-These entities are disabled by default and can be enabled in the entity
-settings.
+##### General
 
-The integration also provides binary sensors for common on/off states, such as
-whether charging is active.
+| Sensor        | Unit | Class / Statistics    | Description                       |
+| ------------- | ---- | --------------------- | --------------------------------- |
+| Rated current | A    | current (measurement) | Max rated current of the NRGkick. |
+
+##### Connector
+
+| Sensor                | Unit | Class / Statistics    | Description                                |
+| --------------------- | ---- | --------------------- | ------------------------------------------ |
+| Connector phase count | —    |                       | Phase count of the connected attachment.   |
+| Connector max current | A    | current (measurement) | Max current of the connected attachment.   |
+| Connector type        | —    |                       | Attachment type (for example Type 2, CEE). |
+| Connector serial      | —    |                       | Attachment serial number.                  |
+
+##### Grid
+
+| Sensor         | Unit | Class / Statistics      | Description                                               |
+| -------------- | ---- | ----------------------- | --------------------------------------------------------- |
+| Grid voltage   | V    | voltage (measurement)   | Detected grid voltage type.                               |
+| Grid frequency | Hz   | frequency (measurement) | Detected grid frequency.                                  |
+| Grid phases    | —    |                         | Connected phases on grid side (for example L1, L1/L2/L3). |
+
+##### Network
+
+| Sensor          | Unit | Class / Statistics            | Description                                            |
+| --------------- | ---- | ----------------------------- | ------------------------------------------------------ |
+| IP address      | —    |                               | IP address of the NRGkick device.                      |
+| MAC address     | —    |                               | MAC address of the NRGkick device.                     |
+| SSID            | —    |                               | Wi-Fi network name of the currently connected network. |
+| Signal strength | dBm  | signal_strength (measurement) | Wi-Fi signal strength (RSSI).                          |
+
+##### Cellular (only if available)
+
+These sensors are only available on NRGkick SIM models and are disabled by
+default.
+
+| Sensor                   | Unit | Class / Statistics            | Description                      |
+| ------------------------ | ---- | ----------------------------- | -------------------------------- |
+| Cellular operator        | —    |                               | Cellular network operator.       |
+| Cellular signal strength | dBm  | signal_strength (measurement) | Cellular signal strength (RSSI). |
+| Cellular mode            | —    |                               | Cellular mode.                   |
+
+##### GPS (only if available)
+
+These sensors are only available on NRGkick SIM models and are disabled by
+default.
+
+| Sensor        | Unit | Class / Statistics | Description    |
+| ------------- | ---- | ------------------ | -------------- |
+| GPS latitude  | °    | measurement        | GPS latitude.  |
+| GPS longitude | °    | measurement        | GPS longitude. |
+| GPS altitude  | m    | measurement        | GPS altitude.  |
+| GPS accuracy  | m    | measurement        | GPS accuracy.  |
+
+##### Versions
+
+These sensors are disabled by default.
+
+| Sensor           | Unit | Class / Statistics | Description                   |
+| ---------------- | ---- | ------------------ | ----------------------------- |
+| Software version | —    |                    | SmartModule software version. |
+| Hardware version | —    |                    | SmartModule hardware version. |
+
+#### Device control
+
+These values are exposed as sensors for monitoring. Setting charging parameters
+from Home Assistant is not supported in this version of the integration.
+
+| Sensor               | Unit | Class / Statistics    | Description                          |
+| -------------------- | ---- | --------------------- | ------------------------------------ |
+| Charging current set | A    | current (measurement) | User-set charging current setpoint.  |
+| Charge pause         | —    |                       | Charge pause state (0/1).            |
+| Energy limit         | kWh  | energy (total)        | User-set energy limit setpoint.      |
+| Phase count          | —    |                       | User-set maximum charge phase count. |
+
+#### Device values
+
+##### Energy
+
+| Sensor               | Unit | Class / Statistics        | Description                                           |
+| -------------------- | ---- | ------------------------- | ----------------------------------------------------- |
+| Total charged energy | kWh  | energy (total_increasing) | Total charged energy overall.                         |
+| Charged energy       | kWh  | energy (total_increasing) | Charged energy during the most recent charge session. |
+
+##### Powerflow
+
+| Sensor                   | Unit | Class / Statistics           | Description                                          |
+| ------------------------ | ---- | ---------------------------- | ---------------------------------------------------- |
+| Charging current         | A    | current (measurement)        | Max current signaled to the EV.                      |
+| Peak power               | W    | power (measurement)          | Highest power during the most recent charge session. |
+| Total active power       | W    | power (measurement)          | Total active power across all phases.                |
+| Total reactive power     | var  | reactive_power (measurement) | Total reactive power across all phases.              |
+| Total apparent power     | VA   | apparent_power (measurement) | Total apparent power across all phases.              |
+| Total power factor       | %    | power_factor (measurement)   | Power factor across all phases.                      |
+| Charging voltage         | V    | voltage (measurement)        | Average charging voltage across phases.              |
+| Powerflow grid frequency | Hz   | frequency (measurement)      | Grid frequency reported in powerflow data.           |
+| L1 voltage               | V    | voltage (measurement)        | Voltage on phase L1.                                 |
+| L1 current               | A    | current (measurement)        | Current on phase L1.                                 |
+| L1 active power          | W    | power (measurement)          | Active power on phase L1.                            |
+| L1 reactive power        | var  | reactive_power (measurement) | Reactive power on phase L1.                          |
+| L1 apparent power        | VA   | apparent_power (measurement) | Apparent power on phase L1.                          |
+| L1 power factor          | %    | power_factor (measurement)   | Power factor on phase L1.                            |
+| L2 voltage               | V    | voltage (measurement)        | Voltage on phase L2.                                 |
+| L2 current               | A    | current (measurement)        | Current on phase L2.                                 |
+| L2 active power          | W    | power (measurement)          | Active power on phase L2.                            |
+| L2 reactive power        | var  | reactive_power (measurement) | Reactive power on phase L2.                          |
+| L2 apparent power        | VA   | apparent_power (measurement) | Apparent power on phase L2.                          |
+| L2 power factor          | %    | power_factor (measurement)   | Power factor on phase L2.                            |
+| L3 voltage               | V    | voltage (measurement)        | Voltage on phase L3.                                 |
+| L3 current               | A    | current (measurement)        | Current on phase L3.                                 |
+| L3 active power          | W    | power (measurement)          | Active power on phase L3.                            |
+| L3 reactive power        | var  | reactive_power (measurement) | Reactive power on phase L3.                          |
+| L3 apparent power        | VA   | apparent_power (measurement) | Apparent power on phase L3.                          |
+| L3 power factor          | %    | power_factor (measurement)   | Power factor on phase L3.                            |
+| Neutral current          | A    | current (measurement)        | Current on neutral conductor (N).                    |
+
+##### General
+
+| Sensor                | Unit | Class / Statistics     | Description                                                        |
+| --------------------- | ---- | ---------------------- | ------------------------------------------------------------------ |
+| Charging rate         | —    | measurement            | Charging rate (value from device API is in km/h).                  |
+| Vehicle connect time  | s    | duration (measurement) | Connect time of the most recent charge session.                    |
+| Vehicle charging time | s    | duration (measurement) | Charging time of the most recent charge session.                   |
+| Status                | —    |                        | Charging status (for example standby, connected, charging, error). |
+| Charge permitted      | —    |                        | Whether charging is permitted by the device (0/1).                 |
+| Relay state           | —    |                        | Current switched relay state (for example active phases).          |
+| Charge count          | —    | total_increasing       | Vehicle plug-in cycle count.                                       |
+| RCD trigger           | —    |                        | Indicates if the RCD got triggered and which type.                 |
+| Warning code          | —    |                        | Current warning code reported by the device.                       |
+| Error code            | —    |                        | Current error code reported by the device.                         |
+
+##### Temperatures
+
+| Sensor                      | Unit | Class / Statistics        | Description                            |
+| --------------------------- | ---- | ------------------------- | -------------------------------------- |
+| Housing temperature         | °C   | temperature (measurement) | NRGkick housing temperature.           |
+| Connector L1 temperature    | °C   | temperature (measurement) | Attachment phase 1 temperature.        |
+| Connector L2 temperature    | °C   | temperature (measurement) | Attachment phase 2 temperature.        |
+| Connector L3 temperature    | °C   | temperature (measurement) | Attachment phase 3 temperature.        |
+| Domestic plug 1 temperature | °C   | temperature (measurement) | Domestic attachment pin 1 temperature. |
+| Domestic plug 2 temperature | °C   | temperature (measurement) | Domestic attachment pin 2 temperature. |
 
 ### Controls
 
-The integration provides controls to adjust charging behavior:
-
-- **Charging current** (number): Set the current limit.
-- **Charge pause** (switch): Pause or resume charging.
-- **Energy limit** (number): Set an energy limit per session. A value of 0 means
-  unlimited.
-- **Phase count** (number): Set the number of phases, if supported by the
-  device and attachment.
+Support for charging control will be added in a later release.
 
 ### Key entities
 
-Entity IDs depend on your device name in Home Assistant. The examples below
-assume the default device name of `NRGkick`.
+Entity IDs depend on your device name in Home Assistant. The examples below assume the default device name of `NRGkick`.
 
 - `sensor.nrgkick_charging_current`: Charging current.
 - `sensor.nrgkick_charged_energy`: Charged energy.
 - `sensor.nrgkick_status`: Charging status.
-- `binary_sensor.nrgkick_charging`: On when charging is active.
-- `switch.nrgkick_charge_pause`: Pause or resume charging.
-- `number.nrgkick_current_set`: Charging charging current.
-- `number.nrgkick_energy_limit`: Energy limit for a session (0 means unlimited).
-
-## Examples
-
-### Pause charging during peak hours
-
-This {% term automation %} pauses charging at 5 PM and resumes at 10 PM.
-
-```yaml
-automation:
-  - alias: "NRGkick - Pause charging during peak hours"
-    triggers:
-      - trigger: time
-        at: "17:00:00"
-    actions:
-      - action: switch.turn_on
-        target:
-          entity_id: switch.nrgkick_charge_pause
-
-  - alias: "NRGkick - Resume charging after peak hours"
-    triggers:
-      - trigger: time
-        at: "22:00:00"
-    actions:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.nrgkick_charge_pause
-```
-
-### Start charging when solar production is sufficient
-
-This example starts charging when your solar production exceeds 3 kW.
-
-```yaml
-automation:
-  - alias: "NRGkick - Start solar charging"
-    triggers:
-      - trigger: numeric_state
-        entity_id: sensor.solar_power
-        above: 3000
-    conditions:
-      - condition: state
-        entity_id: binary_sensor.nrgkick_charging
-        state: off
-      - condition: state
-        entity_id: switch.nrgkick_charge_pause
-        state: on
-    actions:
-      - action: switch.turn_off
-        target:
-          entity_id: switch.nrgkick_charge_pause
-      - action: number.set_value
-        target:
-          entity_id: number.nrgkick_current_set
-        data:
-          value: 16
-```
 
 ## Data updates
 
-The integration polls the device for updates.
+The integration {% term polling polls %} the device for updates.
 
-- Default scan interval: 30 seconds.
-- Minimum scan interval: 10 seconds.
+- Polling interval: 30 seconds.
+- You cannot change the polling interval.
 
 ## Known limitations
 
-- Per-phase values for L2 and L3 are only available when the power source and
-  session are using multiple phases.
-- Some temperature sensors depend on the connected attachment and may not be
-  available.
+- Charging control is not yet supported and will be added in a later release.
+- Per-phase values for L2 and L3 are only available when the power source and session are using multiple phases.
+- Some temperature sensors depend on the connected attachment and may not be available.
 - Cellular and GPS sensors are only available on SIM models.
 
 ## Troubleshooting
@@ -223,14 +256,12 @@ If setup fails with a connection error:
 ### Entities show unavailable
 
 - Verify the device is powered on and connected.
-- Under **Settings** > **Devices & services**, select **NRGkick**, then reload
-  the integration.
-- Increase the scan interval if your network is unstable.
+- Under **Settings** > **Devices & services**, select **NRGkick**, then reload the integration.
+- If your network is unstable, verify Wi-Fi coverage.
 
-### Some phase sensors are missing or show unknown
+### Some phase sensors are missing or show as unknown
 
-This is expected when charging with a single-phase power source. Those sensors
-usually provide values only when a three-phase source is available and active.
+This is expected when charging with a single-phase power source. Those sensors usually provide values only when a three-phase source is available and active.
 
 ## Removing the integration
 
