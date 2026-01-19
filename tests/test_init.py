@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-import pytest
-
-from custom_components.nrgkick.api import (
-    NRGkickApiClientAuthenticationError,
-    NRGkickApiClientCommunicationError,
+from nrgkick_api import (
+    NRGkickAuthenticationError as LibAuthError,
+    NRGkickConnectionError as LibConnectionError,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -18,7 +19,7 @@ from . import async_setup_entry_with_return, create_mock_config_entry
 
 
 async def test_setup_entry(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
 ) -> None:
     """Test successful setup of entry."""
     mock_config_entry.add_to_hass(hass)
@@ -36,12 +37,12 @@ async def test_setup_entry(
 
 
 async def test_setup_entry_failed_connection(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
 ) -> None:
     """Test setup entry with failed connection."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_nrgkick_api.get_info.side_effect = NRGkickApiClientCommunicationError
+    mock_nrgkick_api.get_info.side_effect = LibConnectionError("Connection failed")
 
     with (
         patch("custom_components.nrgkick.NRGkickAPI", return_value=mock_nrgkick_api),
@@ -54,7 +55,7 @@ async def test_setup_entry_failed_connection(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
 ) -> None:
     """Test successful unload of entry."""
     mock_config_entry.add_to_hass(hass)
@@ -75,7 +76,7 @@ async def test_unload_entry(
 
 
 async def test_reload_entry(
-    hass: HomeAssistant, mock_config_entry: ConfigEntry, mock_nrgkick_api
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_nrgkick_api
 ) -> None:
     """Test reload of entry."""
     mock_config_entry.add_to_hass(hass)
@@ -99,7 +100,7 @@ async def test_reload_entry(
 
 async def test_coordinator_update_success(
     hass: HomeAssistant,
-    mock_config_entry: ConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_nrgkick_api,
     mock_info_data,
     mock_control_data,
@@ -133,7 +134,7 @@ async def test_coordinator_update_failed(
     """Test coordinator update failed."""
     entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
     entry.add_to_hass(hass)
-    mock_nrgkick_api.get_values.side_effect = NRGkickApiClientCommunicationError
+    mock_nrgkick_api.get_values.side_effect = LibConnectionError("Connection failed")
 
     with patch(
         "custom_components.nrgkick.NRGkickAPI",
@@ -151,7 +152,7 @@ async def test_coordinator_auth_failed(
     """Test coordinator auth failed."""
     entry = create_mock_config_entry(data={CONF_HOST: "192.168.1.100"})
     entry.add_to_hass(hass)
-    mock_nrgkick_api.get_values.side_effect = NRGkickApiClientAuthenticationError
+    mock_nrgkick_api.get_values.side_effect = LibAuthError("Auth failed")
 
     with patch(
         "custom_components.nrgkick.NRGkickAPI",
@@ -160,4 +161,4 @@ async def test_coordinator_auth_failed(
         await async_setup_entry_with_return(hass, entry)
         await hass.async_block_till_done()
 
-    assert entry.state is ConfigEntryState.SETUP_ERROR
+    assert entry.state is ConfigEntryState.SETUP_RETRY

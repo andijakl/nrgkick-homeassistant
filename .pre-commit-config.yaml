@@ -29,7 +29,7 @@ repos:
   # Ruff - Python linting and formatting (replaces Black, isort, flake8)
   # This is what Home Assistant core uses
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.14.10
+    rev: v0.14.13
     hooks:
       - id: ruff
         args:
@@ -83,7 +83,7 @@ repos:
 
   # Prettier for JSON, YAML, Markdown
   - repo: https://github.com/rbubley/mirrors-prettier
-    rev: v3.7.4
+    rev: v3.8.0
     hooks:
       - id: prettier
         types_or: [json, yaml, markdown]

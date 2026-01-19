@@ -7,12 +7,8 @@ from unittest.mock import ANY, AsyncMock, patch
 import pytest
 import voluptuous as vol
 
-from custom_components.nrgkick.config_flow import (
-    NRGkickConfigFlow,
-    _normalize_host,
-    validate_input,
-)
-from homeassistant import data_entry_flow
+from custom_components.nrgkick.api import NRGkickApiClientInvalidResponseError
+from custom_components.nrgkick.config_flow import _normalize_host, validate_input
 from homeassistant.core import HomeAssistant
 
 
@@ -94,18 +90,6 @@ async def test_validate_input_fallback_name_and_serial_required(
             "custom_components.nrgkick.config_flow.NRGkickAPI",
             return_value=api,
         ),
-        pytest.raises(ValueError),
+        pytest.raises(NRGkickApiClientInvalidResponseError),
     ):
         await validate_input(hass, "192.168.1.100")
-
-
-async def test_flow_guards_and_fallbacks(hass: HomeAssistant) -> None:
-    """Test defensive guards and fallbacks that are hard to hit via FlowManager."""
-    flow = NRGkickConfigFlow()
-    flow.hass = hass
-
-    # user_auth without pending host falls back to user step
-    flow._pending_host = None
-    result = await flow.async_step_user_auth()
-    assert result.get("type") == data_entry_flow.FlowResultType.FORM
-    assert result.get("step_id") == "user"

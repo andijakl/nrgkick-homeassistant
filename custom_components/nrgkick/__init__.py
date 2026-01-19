@@ -2,11 +2,12 @@
 
 from __future__ import annotations
 
-from homeassistant.const import Platform
+from nrgkick_api import NRGkickAPI
+
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .api import NRGkickAPI
 from .coordinator import NRGkickConfigEntry, NRGkickDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
@@ -17,9 +18,9 @@ PLATFORMS: list[Platform] = [
 async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
     """Set up NRGkick from a config entry."""
     api = NRGkickAPI(
-        host=entry.data["host"],
-        username=entry.data.get("username"),
-        password=entry.data.get("password"),
+        host=entry.data[CONF_HOST],
+        username=entry.data.get(CONF_USERNAME),
+        password=entry.data.get(CONF_PASSWORD),
         session=async_get_clientsession(hass),
     )
 
@@ -36,5 +37,4 @@ async def async_setup_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: NRGkickConfigEntry) -> bool:
     """Unload a config entry."""
-    result: bool = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    return result
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

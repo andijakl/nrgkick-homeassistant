@@ -2,14 +2,15 @@
     "config": {
         "abort": {
             "already_configured": "Device is already configured",
-            "already_in_progress": "Configuration is already in progress",
-            "json_api_disabled": "JSON API is disabled on the device",
+            "already_in_progress": "Configuration flow is already in progress",
+            "json_api_disabled": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants.",
             "no_serial_number": "Device does not provide a serial number"
         },
         "error": {
             "cannot_connect": "Cannot connect to the NRGkick device. Test the connection using a browser: http://{device_ip}/info",
             "invalid_auth": "Invalid authentication",
-            "json_api_disabled": "JSON API is disabled on the device",
+            "invalid_response": "The device returned an invalid response. Verify the host or IP address and make sure JSON API is enabled in the NRGkick mobile app.",
+            "json_api_disabled": "JSON API is disabled on the device.\n\nEnable JSON API in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n3. (Optional & recommended) Enable Authentication (JSON) and set credentials\n\nAfter enabling JSON API, submit this form again.",
             "no_serial_number": "Device does not provide a serial number",
             "unknown": "Unexpected error"
         },
@@ -32,35 +33,13 @@
                     "password": "Password for Basic Auth.",
                     "username": "Username for Basic Auth."
                 },
-                "description": "Authentication is required for {device_ip}."
-            },
-            "zeroconf_auth": {
-                "data": {
-                    "password": "Password",
-                    "username": "Username"
-                },
-                "data_description": {
-                    "password": "Password for Basic Auth.",
-                    "username": "Username for Basic Auth."
-                },
-                "description": "Authentication is required for {device_ip}."
+                "description": "Authentication is required for {device_ip}.\n\nGet your username and password in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Under Authentication (JSON), check or set your username and password\n\nIf you changed the credentials in the app, use the updated values here."
             },
             "zeroconf_confirm": {
                 "description": "Do you want to add the NRGkick device ({name}) at {device_ip} to Home Assistant?"
             },
             "zeroconf_enable_json_api": {
                 "description": "The NRGkick device ({name}) at {device_ip} was discovered, but JSON API is disabled.\n\nEnable JSON API in the NRGkick mobile app:\n1. Open the NRGkick mobile app \u2192 Extended \u2192 Local API\n2. Enable JSON API under API Variants\n3. (Optional & recommended) Enable Authentication (JSON) and set credentials\n\nAfter enabling JSON API, submit this form to continue."
-            },
-            "zeroconf_enable_json_api_auth": {
-                "data": {
-                    "password": "Password",
-                    "username": "Username"
-                },
-                "data_description": {
-                    "password": "Password for Basic Auth.",
-                    "username": "Username for Basic Auth."
-                },
-                "description": "Authentication is required for {device_ip}."
             }
         }
     },
@@ -83,13 +62,8 @@
                 "name": "Cellular signal strength"
             },
             "charge_count": {
-                "name": "Charge count"
-            },
-            "charge_pause": {
-                "name": "Charge pause"
-            },
-            "charge_permitted": {
-                "name": "Charge permitted"
+                "name": "Charge count",
+                "unit_of_measurement": "cycles"
             },
             "charged_energy": {
                 "name": "Charged energy"
@@ -132,17 +106,11 @@
                     "wall": "Wall socket"
                 }
             },
-            "current_set": {
-                "name": "Charging current set"
-            },
             "domestic_plug_1_temperature": {
                 "name": "Domestic plug 1 temperature"
             },
             "domestic_plug_2_temperature": {
                 "name": "Domestic plug 2 temperature"
-            },
-            "energy_limit": {
-                "name": "Energy limit"
             },
             "error_code": {
                 "name": "Error code",
@@ -181,33 +149,8 @@
                     "voltage_drop_detected": "Voltage drop detected"
                 }
             },
-            "gps_accuracy": {
-                "name": "GPS accuracy"
-            },
-            "gps_altitude": {
-                "name": "GPS altitude"
-            },
-            "gps_latitude": {
-                "name": "GPS latitude"
-            },
-            "gps_longitude": {
-                "name": "GPS longitude"
-            },
             "grid_frequency": {
                 "name": "Grid frequency"
-            },
-            "grid_phases": {
-                "name": "Grid phases",
-                "state": {
-                    "l1": "L1",
-                    "l1_l2": "L1, L2",
-                    "l1_l2_l3": "L1, L2, L3",
-                    "l1_l3": "L1, L3",
-                    "l2": "L2",
-                    "l2_l3": "L2, L3",
-                    "l3": "L3",
-                    "unknown": "Unknown"
-                }
             },
             "grid_voltage": {
                 "name": "Grid voltage"
@@ -272,12 +215,6 @@
             "n_current": {
                 "name": "Neutral current"
             },
-            "network_ip_address": {
-                "name": "IP address"
-            },
-            "network_mac_address": {
-                "name": "MAC address"
-            },
             "network_rssi": {
                 "name": "Signal strength"
             },
@@ -286,9 +223,6 @@
             },
             "peak_power": {
                 "name": "Peak power"
-            },
-            "phase_count": {
-                "name": "Phase count"
             },
             "powerflow_grid_frequency": {
                 "name": "Powerflow grid frequency"
@@ -305,28 +239,6 @@
                     "dc_negative_6ma_fault": "DC -6mA fault",
                     "dc_positive_6ma_fault": "DC +6mA fault",
                     "no_fault": "No fault",
-                    "unknown": "Unknown"
-                }
-            },
-            "relay_state": {
-                "name": "Relay state",
-                "state": {
-                    "l1": "L1",
-                    "l1_l2": "L1, L2",
-                    "l1_l2_l3": "L1, L2, L3",
-                    "l1_l3": "L1, L3",
-                    "l2": "L2",
-                    "l2_l3": "L2, L3",
-                    "l3": "L3",
-                    "n": "N",
-                    "n_l1": "N, L1",
-                    "n_l1_l2": "N, L1, L2",
-                    "n_l1_l2_l3": "N, L1, L2, L3",
-                    "n_l1_l3": "N, L1, L3",
-                    "n_l2": "N, L2",
-                    "n_l2_l3": "N, L2, L3",
-                    "n_l3": "N, L3",
-                    "no_relay": "No relay",
                     "unknown": "Unknown"
                 }
             },
@@ -359,14 +271,8 @@
             "vehicle_charging_time": {
                 "name": "Vehicle charging time"
             },
-            "vehicle_connect_time": {
-                "name": "Vehicle connect time"
-            },
-            "versions_hw_sm": {
-                "name": "Hardware version"
-            },
-            "versions_sw_sm": {
-                "name": "Software version"
+            "vehicle_connected_since": {
+                "name": "Vehicle connected since"
             },
             "warning_code": {
                 "name": "Warning code",
@@ -409,6 +315,12 @@
         },
         "http_error": {
             "message": "Device returned HTTP error {status_code} ({status_message}). URL: {url}"
+        },
+        "invalid_response": {
+            "message": "The device returned an invalid response."
+        },
+        "json_api_disabled": {
+            "message": "JSON API is disabled on the device. Enable it in the NRGkick mobile app under Extended \u2192 Local API \u2192 API Variants."
         },
         "unknown_error": {
             "message": "An unknown error occurred."

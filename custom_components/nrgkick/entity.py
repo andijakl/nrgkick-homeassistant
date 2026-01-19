@@ -4,11 +4,15 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import NRGkickData, NRGkickDataUpdateCoordinator
+from .coordinator import NRGkickDataUpdateCoordinator
 
 
 class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
@@ -20,30 +24,36 @@ class NRGkickEntity(CoordinatorEntity[NRGkickDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         self._key = key
-        self._setup_device_info()
 
-    def _setup_device_info(self) -> None:
-        """Set up device info and unique ID."""
-        data: NRGkickData | None = self.coordinator.data
-        info_data: dict[str, Any] = data.info if data else {}
+        data = self.coordinator.data
+        assert data is not None
+
+        info_data: dict[str, Any] = data.info
         device_info: dict[str, Any] = info_data.get("general", {})
+        network_info: dict[str, Any] = info_data.get("network", {})
 
         # The config flow requires a serial number and sets it as unique_id.
-        # Prefer the configured unique_id to avoid depending on runtime API data.
-        serial: str = (
-            self.coordinator.config_entry.unique_id
-            or self.coordinator.config_entry.entry_id
-        )
+        serial = self.coordinator.config_entry.unique_id
+        assert serial is not None
 
+        # Get additional device info fields.
         versions: dict[str, Any] = info_data.get("versions", {})
+        connections: set[tuple[str, str]] | None = None
+        if (mac_address := network_info.get("mac_address")) and isinstance(
+            mac_address, str
+        ):
+            connections = {(CONNECTION_NETWORK_MAC, format_mac(mac_address))}
+
         self._attr_unique_id = f"{serial}_{self._key}"
-        self._attr_device_info = DeviceInfo(
+        device_info_typed = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             serial_number=serial,
-            # The config entry title already contains the device name (set in the
-            # config flow), so we can reuse it here.
-            name=self.coordinator.config_entry.title,
             manufacturer="DiniTech",
             model=device_info.get("model_type", "NRGkick Gen2"),
             sw_version=versions.get("sw_sm"),
+            hw_version=versions.get("hw_sm"),
         )
+        if connections is not None:
+            device_info_typed["connections"] = connections
+
+        self._attr_device_info = device_info_typed
