@@ -26,7 +26,7 @@ zeroconf>=0.148.0
 
 
 # NRGkick API Library
-# For CI/production: use published PyPI package
-nrgkick-api>=1.3.1
+# Keep in sync with custom_components/nrgkick/manifest.json
+nrgkick-api==1.3.1
 # For local development with library changes, comment above and use:
 # -e ../nrgkick-api
