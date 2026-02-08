@@ -19,7 +19,7 @@ above.
 [![Validate](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/validate.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/validate.yml)
 [![Test](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml)
 
-Home Assistant integration for the [NRGkick Gen2 EV mobile wallbox](https://www.nrgkick.com/en/) by [DiniTech GmbH](https://www.dinitech.at/en/) using the official local REST JSON API.
+Legacy (archived) Home Assistant custom integration for the [NRGkick Gen2 EV mobile wallbox](https://www.nrgkick.com/en/) by [DiniTech GmbH](https://www.dinitech.at/en/) using the official local REST JSON API.
 
 ## Features
 
