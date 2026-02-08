@@ -1,5 +1,13 @@
 # NRGkick Home Assistant Integration
 
+## ⚠️ This repository is archived
+
+NRGkick is now available as an official Home Assistant **Core** integration.
+As a result, this community integration is deprecated and no longer needed.
+
+Please use the official documentation and installation instructions here:
+https://www.home-assistant.io/integrations/nrgkick/
+
 [![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/docs/default_repositories)
 [![GitHub Release](https://img.shields.io/github/release/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/releases)
 [![License](https://img.shields.io/github/license/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/blob/main/LICENSE)
