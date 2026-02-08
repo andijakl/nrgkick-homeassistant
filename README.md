@@ -8,13 +8,16 @@ As a result, this community integration is deprecated and no longer needed.
 Please use the official documentation and installation instructions here:
 https://www.home-assistant.io/integrations/nrgkick/
 
-[![HACS Default](https://img.shields.io/badge/HACS-Default-41BDF5.svg)](https://hacs.xyz/docs/default_repositories)
+The remaining sections of this README describe the legacy custom component and
+are kept for historical reference only. New and existing users should migrate
+to the Home Assistant Core integration and follow the documentation linked
+above.
+
 [![GitHub Release](https://img.shields.io/github/release/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/releases)
 [![License](https://img.shields.io/github/license/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/blob/main/LICENSE)
 [![GitHub Issues](https://img.shields.io/github/issues/andijakl/nrgkick-homeassistant.svg)](https://github.com/andijakl/nrgkick-homeassistant/issues)
 [![Validate](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/validate.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/validate.yml)
 [![Test](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/test.yml)
-[![HACS Validation](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml/badge.svg)](https://github.com/andijakl/nrgkick-homeassistant/actions/workflows/hacs.yml)
 
 Home Assistant integration for the [NRGkick Gen2 EV mobile wallbox](https://www.nrgkick.com/en/) by [DiniTech GmbH](https://www.dinitech.at/en/) using the official local REST JSON API.
 
@@ -74,19 +77,7 @@ _Note: NRGkick Gen1 (Bluetooth only) is not supported._
 
 ## Installation
 
-### Via HACS (Recommended)
-
-This integration is available in the default HACS repository:
-
-1. Open **HACS** in Home Assistant
-2. Go to **Integrations**
-3. Click **Explore & Download Repositories**
-4. Search for **NRGkick**
-5. Click **Download**
-6. Restart Home Assistant
-7. Go to **Settings** → **Devices & Services** → **Add Integration** → **NRGkick**
-
-### Manual Installation
+### Legacy Manual Installation
 
 1. Download the latest release from GitHub
 2. Extract and copy the `custom_components/nrgkick` folder to your Home Assistant `config/custom_components/` directory
