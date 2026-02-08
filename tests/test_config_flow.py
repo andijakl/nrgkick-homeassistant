@@ -13,9 +13,9 @@ from custom_components.nrgkick.api import (
 )
 from custom_components.nrgkick.const import CONF_SCAN_INTERVAL
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import create_mock_config_entry
 

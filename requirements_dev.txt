@@ -18,20 +18,15 @@ mypy>=1.19.1
 types-aiofiles>=25.1.0.20251011
 
 # Home Assistant (for development/testing)
-homeassistant>=2025.12.4
+homeassistant>=2026.01.1
 
 # API Dependencies
 aiohttp>=3.13.2
 zeroconf>=0.148.0
 
-# Fix aiodns/pycares compatibility: pycares 5.0.0 removed ares_query_a_result
-# which aiodns 3.5.0 (pinned by Home Assistant) uses in its type hints
-pycares>=4.4.0,<5.0.0
-#pycares>=5.0.0
-
 
 # NRGkick API Library
-# For CI/production: use published PyPI package
-nrgkick-api>=1.3.1
+# Keep in sync with custom_components/nrgkick/manifest.json
+nrgkick-api==1.3.1
 # For local development with library changes, comment above and use:
 # -e ../nrgkick-api
